@@ -11,3 +11,5 @@ dataclasses = "*"
 [dev-packages]
 
 pytest = "*"
+twine = "*"
+wheel = "*"
