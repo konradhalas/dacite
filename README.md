@@ -33,31 +33,13 @@ class User:
 data = {
     'name': 'john',
     'age': 30,
-    'is_active': True
+    'is_active': True,
 }
 
 user = make(data_class=User, data=data)
 
 assert user == User(name='john', age=30, is_active=True)
 ```
-
-## Motivation
-
-Passing plain dictionaries as a data container between your functions or
-methods isn't a good practice. Of course you can always create your
-custom class instead, but this solution is an overkill if you only want
-to merge a few fields into one entity.
-
-Fortunately Python has a good solution of this problem - data classes.
-Thanks to `@dataclass` decorator you can easily create a new custom
-type with a list of given fields in a declarative manner. Data classes
-support type hints by design.
-
-However, even if you are using data classes, you have to create their
-instances. In many such cases, your input is a dictionary - it can be
-a payload from a HTTP request or a raw data from a database. If you want
-to convert those dictionaries into data classes, `dacite` is your best
-friend.
 
 ## Features
 
@@ -69,7 +51,28 @@ Dacite supports following features:
 - fields values casting and transformation
 - remapping of fields names
 
+## Motivation
+
+Passing plain dictionaries as a data container between your functions or
+methods isn't a good practice. Of course you can always create your
+custom class instead, but this solution is an overkill if you only want
+to merge a few fields within a single object.
+
+Fortunately Python has a good solution to this problem - data classes.
+Thanks to `@dataclass` decorator you can easily create a new custom
+type with a list of given fields in a declarative manner. Data classes
+support type hints by design.
+
+However, even if you are using data classes, you have to create their
+instances. In many such cases, your input is a dictionary - it can be
+a payload from a HTTP request or a raw data from a database. If you want
+to convert those dictionaries into data classes, `dacite` is your best
+friend.
+
 ## Usage
+
+This library is based on a single function - `dacite.make`. Following
+examples show various ways to call it and use of all its parameters.
 
 ### Nested structures
 
@@ -96,7 +99,6 @@ result = make(data_class=B, data=data)
 
 assert result == B(a=A(x='test', y=1))
 ```
-
 
 ### Rename
 
@@ -174,7 +176,6 @@ result = make(data_class=A, data=data, transform={'x': str.lower})
 
 assert result == A(x='test')
 ```
-
 
 ### Optional fields
 
