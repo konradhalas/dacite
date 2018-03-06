@@ -1,12 +1,20 @@
 # dacite
 
-This module simplify creation of data classes from dictionaries.
+[![License](https://img.shields.io/pypi/l/dacite.svg)](https://pypi.python.org/pypi/dacite/)
+[![Build Status](https://travis-ci.org/konradhalas/dacite.svg?branch=master)](https://travis-ci.org/konradhalas/dacite)
 
-## Usage
+This module simplify creation of data classes ([PEP 557](pep-557)) from
+dictionaries.
 
-### Basic usage
+## Installation
 
-The following example shows the basic usage.
+To install dacite, simply use `pip` (or `pipenv`):
+
+```
+$ pip install dacite
+```
+
+## Quick start
 
 ```python
 from dataclasses import dataclass
@@ -14,31 +22,77 @@ from dacite import make
 
 
 @dataclass
-class Address:
-    street: str
-    town: str
-
-
-@dataclass
-class Person:
+class User:
     name: str
     age: int
-    address: Address
+    is_active: bool
 
 
 data = {
-    'name': 'John Lennon',
+    'name': 'john',
     'age': 30,
-    'address': {
-        'street': 'Abbey Road',
-        'town': 'London',
+    'is_active': True
+}
+
+user = make(data_class=User, data=data)
+
+assert user == User(name='john', age=30, is_active=True)
+```
+
+## Motivation
+
+Passing plain dictionaries as a data container between your functions or
+methods isn't a good practice. Of course you can always create your
+custom class instead, but this solution is an overkill if you only want
+to merge a few fields into one entity.
+
+Fortunately Python has a good solution of this problem - data classes.
+Thanks to `@dataclass` decorator you can easily create a new custom
+type with a list of given fields in a declarative manner. Data classes
+support type hints by design.
+
+However, even if you are using data classes, you have to create their
+instances. In many such cases, your input is a dictionary - it can be
+a payload from a HTTP request or a raw data from a database. If you want
+to convert those dictionaries into data classes, `dacite` is your best
+friend.
+
+## Features
+
+Dacite supports following features:
+
+- nested structures
+- types checking
+- optional fields (i.e. `typing.Optional`)
+- fields values casting and transformation
+- remapping of fields names
+
+## Usage
+
+### Nested structures
+
+```python
+@dataclass
+class A:
+    x: str
+    y: int
+
+
+@dataclass
+class B:
+    a: A
+
+
+data = {
+    'a': {
+        'x': 'test',
+        'y': 1,
     }
 }
 
-john = make(data_class=Person, data=data)
+result = make(data_class=B, data=data)
 
-assert john.name == 'John Lennon'
-assert john.address.street == 'Abbey Road'
+assert result == B(a=A(x='test', y=1))
 ```
 
 
@@ -85,7 +139,7 @@ assert result == B(a=A(x='test', y=1))
 
 ```
 
-### Cast
+### Casting
 
 ```python
 @dataclass
@@ -102,7 +156,7 @@ result = make(data_class=A, data=data, cast=['x'])
 assert result == A(x='1')
 ```
 
-### Transform
+### Transformation
 
 ```python
 @dataclass
@@ -120,7 +174,7 @@ assert result == A(x='test')
 ```
 
 
-### Optionals
+### Optional fields
 
 ```python
 from typing import Optional
@@ -139,3 +193,5 @@ result = make(data_class=A, data=data)
 
 assert result == A(x='test', y=None)
 ```
+
+[pep-557]: https://www.python.org/dev/peps/pep-0557/
