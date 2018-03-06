@@ -44,7 +44,7 @@ assert john.address.street == 'Abbey Road'
 
 ### Rename
 
-```
+```python
 @dataclass
 class A:
     x: str
@@ -62,7 +62,7 @@ assert result.x == 'test'
 
 ### Prefixes
 
-```
+```python
 @dataclass
 class A:
     x: str
@@ -87,7 +87,7 @@ assert result == B(a=A(x='test', y=1))
 
 ### Cast
 
-```
+```python
 @dataclass
 class A:
     x: str
@@ -104,7 +104,7 @@ assert result == A(x='1')
 
 ### Transform
 
-```
+```python
 @dataclass
 class A:
     x: str
@@ -122,7 +122,7 @@ assert result == A(x='test')
 
 ### Optionals
 
-```
+```python
 from typing import Optional
 
 @dataclass
