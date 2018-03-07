@@ -8,18 +8,18 @@ T = TypeVar('T')
 def make(data_class: Type[T],
          data: Dict[str, Any],
          rename: Dict[str, str] = None,
-         prefixes: Dict[str, str] = None,
+         prefixed: Dict[str, str] = None,
          cast: Iterable[str] = None,
          transform: Dict[str, Callable[[Any], Any]] = None) -> T:
     rename = rename or {}
-    prefixes = prefixes or {}
+    prefixed = prefixed or {}
     cast = cast or []
     transform = transform or {}
     values = {}
     for field in fields(data_class):
         try:
-            if field.name in prefixes:
-                value = _extract_nested_dict_for_prefix(prefixes[field.name], data)
+            if field.name in prefixed:
+                value = _extract_nested_dict_for_prefix(prefixed[field.name], data)
             else:
                 key_name = rename.get(field.name, field.name)
                 value = data[key_name]
@@ -30,7 +30,7 @@ def make(data_class: Type[T],
                     data_class=field.type,
                     data=value,
                     rename=_extract_nested_dict(field, rename),
-                    prefixes=_extract_nested_dict(field, prefixes),
+                    prefixed=_extract_nested_dict(field, prefixed),
                     cast=_extract_nested_list(field, cast),
                     transform=_extract_nested_dict(field, transform),
                 )

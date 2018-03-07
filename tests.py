@@ -78,19 +78,19 @@ def test_make_with_nested_rename():
 
 
 def test_make_with_prefix():
-    result = make(B, {'s': 'test', 'a_s': 'test', 'a_i': 1}, prefixes={'a': 'a_'})
+    result = make(B, {'s': 'test', 'a_s': 'test', 'a_i': 1}, prefixed={'a': 'a_'})
 
     assert result == B(s='test', a=A(s='test', i=1))
 
 
 def test_make_with_nested_prefix():
-    result = make(C, {'b': {'s': 'test', 'a_s': 'test', 'a_i': 1}}, prefixes={'b.a': 'a_'})
+    result = make(C, {'b': {'s': 'test', 'a_s': 'test', 'a_i': 1}}, prefixed={'b.a': 'a_'})
 
     assert result == C(b=B(s='test', a=A(s='test', i=1)))
 
 
 def test_make_with_prefix_and_rename():
-    result = make(B, {'s': 'test', 'a_s': 'test', 'a_j': 1}, prefixes={'a': 'a_'}, rename={'a.i': 'j'})
+    result = make(B, {'s': 'test', 'a_s': 'test', 'a_j': 1}, prefixed={'a': 'a_'}, rename={'a.i': 'j'})
 
     assert result == B(s='test', a=A(s='test', i=1))
 
