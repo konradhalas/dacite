@@ -118,7 +118,7 @@ assert result == B(a=A(x='test', y=1))
 ### Rename
 
 If you want to change the name of your input field, you can use `rename`
-argument. You have to pass dictionary of with a following mapping:
+argument. You have to pass dictionary with a following mapping:
 `{'data_class_field': 'input_field'}`
 
 ```python
@@ -135,6 +135,35 @@ result = make(data_class=A, data=data, rename={'x': 'y'})
 
 assert result.x == 'test'
 
+```
+### Flattened
+
+You often receive a flat structure which you want to convert to
+something more sophisticated. In this case you can use `flattened`
+argument. You have to pass list of flattened fields.
+
+```python
+@dataclass
+class A:
+    x: str
+    y: int
+
+
+@dataclass
+class B:
+    a: A
+    z: float
+
+
+data = {
+    'x': 'test',
+    'y': 1,
+    'z': 2.0,
+}
+
+result = make(data_class=B, data=data, flattened=['a'])
+
+assert result == B(a=A(x='test', y=1), z=2.0)
 ```
 
 ### Prefixed
@@ -153,17 +182,18 @@ class A:
 @dataclass
 class B:
     a: A
+    z: float
 
 
 data = {
     'a_x': 'test',
     'a_y': 1,
+    'z': 2.0,
 }
 
 result = make(data_class=B, data=data, prefixed={'a': 'a_'})
 
-assert result == B(a=A(x='test', y=1))
-
+assert result == B(a=A(x='test', y=1), z=2.0)
 ```
 
 ### Casting
@@ -231,5 +261,31 @@ result = make(data_class=A, data=data)
 
 assert result == A(x='test', y=None)
 ```
+
+### Multiple inputs
+
+If you have multiple input dicts, you can pass a list of dictionaries
+instead of a single one as a value of `data` argument.
+
+```python
+@dataclass
+class A:
+    x: str
+    y: int
+
+
+data_1 = {
+    'x': 'test',
+}
+
+data_2 = {
+    'y': 1,
+}
+
+result = make(data_class=A, data=[data_1, data_2])
+
+assert result == A(x='test', y=1)
+```
+
 
 [pep-557]: https://www.python.org/dev/peps/pep-0557/
