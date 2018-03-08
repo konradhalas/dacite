@@ -117,6 +117,12 @@ def test_make_with_missing_optional_value():
     assert result == D(s=None, i=1)
 
 
+def test_make_with_none_for_optional_value():
+    result = make(D, {'s': None, 'i': 1})
+
+    assert result == D(s=None, i=1)
+
+
 def test_make_with_wrong_type_of_optional_value():
     with pytest.raises(TypeError):
         make(D, {'s': 1, 'i': 1})
@@ -132,6 +138,18 @@ def test_make_with_optional_nested_data_class():
     result = make(F, {'a': {'s': 'test', 'i': 1}})
 
     assert result == F(a=A(s='test', i=1))
+
+
+def test_make_with_null_for_optional_nested_data_class():
+    result = make(F, {'a': None})
+
+    assert result == F(a=None)
+
+
+def test_make_with_missing_optional_nested_data_class():
+    result = make(F, {})
+
+    assert result == F(a=None)
 
 
 def test_make_with_cast():

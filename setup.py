@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='dacite',
-    version='0.0.4',
+    version='0.0.5',
     description='Simple creation of data classes from dictionaries.',
     author='Konrad Hałas',
     author_email='halas.konrad@gmail.com',

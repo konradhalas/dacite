@@ -34,7 +34,7 @@ def make(data_class: Type[T],
                 value = data[key_name]
             if field.name in transform:
                 value = transform[field.name](value)
-            if _is_dataclass(field):
+            if value is not None and _is_dataclass(field):
                 value = make(
                     data_class=_extract_data_class(field),
                     data=value,
