@@ -77,14 +77,29 @@ a payload from a HTTP request or a raw data from a database. If you want
 to convert those dictionaries into data classes, `dacite` is your best
 friend.
 
-It was originally created to simplify creation of type hinted data
-transfer objects (DTO) which can cross the boundaries in the application
-architecture.
+This library was originally created to simplify creation of type hinted
+data transfer objects (DTO) which can cross the boundaries in the
+application architecture.
 
 ## Usage
 
-This library is based on a single function - `dacite.make`. Following
-examples show various ways to call it and use of all its parameters.
+Dacite is based on a single function - `dacite.make`. This function
+takes 3 parameters:
+
+- `data_class` - data class type
+- `data` - dictionary of input data
+- `config` - configuration of the creation process, instance of
+`dacite.Config` class
+
+Configuration is a (data) class with following fields:
+
+- `rename`
+- `prefixed`
+- `cast`
+- `transform`
+- `flattened`
+
+The examples below show usage of all `Config` parameters.
 
 ### Nested structures
 
@@ -117,9 +132,9 @@ assert result == B(a=A(x='test', y=1))
 
 ### Rename
 
-If you want to change the name of your input field, you can use `rename`
-argument. You have to pass dictionary with a following mapping:
-`{'data_class_field': 'input_field'}`
+If you want to change the name of your input field, you can use
+`Config.rename` argument. You have to pass dictionary with a following
+mapping: `{'data_class_field': 'input_field'}`
 
 ```python
 @dataclass
@@ -139,8 +154,8 @@ assert result.x == 'test'
 ### Flattened
 
 You often receive a flat structure which you want to convert to
-something more sophisticated. In this case you can use `flattened`
-argument. You have to pass list of flattened fields.
+something more sophisticated. In this case you can use
+`Config.flattened` argument. You have to pass list of flattened fields.
 
 ```python
 @dataclass
@@ -169,8 +184,8 @@ assert result == B(a=A(x='test', y=1), z=2.0)
 ### Prefixed
 
 Sometimes your data are prefixed instead of nested. To handle this case,
-you have to use `prefixed` argument, just pass a following mapping:
-`{'data_class_field': 'prefix'}`
+you have to use `Config.prefixed` argument, just pass a following
+mapping: `{'data_class_field': 'prefix'}`
 
 ```python
 @dataclass
@@ -200,7 +215,8 @@ assert result == B(a=A(x='test', y=1), z=2.0)
 
 Input values are not casted by default. If you want to use field type
 information to transform input value from one type to another, you have
-to pass given field name as an element of the `cast` argument list.
+to pass given field name as an element of the `Config.cast` argument
+list.
 
 ```python
 @dataclass
@@ -219,8 +235,8 @@ assert result == A(x='1')
 
 ### Transformation
 
-You can use `transform` argument if you want to transform the input data
-into the new value. You have to pass a following mapping:
+You can use `Config.transform` argument if you want to transform the
+input data into the new value. You have to pass a following mapping:
 `{'data_class_field': callable}`, where `callable` is a
 `Callable[[Any], Any]`.
 
