@@ -40,6 +40,11 @@ class F:
     a: Optional[A]
 
 
+@dataclass
+class G:
+    a_list: List[A]
+
+
 def test_make_from_correct_data():
     result = make(A, {'s': 'test', 'i': 1, 'f': 1.0})
 
@@ -197,5 +202,10 @@ def test_make_with_flat_and_rename():
 def test_make_from_multiple_dicts():
     result = make(A, [{'s': 'test'}, {'i': 1, 'f': 1.0}])
 
-    assert isinstance(result, A)
     assert result == A(s='test', i=1, f=1.0)
+
+
+def test_make_with_list_of_dataclasses():
+    result = make(G, {'a_list': [{'s': 'test_1', 'i': 1}, {'s': 'test_2', 'i': 2}]})
+
+    assert result == G(a_list=[A(s='test_1', i=1), A(s='test_2', i=2)])
