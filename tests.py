@@ -3,7 +3,7 @@ from typing import Optional, List
 import pytest
 from dataclasses import dataclass
 
-from dacite import make
+from dacite import make, Config
 
 
 @dataclass
@@ -81,31 +81,31 @@ def test_make_with_additional_values():
 
 
 def test_make_with_rename():
-    result = make(A, {'s': 'test', 'j': 1}, rename={'i': 'j'})
+    result = make(A, {'s': 'test', 'j': 1}, Config(rename={'i': 'j'}))
 
     assert result == A(s='test', i=1)
 
 
 def test_make_with_nested_rename():
-    result = make(B, {'t': 'test', 'a': {'s': 'test', 'j': 1}}, rename={'a.i': 'j'})
+    result = make(B, {'t': 'test', 'a': {'s': 'test', 'j': 1}}, Config(rename={'a.i': 'j'}))
 
     assert result == B(t='test', a=A(s='test', i=1))
 
 
 def test_make_with_prefix():
-    result = make(B, {'t': 'test', 'a_s': 'test', 'a_i': 1}, prefixed={'a': 'a_'})
+    result = make(B, {'t': 'test', 'a_s': 'test', 'a_i': 1}, Config(prefixed={'a': 'a_'}))
 
     assert result == B(t='test', a=A(s='test', i=1))
 
 
 def test_make_with_nested_prefix():
-    result = make(C, {'b': {'t': 'test', 'a_s': 'test', 'a_i': 1}}, prefixed={'b.a': 'a_'})
+    result = make(C, {'b': {'t': 'test', 'a_s': 'test', 'a_i': 1}}, Config(prefixed={'b.a': 'a_'}))
 
     assert result == C(b=B(t='test', a=A(s='test', i=1)))
 
 
 def test_make_with_prefix_and_rename():
-    result = make(B, {'t': 'test', 'a_s': 'test', 'a_j': 1}, prefixed={'a': 'a_'}, rename={'a.i': 'j'})
+    result = make(B, {'t': 'test', 'a_s': 'test', 'a_j': 1}, Config(prefixed={'a': 'a_'}, rename={'a.i': 'j'}))
 
     assert result == B(t='test', a=A(s='test', i=1))
 
@@ -158,43 +158,43 @@ def test_make_with_missing_optional_nested_data_class():
 
 
 def test_make_with_cast():
-    result = make(A, {'s': 'test', 'i': '1'}, cast=['i'])
+    result = make(A, {'s': 'test', 'i': '1'}, Config(cast=['i']))
 
     assert result == A(s='test', i=1)
 
 
 def test_make_with_nested_cast():
-    result = make(B, {'t': 'test', 'a': {'s': 'test', 'i': '1'}}, cast=['a.i'])
+    result = make(B, {'t': 'test', 'a': {'s': 'test', 'i': '1'}}, Config(cast=['a.i']))
 
     assert result == B(t='test', a=A(s='test', i=1))
 
 
 def test_make_with_transform():
-    result = make(A, {'s': 'TEST', 'i': 1}, transform={'s': str.lower})
+    result = make(A, {'s': 'TEST', 'i': 1}, Config(transform={'s': str.lower}))
 
     assert result == A(s='test', i=1)
 
 
 def test_make_with_nested_transform():
-    result = make(B, {'t': 'test', 'a': {'s': 'TEST', 'i': 1}}, transform={'a.s': str.lower})
+    result = make(B, {'t': 'test', 'a': {'s': 'TEST', 'i': 1}}, Config(transform={'a.s': str.lower}))
 
     assert result == B(t='test', a=A(s='test', i=1))
 
 
 def test_make_with_flat():
-    result = make(B, {'t': 'test', 's': 'test', 'i': 1}, flattened=['a'])
+    result = make(B, {'t': 'test', 's': 'test', 'i': 1}, Config(flattened=['a']))
 
     assert result == B(t='test', a=A(s='test', i=1))
 
 
 def test_make_with_nested_flat():
-    result = make(C, {'b': {'t': 'test', 's': 'test', 'i': 1}}, flattened=['b.a'])
+    result = make(C, {'b': {'t': 'test', 's': 'test', 'i': 1}}, Config(flattened=['b.a']))
 
     assert result == C(b=B(t='test', a=A(s='test', i=1)))
 
 
 def test_make_with_flat_and_rename():
-    result = make(B, {'t': 'test', 's': 'test', 'j': 1}, flattened=['a'], rename={'a.i': 'j'})
+    result = make(B, {'t': 'test', 's': 'test', 'j': 1}, Config(flattened=['a'], rename={'a.i': 'j'}))
 
     assert result == B(t='test', a=A(s='test', i=1))
 

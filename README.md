@@ -131,7 +131,7 @@ data = {
     'y': 'test',
 }
 
-result = make(data_class=A, data=data, rename={'x': 'y'})
+result = make(data_class=A, data=data, config=Config(rename={'x': 'y'}))
 
 assert result.x == 'test'
 
@@ -161,7 +161,7 @@ data = {
     'z': 2.0,
 }
 
-result = make(data_class=B, data=data, flattened=['a'])
+result = make(data_class=B, data=data, config=Config(flattened=['a']))
 
 assert result == B(a=A(x='test', y=1), z=2.0)
 ```
@@ -191,7 +191,7 @@ data = {
     'z': 2.0,
 }
 
-result = make(data_class=B, data=data, prefixed={'a': 'a_'})
+result = make(data_class=B, data=data, config=Config(prefixed={'a': 'a_'}))
 
 assert result == B(a=A(x='test', y=1), z=2.0)
 ```
@@ -212,7 +212,7 @@ data = {
     'x': 1,
 }
 
-result = make(data_class=A, data=data, cast=['x'])
+result = make(data_class=A, data=data, config=Config(cast=['x']))
 
 assert result == A(x='1')
 ```
@@ -234,7 +234,7 @@ data = {
     'x': 'TEST',
 }
 
-result = make(data_class=A, data=data, transform={'x': str.lower})
+result = make(data_class=A, data=data, config=Config(transform={'x': str.lower}))
 
 assert result == A(x='test')
 ```

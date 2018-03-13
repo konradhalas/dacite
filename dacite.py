@@ -1,60 +1,47 @@
-from typing import Dict, Any, TypeVar, Type, Union, Iterable, Callable, List, Generic, Collection
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Collection
 
-from dataclasses import fields, MISSING, is_dataclass, Field
+from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
 
 T = TypeVar('T')
 
 
-def make(data_class: Type[T],
-         data: Union[Dict[str, Any], List[Dict[str, Any]]],
-         rename: Dict[str, str] = None,
-         prefixed: Dict[str, str] = None,
-         cast: List[str] = None,
-         transform: Dict[str, Callable[[Any], Any]] = None,
-         flattened: List[str] = None) -> T:
-    if isinstance(data, list):
-        new_data = {}
-        for single_data in data:
-            new_data.update(single_data)
-        data = new_data
-    rename = rename or {}
-    prefixed = prefixed or {}
-    cast = cast or []
-    transform = transform or {}
-    flattened = flattened or []
+@dataclass
+class Config:
+    rename: Dict[str, str] = dc_field(default_factory=dict)
+    prefixed: Dict[str, str] = dc_field(default_factory=dict)
+    cast: List[str] = dc_field(default_factory=list)
+    transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
+    flattened: List[str] = dc_field(default_factory=list)
+
+
+def make(data_class: Type[T], data: Union[Dict[str, Any], List[Dict[str, Any]]], config: Config = None) -> T:
+    data = _merge_data(data)
+    config = config or Config()
     values = {}
     for field in fields(data_class):
         try:
-            if field.name in prefixed:
-                value = _extract_nested_dict_for_prefix(prefixed[field.name], data)
-            elif field.name in flattened:
-                value = _extract_flattened_fields(field, data, rename)
+            if field.name in config.prefixed:
+                value = _extract_nested_dict_for_prefix(config.prefixed[field.name], data)
+            elif field.name in config.flattened:
+                value = _extract_flattened_fields(field, data, config.rename)
             else:
-                key_name = rename.get(field.name, field.name)
+                key_name = config.rename.get(field.name, field.name)
                 value = data[key_name]
-            if field.name in transform:
-                value = transform[field.name](value)
+            if field.name in config.transform:
+                value = config.transform[field.name](value)
             if value is not None and _is_collection_of_data_classes(field.type):
-                value = [_make_inner(
-                    field=field,
-                    value=item,
-                    rename=rename,
-                    prefixed=prefixed,
-                    cast=cast,
-                    transform=transform,
-                    flattened=flattened,
+                value = [make(
+                    data_class=_extract_data_class(field.type),
+                    data=item,
+                    config=_make_inner_config(field, config),
                 ) for item in value]
             elif value is not None and _is_data_class(field.type):
-                value = _make_inner(
-                    field=field,
-                    value=value,
-                    rename=rename,
-                    prefixed=prefixed,
-                    cast=cast,
-                    transform=transform,
-                    flattened=flattened,
+                value = make(
+                    data_class=_extract_data_class(field.type),
+                    data=value,
+                    config=_make_inner_config(field, config),
                 )
-            elif field.name in cast:
+            elif field.name in config.cast:
                 value = field.type(value)
             elif not _is_instance(field.type, value):
                 raise TypeError(f'wrong type for field {field.name} - should be {field.type} instead of {type(value)}')
@@ -67,21 +54,22 @@ def make(data_class: Type[T],
     return data_class(**values)
 
 
-def _make_inner(field: Field,
-                value: Any,
-                rename: Dict[str, str],
-                prefixed: Dict[str, str],
-                cast: List[str],
-                transform: Dict[str, Callable[[Any], Any]],
-                flattened: Iterable[str]) -> T:
-    return make(
-        data_class=_extract_data_class(field.type),
-        data=value,
-        rename=_extract_nested_dict(field, rename),
-        prefixed=_extract_nested_dict(field, prefixed),
-        cast=_extract_nested_list(field, cast),
-        transform=_extract_nested_dict(field, transform),
-        flattened=_extract_nested_list(field, flattened),
+def _merge_data(data: Union[Dict[str, Any], List[Dict[str, Any]]]) -> Dict[str, Any]:
+    if isinstance(data, list):
+        new_data = {}
+        for single_data in data:
+            new_data.update(single_data)
+        data = new_data
+    return data
+
+
+def _make_inner_config(field: Field, config: Config) -> Config:
+    return Config(
+        rename=_extract_nested_dict(field, config.rename),
+        prefixed=_extract_nested_dict(field, config.prefixed),
+        cast=_extract_nested_list(field, config.cast),
+        transform=_extract_nested_dict(field, config.transform),
+        flattened=_extract_nested_list(field, config.flattened),
     )
 
 
