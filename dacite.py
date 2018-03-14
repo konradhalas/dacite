@@ -24,7 +24,7 @@ def make(data_class: Type[T], data: Union[Dict[str, Any], List[Dict[str, Any]]],
     """
     data = _merge_data(data)
     config = config or Config()
-    values = {}
+    values: Dict[str, Any] = {}
     for field in fields(data_class):
         try:
             if field.name in config.prefixed:
@@ -113,15 +113,15 @@ def _extract_nested_list(field: Field, params: List[str]) -> List[str]:
     return result
 
 
-def _is_optional(t: Type):
+def _is_optional(t: Type) -> bool:
     return _is_union(t) and type(None) in t.__args__
 
 
-def _is_union(t: Type):
+def _is_union(t: Type) -> bool:
     return type(t) == type(Union)
 
 
-def _is_generic(t: Type):
+def _is_generic(t: Type) -> bool:
     return type(t) == type(Generic)
 
 
@@ -135,14 +135,14 @@ def _is_instance(t: Type, value: Any) -> bool:
         return isinstance(value, t)
 
 
-def _is_data_class(t: Type):
+def _is_data_class(t: Type) -> bool:
     if _is_union(t):
         return _has_inner_data_class(t)
     else:
         return is_dataclass(t)
 
 
-def _is_collection_of_data_classes(t: Type):
+def _is_collection_of_data_classes(t: Type) -> bool:
     return not _is_union(t) and issubclass(t, Collection) and _has_inner_data_class(t)
 
 
@@ -154,5 +154,5 @@ def _extract_data_class(t: Type) -> Any:
     return t
 
 
-def _has_inner_data_class(t: Type):
+def _has_inner_data_class(t: Type) -> bool:
     return hasattr(t, '__args__') and any(is_dataclass(t) for t in t.__args__)
