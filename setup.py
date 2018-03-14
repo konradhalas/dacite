@@ -2,8 +2,9 @@ from setuptools import setup
 
 setup(
     name='dacite',
-    version='0.0.6',
+    version='0.0.7',
     description='Simple creation of data classes from dictionaries.',
+    long_description=open('README.md').read(),
     author='Konrad Hałas',
     author_email='halas.konrad@gmail.com',
     url='https://github.com/konradhalas/dacite',
@@ -11,6 +12,7 @@ setup(
     classifiers=[
         'Programming Language :: Python :: 3.6',
     ],
+    python_requires='>=3.6',
     keywords='dataclasses',
     py_modules=['dacite'],
     install_requires=['dataclasses'],
