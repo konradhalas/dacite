@@ -1,4 +1,4 @@
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Collection
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Collection, Optional
 
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
 
@@ -14,7 +14,14 @@ class Config:
     flattened: List[str] = dc_field(default_factory=list)
 
 
-def make(data_class: Type[T], data: Union[Dict[str, Any], List[Dict[str, Any]]], config: Config = None) -> T:
+def make(data_class: Type[T], data: Union[Dict[str, Any], List[Dict[str, Any]]], config: Optional[Config] = None) -> T:
+    """Create a data class instance from a dictionary.
+
+    :param data_class: a data class type
+    :param data: a dictionary of a input data
+    :param config: a configuration of the creation process
+    :return: an instance of a data class
+    """
     data = _merge_data(data)
     config = config or Config()
     values = {}
@@ -30,11 +37,11 @@ def make(data_class: Type[T], data: Union[Dict[str, Any], List[Dict[str, Any]]],
             if field.name in config.transform:
                 value = config.transform[field.name](value)
             if value is not None and _is_collection_of_data_classes(field.type):
-                value = [make(
+                value = field.type.__extra__(make(
                     data_class=_extract_data_class(field.type),
                     data=item,
                     config=_make_inner_config(field, config),
-                ) for item in value]
+                ) for item in value)
             elif value is not None and _is_data_class(field.type):
                 value = make(
                     data_class=_extract_data_class(field.type),
@@ -144,8 +151,7 @@ def _extract_data_class(t: Type) -> Any:
         for inner_type in t.__args__:
             if is_dataclass(inner_type):
                 return inner_type
-    else:
-        return t
+    return t
 
 
 def _has_inner_data_class(t: Type):

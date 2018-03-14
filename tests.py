@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Set
 
 import pytest
 from dataclasses import dataclass
@@ -6,206 +6,375 @@ from dataclasses import dataclass
 from dacite import make, Config
 
 
-@dataclass
-class A:
-    s: str
-    i: int
-    f: float = 0.0
-
-
-@dataclass
-class B:
-    t: str
-    a: A
-
-
-@dataclass
-class C:
-    b: B
-
-
-@dataclass
-class D:
-    s: Optional[str]
-    i: int
-
-
-@dataclass
-class E:
-    l: List[int]
-
-
-@dataclass
-class F:
-    a: Optional[A]
-
-
-@dataclass
-class G:
-    a_list: List[A]
-
-
 def test_make_from_correct_data():
-    result = make(A, {'s': 'test', 'i': 1, 'f': 1.0})
+    @dataclass
+    class X:
+        s: str
+        i: int
+        f: float
 
-    assert isinstance(result, A)
-    assert result == A(s='test', i=1, f=1.0)
+    result = make(X, {'s': 'test', 'i': 1, 'f': 1.0})
+
+    assert isinstance(result, X)
+    assert result == X(s='test', i=1, f=1.0)
 
 
 def test_make_with_default_value():
-    result = make(A, {'s': 'test', 'i': 1})
+    @dataclass
+    class X:
+        s: str
+        i: int = 0
 
-    assert result == A(s='test', i=1, f=0.0)
+    result = make(X, {'s': 'test'})
+
+    assert result == X(s='test', i=0)
 
 
 def test_make_from_incorrect_data():
+    @dataclass
+    class X:
+        s: str
+        i: int
+
     with pytest.raises(TypeError):
-        make(A, {'s': 'test', 'i': 'wrong'})
+        make(X, {'s': 'test', 'i': 'wrong'})
 
 
 def test_make_without_required_value():
+    @dataclass
+    class X:
+        s: str
+        i: int
+
     with pytest.raises(ValueError, message='missing value for field i'):
-        make(A, {'s': 'test'})
+        make(X, {'s': 'test'})
 
 
 def test_make_with_nested_data_class():
-    result = make(B, {'t': 'test', 'a': {'s': 'test', 'i': 1}})
+    @dataclass
+    class X:
+        i: int
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    result = make(Y, {'s': 'test', 'x': {'i': 1}})
+
+    assert result == Y(s='test', x=X(i=1))
 
 
 def test_make_with_additional_values():
-    result = make(A, {'s': 'test', 'i': 1, 'x': 'extra'})
+    @dataclass
+    class X:
+        i: int
 
-    assert result == A(s='test', i=1)
+    result = make(X, {'i': 1, 's': 'extra'})
+
+    assert result == X(i=1)
 
 
 def test_make_with_rename():
-    result = make(A, {'s': 'test', 'j': 1}, Config(rename={'i': 'j'}))
+    @dataclass
+    class X:
+        s: str
+        i: int
 
-    assert result == A(s='test', i=1)
+    result = make(X, {'s': 'test', 'j': 1}, Config(rename={'i': 'j'}))
+
+    assert result == X(s='test', i=1)
 
 
 def test_make_with_nested_rename():
-    result = make(B, {'t': 'test', 'a': {'s': 'test', 'j': 1}}, Config(rename={'a.i': 'j'}))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    result = make(Y, {'s': 'test', 'x': {'j': 1}}, Config(rename={'x.i': 'j'}))
+
+    assert result == Y(s='test', x=X(i=1))
 
 
 def test_make_with_prefix():
-    result = make(B, {'t': 'test', 'a_s': 'test', 'a_i': 1}, Config(prefixed={'a': 'a_'}))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    result = make(Y, {'s': 'test', 'x_i': 1}, Config(prefixed={'x': 'x_'}))
+
+    assert result == Y(s='test', x=X(i=1))
 
 
 def test_make_with_nested_prefix():
-    result = make(C, {'b': {'t': 'test', 'a_s': 'test', 'a_i': 1}}, Config(prefixed={'b.a': 'a_'}))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == C(b=B(t='test', a=A(s='test', i=1)))
+    @dataclass
+    class Y:
+        x: X
+
+    @dataclass
+    class Z:
+        y: Y
+
+    result = make(Z, {'y': {'x_i': 1}}, Config(prefixed={'y.x': 'x_'}))
+
+    assert result == Z(y=Y(x=X(i=1)))
 
 
 def test_make_with_prefix_and_rename():
-    result = make(B, {'t': 'test', 'a_s': 'test', 'a_j': 1}, Config(prefixed={'a': 'a_'}, rename={'a.i': 'j'}))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        x: X
+
+    result = make(Y, {'x_j': 1}, Config(prefixed={'x': 'x_'}, rename={'x.i': 'j'}))
+
+    assert result == Y(x=X(i=1))
 
 
 def test_make_with_optional_value():
-    result = make(D, {'s': 'test', 'i': 1})
+    @dataclass
+    class X:
+        s: Optional[str]
+        i: int
 
-    assert result == D(s='test', i=1)
+    result = make(X, {'s': 'test', 'i': 1})
+
+    assert result == X(s='test', i=1)
 
 
 def test_make_with_missing_optional_value():
-    result = make(D, {'i': 1})
+    @dataclass
+    class X:
+        s: Optional[str]
+        i: int
 
-    assert result == D(s=None, i=1)
+    result = make(X, {'i': 1})
+
+    assert result == X(s=None, i=1)
 
 
 def test_make_with_none_for_optional_value():
-    result = make(D, {'s': None, 'i': 1})
+    @dataclass
+    class X:
+        s: Optional[str]
+        i: int
 
-    assert result == D(s=None, i=1)
+    result = make(X, {'s': None, 'i': 1})
+
+    assert result == X(s=None, i=1)
 
 
 def test_make_with_wrong_type_of_optional_value():
+    @dataclass
+    class X:
+        s: Optional[str]
+        i: int
+
     with pytest.raises(TypeError):
-        make(D, {'s': 1, 'i': 1})
-
-
-def test_make_with_generic():
-    result = make(E, {'l': [1]})
-
-    assert result == E(l=[1])
+        make(X, {'s': 1, 'i': 1})
 
 
 def test_make_with_optional_nested_data_class():
-    result = make(F, {'a': {'s': 'test', 'i': 1}})
+    @dataclass
+    class X:
+        i: int
 
-    assert result == F(a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        x: Optional[X]
+
+    result = make(Y, {'x': {'i': 1}})
+
+    assert result == Y(x=X(i=1))
 
 
 def test_make_with_null_for_optional_nested_data_class():
-    result = make(F, {'a': None})
+    @dataclass
+    class X:
+        i: int
 
-    assert result == F(a=None)
+    @dataclass
+    class Y:
+        x: Optional[X]
+
+    result = make(Y, {'x': None})
+
+    assert result == Y(x=None)
 
 
 def test_make_with_missing_optional_nested_data_class():
-    result = make(F, {})
+    @dataclass
+    class X:
+        i: int
 
-    assert result == F(a=None)
+    @dataclass
+    class Y:
+        x: Optional[X]
+
+    result = make(Y, {})
+
+    assert result == Y(x=None)
+
+
+def test_make_with_generic():
+    @dataclass
+    class X:
+        l: List[int]
+
+    result = make(X, {'l': [1]})
+
+    assert result == X(l=[1])
 
 
 def test_make_with_cast():
-    result = make(A, {'s': 'test', 'i': '1'}, Config(cast=['i']))
+    @dataclass
+    class X:
+        i: int
+        s: str
 
-    assert result == A(s='test', i=1)
+    result = make(X, {'s': 'test', 'i': '1'}, Config(cast=['i']))
+
+    assert result == X(s='test', i=1)
 
 
 def test_make_with_nested_cast():
-    result = make(B, {'t': 'test', 'a': {'s': 'test', 'i': '1'}}, Config(cast=['a.i']))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        x: X
+
+    result = make(Y, {'x': {'i': '1'}}, Config(cast=['x.i']))
+
+    assert result == Y(x=X(i=1))
 
 
 def test_make_with_transform():
-    result = make(A, {'s': 'TEST', 'i': 1}, Config(transform={'s': str.lower}))
+    @dataclass
+    class X:
+        s: str
 
-    assert result == A(s='test', i=1)
+    result = make(X, {'s': 'TEST'}, Config(transform={'s': str.lower}))
+
+    assert result == X(s='test')
 
 
 def test_make_with_nested_transform():
-    result = make(B, {'t': 'test', 'a': {'s': 'TEST', 'i': 1}}, Config(transform={'a.s': str.lower}))
+    @dataclass
+    class X:
+        s: str
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        x: X
+
+    result = make(Y, {'x': {'s': 'TEST'}}, Config(transform={'x.s': str.lower}))
+
+    assert result == Y(x=X(s='test'))
 
 
 def test_make_with_flat():
-    result = make(B, {'t': 'test', 's': 'test', 'i': 1}, Config(flattened=['a']))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    result = make(Y, {'s': 'test', 'i': 1}, Config(flattened=['x']))
+
+    assert result == Y(s='test', x=X(i=1))
 
 
 def test_make_with_nested_flat():
-    result = make(C, {'b': {'t': 'test', 's': 'test', 'i': 1}}, Config(flattened=['b.a']))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == C(b=B(t='test', a=A(s='test', i=1)))
+    @dataclass
+    class Y:
+        x: X
+
+    @dataclass
+    class Z:
+        y: Y
+
+    result = make(Z, {'y': {'i': 1}}, Config(flattened=['y.x']))
+
+    assert result == Z(y=Y(x=X(i=1)))
 
 
 def test_make_with_flat_and_rename():
-    result = make(B, {'t': 'test', 's': 'test', 'j': 1}, Config(flattened=['a'], rename={'a.i': 'j'}))
+    @dataclass
+    class X:
+        i: int
 
-    assert result == B(t='test', a=A(s='test', i=1))
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    result = make(Y, {'s': 'test', 'j': 1}, Config(flattened=['x'], rename={'x.i': 'j'}))
+
+    assert result == Y(s='test', x=X(i=1))
 
 
 def test_make_from_multiple_dicts():
-    result = make(A, [{'s': 'test'}, {'i': 1, 'f': 1.0}])
+    @dataclass
+    class X:
+        s: str
+        i: int
+        f: float
 
-    assert result == A(s='test', i=1, f=1.0)
+    result = make(X, [{'s': 'test'}, {'i': 1, 'f': 1.0}])
+
+    assert result == X(s='test', i=1, f=1.0)
 
 
 def test_make_with_list_of_dataclasses():
-    result = make(G, {'a_list': [{'s': 'test_1', 'i': 1}, {'s': 'test_2', 'i': 2}]})
+    @dataclass
+    class X:
+        i: int
 
-    assert result == G(a_list=[A(s='test_1', i=1), A(s='test_2', i=2)])
+    @dataclass
+    class Y:
+        x_list: List[X]
+
+    result = make(Y, {'x_list': [{'i': 1}, {'i': 2}]})
+
+    assert result == Y(x_list=[X(i=1), X(i=2)])
+
+
+def test_make_with_set_of_dataclasses():
+    @dataclass(frozen=True)
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        x_set: Set[X]
+
+    result = make(Y, {'x_set': [{'i': 1}, {'i': 2}]})
+
+    assert result == Y(x_set={X(i=1), X(i=2)})
