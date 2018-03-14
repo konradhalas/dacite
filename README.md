@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/pypi/v/dacite.svg)](https://pypi.python.org/pypi/dacite/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dacite.svg)](https://pypi.python.org/pypi/dacite/)
 
-This module simplify creation of data classes ([PEP 557](pep-557)) from
+This module simplify creation of data classes ([PEP 557][pep-557]) from
 dictionaries.
 
 ## Installation
@@ -23,7 +23,7 @@ Minimum Python version supported by `dacite` is 3.6.
 Data classes will be available in Python 3.7 as a part of the standard
 library, but you can use `dataclasses` module now - it's available as
 an external package from PyPI. It will be installed automatically
-as a `dacite` requirement.
+as a `dacite` dependence.
 
 ## Quick start
 
@@ -57,7 +57,7 @@ Dacite supports following features:
 - nested structures
 - types checking
 - optional fields (i.e. `typing.Optional`)
-- fields values casting and transformation
+- values casting and transformation
 - remapping of fields names
 
 ## Motivation
@@ -89,18 +89,19 @@ takes 3 parameters:
 
 - `data_class` - data class type
 - `data` - dictionary of input data
-- `config` - configuration of the creation process, instance of
+- `config` (optional)- configuration of the creation process, instance of
 `dacite.Config` class
 
 Configuration is a (data) class with following fields:
 
 - `rename`
+- `flattened`
 - `prefixed`
 - `cast`
 - `transform`
-- `flattened`
 
-The examples below show usage of all `Config` parameters.
+The examples below show all features of `make` function and usage of all
+`Config` parameters.
 
 ### Nested structures
 
@@ -131,6 +132,54 @@ result = make(data_class=B, data=data)
 assert result == B(a=A(x='test', y=1))
 ```
 
+### Optional fields
+
+Whenever your data class has a `Optional` field and you will not provide
+input data for this field, it will take the `None` value.
+
+```python
+from typing import Optional
+
+@dataclass
+class A:
+    x: str
+    y: Optional[int]
+
+
+data = {
+    'x': 'test',
+}
+
+result = make(data_class=A, data=data)
+
+assert result == A(x='test', y=None)
+```
+
+### Multiple inputs
+
+If you have multiple input dicts, you can pass a list of dictionaries
+instead of a single one as a value of `data` argument.
+
+```python
+@dataclass
+class A:
+    x: str
+    y: int
+
+
+data_1 = {
+    'x': 'test',
+}
+
+data_2 = {
+    'y': 1,
+}
+
+result = make(data_class=A, data=[data_1, data_2])
+
+assert result == A(x='test', y=1)
+```
+
 ### Rename
 
 If you want to change the name of your input field, you can use
@@ -149,7 +198,7 @@ data = {
 
 result = make(data_class=A, data=data, config=Config(rename={'x': 'y'}))
 
-assert result.x == 'test'
+assert result == A(x='test')
 
 ```
 ### Flattened
@@ -255,54 +304,5 @@ result = make(data_class=A, data=data, config=Config(transform={'x': str.lower})
 
 assert result == A(x='test')
 ```
-
-### Optional fields
-
-Whenever your data class has a `Optional` field and you will not provide
-input data for this field, it will take the `None` value.
-
-```python
-from typing import Optional
-
-@dataclass
-class A:
-    x: str
-    y: Optional[int]
-
-
-data = {
-    'x': 'test',
-}
-
-result = make(data_class=A, data=data)
-
-assert result == A(x='test', y=None)
-```
-
-### Multiple inputs
-
-If you have multiple input dicts, you can pass a list of dictionaries
-instead of a single one as a value of `data` argument.
-
-```python
-@dataclass
-class A:
-    x: str
-    y: int
-
-
-data_1 = {
-    'x': 'test',
-}
-
-data_2 = {
-    'y': 1,
-}
-
-result = make(data_class=A, data=[data_1, data_2])
-
-assert result == A(x='test', y=1)
-```
-
 
 [pep-557]: https://www.python.org/dev/peps/pep-0557/
