@@ -2,7 +2,23 @@ from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Col
 
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
 
-T = TypeVar('T')
+
+class DaciteError(Exception):
+    pass
+
+
+class WrongTypeError(DaciteError):
+    def __init__(self, field: Field, value: Any):
+        super().__init__(f'wrong type for field "{field.name}" - should be "{_get_type_name(field.type)}" '
+                         f'instead of "{_get_type_name(type(value))}"')
+        self.field = field
+        self.value = value
+
+
+class MissingValueError(DaciteError):
+    def __init__(self, field: Field):
+        super().__init__(f'missing value for field {field.name}')
+        self.field = field
 
 
 @dataclass
@@ -12,6 +28,9 @@ class Config:
     cast: List[str] = dc_field(default_factory=list)
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
+
+
+T = TypeVar('T')
 
 
 def make(data_class: Type[T], data: Union[Dict[str, Any], List[Dict[str, Any]]], config: Optional[Config] = None) -> T:
@@ -51,13 +70,13 @@ def make(data_class: Type[T], data: Union[Dict[str, Any], List[Dict[str, Any]]],
             elif field.name in config.cast:
                 value = field.type(value)
             elif not _is_instance(field.type, value):
-                raise TypeError(f'wrong type for field {field.name} - should be {field.type} instead of {type(value)}')
+                raise WrongTypeError(field, value)
             values[field.name] = value
         except KeyError:
             if _is_optional(field.type):
                 values[field.name] = None
             elif field.default == MISSING:
-                raise ValueError(f'missing value for field {field.name}')
+                raise MissingValueError(field)
     return data_class(**values)
 
 
@@ -156,3 +175,7 @@ def _extract_data_class(t: Type) -> Any:
 
 def _has_inner_data_class(t: Type) -> bool:
     return hasattr(t, '__args__') and any(is_dataclass(t) for t in t.__args__)
+
+
+def _get_type_name(t: Type) -> str:
+    return t.__name__ if hasattr(t, '__name__') else str(t)

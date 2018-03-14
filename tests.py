@@ -3,7 +3,7 @@ from typing import Optional, List, Set
 import pytest
 from dataclasses import dataclass
 
-from dacite import make, Config
+from dacite import make, Config, WrongTypeError, MissingValueError
 
 
 def test_make_from_correct_data():
@@ -36,8 +36,11 @@ def test_make_from_incorrect_data():
         s: str
         i: int
 
-    with pytest.raises(TypeError):
+    with pytest.raises(WrongTypeError) as exception_info:
         make(X, {'s': 'test', 'i': 'wrong'})
+
+    assert exception_info.value.field.name == 'i'
+    assert exception_info.value.value == 'wrong'
 
 
 def test_make_without_required_value():
@@ -46,8 +49,10 @@ def test_make_without_required_value():
         s: str
         i: int
 
-    with pytest.raises(ValueError, message='missing value for field i'):
+    with pytest.raises(MissingValueError) as exception_info:
         make(X, {'s': 'test'})
+
+    assert exception_info.value.field.name == 'i'
 
 
 def test_make_with_nested_data_class():
@@ -187,8 +192,11 @@ def test_make_with_wrong_type_of_optional_value():
         s: Optional[str]
         i: int
 
-    with pytest.raises(TypeError):
+    with pytest.raises(WrongTypeError) as exception_info:
         make(X, {'s': 1, 'i': 1})
+
+    assert exception_info.value.field.name == 's'
+    assert exception_info.value.value == 1
 
 
 def test_make_with_optional_nested_data_class():
