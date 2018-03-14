@@ -1,6 +1,9 @@
 language: python
 python:
 - 3.6
+addons:
+  apt_packages:
+    - pandoc
 install:
 - pip install pipenv
 - pipenv install --dev
