@@ -241,6 +241,18 @@ def test_make_with_missing_optional_nested_data_class():
     assert result == Y(x=None)
 
 
+def test_make_with_none_for_non_optional_field():
+    @dataclass
+    class X:
+        s: str
+
+    with pytest.raises(WrongTypeError) as exception_info:
+        make(X, {'s': None})
+
+    assert exception_info.value.field.name == 's'
+    assert exception_info.value.value is None
+
+
 def test_make_with_generic():
     @dataclass
     class X:
@@ -386,3 +398,17 @@ def test_make_with_set_of_dataclasses():
     result = make(Y, {'x_set': [{'i': 1}, {'i': 2}]})
 
     assert result == Y(x_set={X(i=1), X(i=2)})
+
+
+def test_make_with_optional_list_of_dataclasses():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        x_list: Optional[List[X]]
+
+    result = make(Y, {'x_list': [{'i': 1}, {'i': 2}]})
+
+    assert result == Y(x_list=[X(i=1), X(i=2)])

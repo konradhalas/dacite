@@ -155,6 +155,41 @@ result = make(data_class=A, data=data)
 assert result == A(x='test', y=None)
 ```
 
+### Collections
+
+Dacite supports fields defined as collection. It works for both - basic
+types and data classes.
+
+```python
+@dataclass
+class A:
+    x: str
+    y: int
+
+
+@dataclass
+class B:
+    a_list: List[A]
+
+
+data = {
+    'a_list': [
+        {
+            'x': 'test1',
+            'y': 1,
+        },
+        {
+            'x': 'test2',
+            'y': 2,
+        }
+    ],
+}
+
+result = make(data_class=B, data=data)
+
+assert result == B(a_list=[A(x='test1', y=1), A(x='test2', y=2)])
+```
+
 ### Multiple inputs
 
 If you have multiple input dicts, you can pass a list of dictionaries
