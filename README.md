@@ -55,8 +55,9 @@ assert user == User(name='john', age=30, is_active=True)
 Dacite supports following features:
 
 - nested structures
-- types checking
+- (basic) types checking
 - optional fields (i.e. `typing.Optional`)
+- collections
 - values casting and transformation
 - remapping of fields names
 
@@ -73,10 +74,10 @@ type with a list of given fields in a declarative manner. Data classes
 support type hints by design.
 
 However, even if you are using data classes, you have to create their
-instances. In many such cases, your input is a dictionary - it can be
-a payload from a HTTP request or a raw data from a database. If you want
-to convert those dictionaries into data classes, `dacite` is your best
-friend.
+instances somehow. In many such cases, your input is a dictionary - it
+can be a payload from a HTTP request or a raw data from a database. If
+you want to convert those dictionaries into data classes, `dacite` is
+your best friend.
 
 This library was originally created to simplify creation of type hinted
 data transfer objects (DTO) which can cross the boundaries in the
@@ -157,7 +158,7 @@ assert result == A(x='test', y=None)
 
 ### Collections
 
-Dacite supports fields defined as collection. It works for both - basic
+Dacite supports fields defined as collections. It works for both - basic
 types and data classes.
 
 ```python
@@ -340,4 +341,9 @@ result = make(data_class=A, data=data, config=Config(transform={'x': str.lower})
 assert result == A(x='test')
 ```
 
+## Authors
+
+Created by [Konrad Hałas][halas-homepage].
+
 [pep-557]: https://www.python.org/dev/peps/pep-0557/
+[halas-homepage]: https://konradhalas.pl
