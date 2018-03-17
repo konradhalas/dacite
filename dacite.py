@@ -43,7 +43,7 @@ T = TypeVar('T')
 Data = Dict[str, Any]
 
 
-def from_dict(data_class: Type[T], data: Union[Data, List[Data]], config: Optional[Config] = None) -> T:
+def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) -> T:
     """Create a data class instance from a dictionary.
 
     :param data_class: a data class type
@@ -51,7 +51,6 @@ def from_dict(data_class: Type[T], data: Union[Data, List[Data]], config: Option
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
-    data = _merge_data(data)
     config = config or Config()
     values: Data = {}
     _validate_config(data_class, data, config)
@@ -130,15 +129,6 @@ def _get_value_for_field(field: Field, data: Data, config: Config) -> Any:
             raise MissingValueError(field)
         else:
             return field.default
-
-
-def _merge_data(data: Union[Dict[str, Any], List[Dict[str, Any]]]) -> Dict[str, Any]:
-    if isinstance(data, list):
-        new_data = {}
-        for single_data in data:
-            new_data.update(single_data)
-        data = new_data
-    return data
 
 
 def _make_inner_config(field: Field, config: Config) -> Config:

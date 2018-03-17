@@ -191,31 +191,6 @@ result = from_dict(data_class=B, data=data)
 assert result == B(a_list=[A(x='test1', y=1), A(x='test2', y=2)])
 ```
 
-### Multiple inputs
-
-If you have multiple input dicts, you can pass a list of dictionaries
-instead of a single one as a value of `data` argument.
-
-```python
-@dataclass
-class A:
-    x: str
-    y: int
-
-
-data_1 = {
-    'x': 'test',
-}
-
-data_2 = {
-    'y': 1,
-}
-
-result = from_dict(data_class=A, data=[data_1, data_2])
-
-assert result == A(x='test', y=1)
-```
-
 ### Rename
 
 If you want to change the name of your input field, you can use

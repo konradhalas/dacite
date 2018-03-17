@@ -360,18 +360,6 @@ def test_from_dict_with_flat_and_rename():
     assert result == Y(s='test', x=X(i=1))
 
 
-def test_from_dict_from_multiple_dicts():
-    @dataclass
-    class X:
-        s: str
-        i: int
-        f: float
-
-    result = from_dict(X, [{'s': 'test'}, {'i': 1, 'f': 1.0}])
-
-    assert result == X(s='test', i=1, f=1.0)
-
-
 def test_from_dict_with_list_of_dataclasses():
     @dataclass
     class X:
