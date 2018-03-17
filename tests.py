@@ -80,18 +80,18 @@ def test_from_dict_with_additional_values():
     assert result == X(i=1)
 
 
-def test_from_dict_with_rename():
+def test_from_dict_with_remap():
     @dataclass
     class X:
         s: str
         i: int
 
-    result = from_dict(X, {'s': 'test', 'j': 1}, Config(rename={'i': 'j'}))
+    result = from_dict(X, {'s': 'test', 'j': 1}, Config(remap={'i': 'j'}))
 
     assert result == X(s='test', i=1)
 
 
-def test_from_dict_with_nested_rename():
+def test_from_dict_with_nested_remap():
     @dataclass
     class X:
         i: int
@@ -101,7 +101,7 @@ def test_from_dict_with_nested_rename():
         s: str
         x: X
 
-    result = from_dict(Y, {'s': 'test', 'x': {'j': 1}}, Config(rename={'x.i': 'j'}))
+    result = from_dict(Y, {'s': 'test', 'x': {'j': 1}}, Config(remap={'x.i': 'j'}))
 
     assert result == Y(s='test', x=X(i=1))
 
@@ -139,7 +139,7 @@ def test_from_dict_with_nested_prefix():
     assert result == Z(y=Y(x=X(i=1)))
 
 
-def test_from_dict_with_prefix_and_rename():
+def test_from_dict_with_prefix_and_remap():
     @dataclass
     class X:
         i: int
@@ -148,7 +148,7 @@ def test_from_dict_with_prefix_and_rename():
     class Y:
         x: X
 
-    result = from_dict(Y, {'x_j': 1}, Config(prefixed={'x': 'x_'}, rename={'x.i': 'j'}))
+    result = from_dict(Y, {'x_j': 1}, Config(prefixed={'x': 'x_'}, remap={'x.i': 'j'}))
 
     assert result == Y(x=X(i=1))
 
@@ -345,7 +345,7 @@ def test_from_dict_with_nested_flat():
     assert result == Z(y=Y(x=X(i=1)))
 
 
-def test_from_dict_with_flat_and_rename():
+def test_from_dict_with_flat_and_remap():
     @dataclass
     class X:
         i: int
@@ -355,7 +355,7 @@ def test_from_dict_with_flat_and_rename():
         s: str
         x: X
 
-    result = from_dict(Y, {'s': 'test', 'j': 1}, Config(flattened=['x'], rename={'x.i': 'j'}))
+    result = from_dict(Y, {'s': 'test', 'j': 1}, Config(flattened=['x'], remap={'x.i': 'j'}))
 
     assert result == Y(s='test', x=X(i=1))
 
@@ -402,27 +402,27 @@ def test_from_dict_with_optional_list_of_dataclasses():
     assert result == Y(x_list=[X(i=1), X(i=2)])
 
 
-def test_from_dict_with_wrong_filed_name_in_config_rename():
+def test_from_dict_with_wrong_filed_name_in_config_remap():
     @dataclass
     class X:
         i: int
 
     with pytest.raises(InvalidConfigurationError) as exception_info:
-        from_dict(X, {'i': 1}, Config(rename={'s': 'z'}))
+        from_dict(X, {'i': 1}, Config(remap={'s': 'z'}))
 
-    assert exception_info.value.parameter == 'rename'
+    assert exception_info.value.parameter == 'remap'
     assert exception_info.value.value == 's'
 
 
-def test_from_dict_with_wrong_data_key_name_in_config_rename():
+def test_from_dict_with_wrong_data_key_name_in_config_remap():
     @dataclass
     class X:
         i: int
 
     with pytest.raises(InvalidConfigurationError) as exception_info:
-        from_dict(X, {'j': 1}, Config(rename={'i': 'k'}))
+        from_dict(X, {'j': 1}, Config(remap={'i': 'k'}))
 
-    assert exception_info.value.parameter == 'rename'
+    assert exception_info.value.parameter == 'remap'
     assert exception_info.value.value == 'k'
 
 

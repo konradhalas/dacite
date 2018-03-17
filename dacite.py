@@ -32,7 +32,7 @@ class InvalidConfigurationError(DaciteError):
 
 @dataclass
 class Config:
-    rename: Dict[str, str] = dc_field(default_factory=dict)
+    remap: Dict[str, str] = dc_field(default_factory=dict)
     prefixed: Dict[str, str] = dc_field(default_factory=dict)
     cast: List[str] = dc_field(default_factory=list)
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
@@ -80,8 +80,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 
 
 def _validate_config(data_class: Type[T], data: Data, config: Config):
-    _validate_config_field_name(data_class, config, 'rename')
-    _validate_config_data_key(data, config, 'rename')
+    _validate_config_field_name(data_class, config, 'remap')
+    _validate_config_data_key(data, config, 'remap')
     _validate_config_field_name(data_class, config, 'prefixed')
     _validate_config_data_key(data, config, 'prefixed', lambda v, c: any(n.startswith(v) for n in c))
     _validate_config_field_name(data_class, config, 'cast')
@@ -118,9 +118,9 @@ def _get_value_for_field(field: Field, data: Data, config: Config) -> Any:
         if field.name in config.prefixed:
             return _extract_nested_dict_for_prefix(config.prefixed[field.name], data)
         elif field.name in config.flattened:
-            return _extract_flattened_fields(field, data, config.rename)
+            return _extract_flattened_fields(field, data, config.remap)
         else:
-            key_name = config.rename.get(field.name, field.name)
+            key_name = config.remap.get(field.name, field.name)
             return data[key_name]
     except KeyError:
         if _is_optional(field.type):
@@ -133,7 +133,7 @@ def _get_value_for_field(field: Field, data: Data, config: Config) -> Any:
 
 def _make_inner_config(field: Field, config: Config) -> Config:
     return Config(
-        rename=_extract_nested_dict(field, config.rename),
+        remap=_extract_nested_dict(field, config.remap),
         prefixed=_extract_nested_dict(field, config.prefixed),
         cast=_extract_nested_list(field, config.cast),
         transform=_extract_nested_dict(field, config.transform),
@@ -141,10 +141,10 @@ def _make_inner_config(field: Field, config: Config) -> Config:
     )
 
 
-def _extract_flattened_fields(field: Field, data: Dict[str, Any], rename: Dict[str, str]):
+def _extract_flattened_fields(field: Field, data: Dict[str, Any], remap: Dict[str, str]):
     result = {}
     for inner_field in fields(_extract_data_class(field.type)):
-        field_name = rename.get(field.name + '.' + inner_field.name, inner_field.name)
+        field_name = remap.get(field.name + '.' + inner_field.name, inner_field.name)
         if field_name in data:
             result[field_name] = data[field_name]
     return result

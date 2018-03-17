@@ -95,7 +95,7 @@ takes 3 parameters:
 
 Configuration is a (data) class with following fields:
 
-- `rename`
+- `remap`
 - `flattened`
 - `prefixed`
 - `cast`
@@ -191,11 +191,12 @@ result = from_dict(data_class=B, data=data)
 assert result == B(a_list=[A(x='test1', y=1), A(x='test2', y=2)])
 ```
 
-### Rename
+### Remapping
 
-If you want to change the name of your input field, you can use
-`Config.rename` argument. You have to pass dictionary with a following
-mapping: `{'data_class_field': 'input_field'}`
+If your input data key does not match with a data class field name, you
+can use `Config.remap` argument to handle this case. You have to pass
+dictionary with a following mapping:
+`{'data_class_field': 'input_field'}`
 
 ```python
 @dataclass
@@ -207,7 +208,7 @@ data = {
     'y': 'test',
 }
 
-result = from_dict(data_class=A, data=data, config=Config(rename={'x': 'y'}))
+result = from_dict(data_class=A, data=data, config=Config(remap={'x': 'y'}))
 
 assert result == A(x='test')
 
@@ -321,8 +322,8 @@ assert result == A(x='test')
 Whenever something goes wrong, `from_dict` will raise adequate exception.
 There are a few of them:
 
-- `WrongTypeError` - raised when a type of input value does not match
-with a type of data class field
+- `WrongTypeError` - raised when a type of a input value does not match
+with a type of a data class field
 - `MissingValueError` - raised when you don't provide a value for a
 required field
 - `InvalidConfigurationError` - raised when you provide a invalid value
