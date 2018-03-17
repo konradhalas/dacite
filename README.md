@@ -29,7 +29,7 @@ as a `dacite` dependence.
 
 ```python
 from dataclasses import dataclass
-from dacite import make
+from dacite import from_dict
 
 
 @dataclass
@@ -45,7 +45,7 @@ data = {
     'is_active': True,
 }
 
-user = make(data_class=User, data=data)
+user = from_dict(data_class=User, data=data)
 
 assert user == User(name='john', age=30, is_active=True)
 ```
@@ -85,7 +85,7 @@ application architecture.
 
 ## Usage
 
-Dacite is based on a single function - `dacite.make`. This function
+Dacite is based on a single function - `dacite.from_dict`. This function
 takes 3 parameters:
 
 - `data_class` - data class type
@@ -101,7 +101,7 @@ Configuration is a (data) class with following fields:
 - `cast`
 - `transform`
 
-The examples below show all features of `make` function and usage of all
+The examples below show all features of `from_dict` function and usage of all
 `Config` parameters.
 
 ### Nested structures
@@ -128,7 +128,7 @@ data = {
     }
 }
 
-result = make(data_class=B, data=data)
+result = from_dict(data_class=B, data=data)
 
 assert result == B(a=A(x='test', y=1))
 ```
@@ -151,7 +151,7 @@ data = {
     'x': 'test',
 }
 
-result = make(data_class=A, data=data)
+result = from_dict(data_class=A, data=data)
 
 assert result == A(x='test', y=None)
 ```
@@ -186,7 +186,7 @@ data = {
     ],
 }
 
-result = make(data_class=B, data=data)
+result = from_dict(data_class=B, data=data)
 
 assert result == B(a_list=[A(x='test1', y=1), A(x='test2', y=2)])
 ```
@@ -211,7 +211,7 @@ data_2 = {
     'y': 1,
 }
 
-result = make(data_class=A, data=[data_1, data_2])
+result = from_dict(data_class=A, data=[data_1, data_2])
 
 assert result == A(x='test', y=1)
 ```
@@ -232,7 +232,7 @@ data = {
     'y': 'test',
 }
 
-result = make(data_class=A, data=data, config=Config(rename={'x': 'y'}))
+result = from_dict(data_class=A, data=data, config=Config(rename={'x': 'y'}))
 
 assert result == A(x='test')
 
@@ -262,7 +262,7 @@ data = {
     'z': 2.0,
 }
 
-result = make(data_class=B, data=data, config=Config(flattened=['a']))
+result = from_dict(data_class=B, data=data, config=Config(flattened=['a']))
 
 assert result == B(a=A(x='test', y=1), z=2.0)
 ```
@@ -292,7 +292,7 @@ data = {
     'z': 2.0,
 }
 
-result = make(data_class=B, data=data, config=Config(prefixed={'a': 'a_'}))
+result = from_dict(data_class=B, data=data, config=Config(prefixed={'a': 'a_'}))
 
 assert result == B(a=A(x='test', y=1), z=2.0)
 ```
@@ -314,7 +314,7 @@ data = {
     'x': 1,
 }
 
-result = make(data_class=A, data=data, config=Config(cast=['x']))
+result = from_dict(data_class=A, data=data, config=Config(cast=['x']))
 
 assert result == A(x='1')
 ```
@@ -336,14 +336,14 @@ data = {
     'x': 'TEST',
 }
 
-result = make(data_class=A, data=data, config=Config(transform={'x': str.lower}))
+result = from_dict(data_class=A, data=data, config=Config(transform={'x': str.lower}))
 
 assert result == A(x='test')
 ```
 
 ### Errors
 
-Whenever something goes wrong, `make` will raise adequate exception.
+Whenever something goes wrong, `from_dict` will raise adequate exception.
 There are a few of them:
 
 - `WrongTypeError` - raised when a type of input value does not match

@@ -43,7 +43,7 @@ T = TypeVar('T')
 Data = Dict[str, Any]
 
 
-def make(data_class: Type[T], data: Union[Data, List[Data]], config: Optional[Config] = None) -> T:
+def from_dict(data_class: Type[T], data: Union[Data, List[Data]], config: Optional[Config] = None) -> T:
     """Create a data class instance from a dictionary.
 
     :param data_class: a data class type
@@ -61,13 +61,13 @@ def make(data_class: Type[T], data: Union[Data, List[Data]], config: Optional[Co
             value = config.transform[field.name](value)
         if value is not None and _has_data_class_collection(field.type):
             collection_type = _extract_data_class_collection(field.type)
-            value = collection_type.__extra__(make(
+            value = collection_type.__extra__(from_dict(
                 data_class=_extract_data_class(field.type),
                 data=item,
                 config=_make_inner_config(field, config),
             ) for item in value)
         elif value is not None and _has_data_class(field.type):
-            value = make(
+            value = from_dict(
                 data_class=_extract_data_class(field.type),
                 data=value,
                 config=_make_inner_config(field, config),
