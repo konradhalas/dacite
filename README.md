@@ -90,8 +90,8 @@ takes 3 parameters:
 
 - `data_class` - data class type
 - `data` - dictionary of input data
-- `config` (optional)- configuration of the creation process, instance of
-`dacite.Config` class
+- `config` (optional) - configuration of the creation process, instance
+of `dacite.Config` class
 
 Configuration is a (data) class with following fields:
 
@@ -101,8 +101,8 @@ Configuration is a (data) class with following fields:
 - `cast`
 - `transform`
 
-The examples below show all features of `from_dict` function and usage of all
-`Config` parameters.
+The examples below show all features of `from_dict` function and usage
+of all `Config` parameters.
 
 ### Nested structures
 
@@ -317,10 +317,10 @@ result = from_dict(data_class=A, data=data, config=Config(transform={'x': str.lo
 assert result == A(x='test')
 ```
 
-### Errors
+## Exceptions
 
-Whenever something goes wrong, `from_dict` will raise adequate exception.
-There are a few of them:
+Whenever something goes wrong, `from_dict` will raise adequate
+exception. There are a few of them:
 
 - `WrongTypeError` - raised when a type of a input value does not match
 with a type of a data class field
