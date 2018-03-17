@@ -5,8 +5,8 @@
 [![Version](https://img.shields.io/pypi/v/dacite.svg)](https://pypi.python.org/pypi/dacite/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dacite.svg)](https://pypi.python.org/pypi/dacite/)
 
-This module simplify creation of data classes ([PEP 557][pep-557]) from
-dictionaries.
+This module simplifies creation of data classes ([PEP 557][pep-557])
+from dictionaries.
 
 ## Installation
 
@@ -269,7 +269,7 @@ assert result == B(a=A(x='test', y=1), z=2.0)
 
 ### Prefixed
 
-Sometimes your data are prefixed instead of nested. To handle this case,
+Sometimes your data is prefixed rather than nested. To handle this case,
 you have to use `Config.prefixed` argument, just pass a following
 mapping: `{'data_class_field': 'prefix'}`
 
@@ -340,6 +340,18 @@ result = make(data_class=A, data=data, config=Config(transform={'x': str.lower})
 
 assert result == A(x='test')
 ```
+
+### Errors
+
+Whenever something goes wrong, `make` will raise adequate exception.
+There are a few of them:
+
+- `WrongTypeError` - raised when a type of input value does not match
+with a type of data class field
+- `MissingValueError` - raised when you don't provide a value for a
+required field
+- `InvalidConfigurationError` - raised when you provide a invalid value
+(a field name or a input data key) for a configuration
 
 ## Authors
 

@@ -3,7 +3,7 @@ from typing import Optional, List, Set
 import pytest
 from dataclasses import dataclass
 
-from dacite import make, Config, WrongTypeError, MissingValueError
+from dacite import make, Config, WrongTypeError, MissingValueError, InvalidConfigurationError
 
 
 def test_make_from_correct_data():
@@ -412,3 +412,103 @@ def test_make_with_optional_list_of_dataclasses():
     result = make(Y, {'x_list': [{'i': 1}, {'i': 2}]})
 
     assert result == Y(x_list=[X(i=1), X(i=2)])
+
+
+def test_make_with_wrong_filed_name_in_config_rename():
+    @dataclass
+    class X:
+        i: int
+
+    with pytest.raises(InvalidConfigurationError) as exception_info:
+        make(X, {'i': 1}, Config(rename={'s': 'z'}))
+
+    assert exception_info.value.parameter == 'rename'
+    assert exception_info.value.value == 's'
+
+
+def test_make_with_wrong_data_key_name_in_config_rename():
+    @dataclass
+    class X:
+        i: int
+
+    with pytest.raises(InvalidConfigurationError) as exception_info:
+        make(X, {'j': 1}, Config(rename={'i': 'k'}))
+
+    assert exception_info.value.parameter == 'rename'
+    assert exception_info.value.value == 'k'
+
+
+def test_make_with_wrong_filed_name_in_config_prefixed():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    with pytest.raises(InvalidConfigurationError) as exception_info:
+        make(Y, {'s': 'test', 'x_i': 1}, Config(prefixed={'z': 'x_'}))
+
+    assert exception_info.value.parameter == 'prefixed'
+    assert exception_info.value.value == 'z'
+
+
+def test_make_with_wrong_prefix_in_config_prefixed():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    with pytest.raises(InvalidConfigurationError) as exception_info:
+        make(Y, {'s': 'test', 'x_i': 1}, Config(prefixed={'x': 'z_'}))
+
+    assert exception_info.value.parameter == 'prefixed'
+    assert exception_info.value.value == 'z_'
+
+
+def test_make_with_wrong_filed_name_in_config_cast():
+    @dataclass
+    class X:
+        i: int
+        s: str
+
+    with pytest.raises(InvalidConfigurationError) as exception_info:
+        make(X, {'s': 'test', 'i': '1'}, Config(cast=['j']))
+
+    assert exception_info.value.parameter == 'cast'
+    assert exception_info.value.value == 'j'
+
+
+def test_make_with_wrong_filed_name_in_transform():
+    @dataclass
+    class X:
+        s: str
+
+    with pytest.raises(InvalidConfigurationError) as exception_info:
+        make(X, {'s': 'TEST'}, Config(transform={'z': str.lower}))
+
+    assert exception_info.value.parameter == 'transform'
+    assert exception_info.value.value == 'z'
+
+
+def test_make_with_wrong_filed_name_in_flattened():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: X
+
+    with pytest.raises(InvalidConfigurationError) as exception_info:
+        make(Y, {'s': 'test', 'i': 1}, Config(flattened=['z']))
+
+    assert exception_info.value.parameter == 'flattened'
+    assert exception_info.value.value == 'z'

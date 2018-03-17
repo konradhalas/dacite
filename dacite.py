@@ -1,4 +1,4 @@
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Collection, Optional
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Collection, Optional, Set
 
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
 
@@ -8,7 +8,7 @@ class DaciteError(Exception):
 
 
 class WrongTypeError(DaciteError):
-    def __init__(self, field: Field, value: Any):
+    def __init__(self, field: Field, value: Any) -> None:
         super().__init__(f'wrong type for field "{field.name}" - should be "{_get_type_name(field.type)}" '
                          f'instead of "{_get_type_name(type(value))}"')
         self.field = field
@@ -16,9 +16,18 @@ class WrongTypeError(DaciteError):
 
 
 class MissingValueError(DaciteError):
-    def __init__(self, field: Field):
+    def __init__(self, field: Field) -> None:
         super().__init__(f'missing value for field {field.name}')
         self.field = field
+
+
+class InvalidConfigurationError(DaciteError):
+    def __init__(self, parameter: str, available_choices: Set[str], value: str) -> None:
+        super().__init__(f'invalid value in "{parameter}" configuration: "{value}". '
+                         f'Choices are: {", ".join(available_choices)}.')
+        self.parameter = parameter
+        self.available_choices = available_choices
+        self.value = value
 
 
 @dataclass
@@ -45,6 +54,7 @@ def make(data_class: Type[T], data: Union[Data, List[Data]], config: Optional[Co
     data = _merge_data(data)
     config = config or Config()
     values: Data = {}
+    _validate_config(data_class, data, config)
     for field in fields(data_class):
         value = _get_value_for_field(field, data, config)
         if field.name in config.transform:
@@ -68,6 +78,40 @@ def make(data_class: Type[T], data: Union[Data, List[Data]], config: Optional[Co
             raise WrongTypeError(field, value)
         values[field.name] = value
     return data_class(**values)
+
+
+def _validate_config(data_class: Type[T], data: Data, config: Config):
+    _validate_config_field_name(data_class, config, 'rename')
+    _validate_config_data_key(data, config, 'rename')
+    _validate_config_field_name(data_class, config, 'prefixed')
+    _validate_config_data_key(data, config, 'prefixed', lambda v, c: any(n.startswith(v) for n in c))
+    _validate_config_field_name(data_class, config, 'cast')
+    _validate_config_field_name(data_class, config, 'transform')
+    _validate_config_field_name(data_class, config, 'flattened')
+
+
+def _validate_config_field_name(data_class: Type[T], config: Config, parameter: str) -> None:
+    data_class_fields = {field.name for field in fields(data_class)}
+    for data_class_field in getattr(config, parameter):
+        if '.' not in data_class_field:
+            if data_class_field not in data_class_fields:
+                raise InvalidConfigurationError(
+                    parameter=parameter,
+                    available_choices=data_class_fields,
+                    value=data_class_field,
+                )
+
+
+def _validate_config_data_key(data: Data, config: Config, parameter: str, validator=lambda v, c: v in c) -> None:
+    input_data_keys = set(data.keys())
+    for data_class_field, input_data_field in getattr(config, parameter).items():
+        if '.' not in data_class_field:
+            if not validator(input_data_field, input_data_keys):
+                raise InvalidConfigurationError(
+                    parameter=parameter,
+                    available_choices=input_data_keys,
+                    value=input_data_field,
+                )
 
 
 def _get_value_for_field(field: Field, data: Data, config: Config) -> Any:
