@@ -9,7 +9,7 @@ except(IOError, ImportError):
 
 setup(
     name='dacite',
-    version='0.0.10',
+    version='0.0.13',
     description='Simple creation of data classes from dictionaries.',
     long_description=long_description,
     author='Konrad Hałas',
