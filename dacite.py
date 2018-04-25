@@ -21,6 +21,12 @@ class MissingValueError(DaciteError):
         self.field = field
 
 
+class UnionMatchError(DaciteError):
+    def __init__(self, field: Field) -> None:
+        super().__init__(f'can not match the data to any type of "{field.name}" union: {_get_type_name(field.type)}')
+        self.field = field
+
+
 class InvalidConfigurationError(DaciteError):
     def __init__(self, parameter: str, available_choices: Set[str], value: str) -> None:
         super().__init__(f'invalid value in "{parameter}" configuration: "{value}". '
@@ -58,20 +64,28 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         value = _get_value_for_field(field, data, config)
         if field.name in config.transform:
             value = config.transform[field.name](value)
-        if value is not None and _has_data_class_collection(field.type):
-            collection_type = _extract_data_class_collection(field.type)
-            value = collection_type.__extra__(from_dict(
-                data_class=_extract_data_class(field.type),
-                data=item,
-                config=_make_inner_config(field, config),
-            ) for item in value)
-        elif value is not None and _has_data_class(field.type):
-            value = from_dict(
-                data_class=_extract_data_class(field.type),
-                data=value,
-                config=_make_inner_config(field, config),
-            )
-        elif field.name in config.cast:
+        if value is not None:
+            if _is_union(field.type) and not _is_optional(field.type):
+                value = _inner_from_dict_for_union(
+                    data=value,
+                    field=field,
+                    outer_config=config,
+                )
+            elif _has_data_class_collection(field.type):
+                value = _inner_from_dict_for_collection(
+                    collection=_extract_data_class_collection(field.type),
+                    data=value,
+                    outer_config=config,
+                    field=field,
+                )
+            elif _has_data_class(field.type):
+                value = _inner_from_dict_for_dataclass(
+                    data_class=_extract_data_class(field.type),
+                    data=value,
+                    outer_config=config,
+                    field=field,
+                )
+        if field.name in config.cast:
             value = field.type(value)
         elif not _is_instance(field.type, value):
             raise WrongTypeError(field, value)
@@ -141,6 +155,46 @@ def _make_inner_config(field: Field, config: Config) -> Config:
     )
 
 
+def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config: Config, field: Field) -> T:
+    return from_dict(
+        data_class=data_class,
+        data=data,
+        config=_make_inner_config(field, outer_config),
+    )
+
+
+def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config, field: Field) -> T:
+    return collection.__extra__(from_dict(
+        data_class=_extract_data_class(collection),
+        data=item,
+        config=_make_inner_config(field, outer_config),
+    ) for item in data)
+
+
+def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) -> Any:
+    for t in field.type.__args__:
+        try:
+            if is_dataclass(t) and isinstance(data, dict):
+                return _inner_from_dict_for_dataclass(
+                    data_class=t,
+                    data=data,
+                    outer_config=outer_config,
+                    field=field,
+                )
+            elif _is_data_class_collection(t) and isinstance(data, list):
+                return _inner_from_dict_for_collection(
+                    collection=t,
+                    data=data,
+                    outer_config=outer_config,
+                    field=field,
+                )
+            elif _is_instance(t, data):
+                return data
+        except DaciteError:
+            pass
+    raise UnionMatchError(field)
+
+
 def _extract_flattened_fields(field: Field, data: Dict[str, Any], remap: Dict[str, str]):
     result = {}
     for inner_field in fields(_extract_data_class(field.type)):
@@ -175,7 +229,7 @@ def _extract_nested_list(field: Field, params: List[str]) -> List[str]:
 
 
 def _is_optional(t: Type) -> bool:
-    return _is_union(t) and type(None) in t.__args__
+    return _is_union(t) and type(None) in t.__args__ and len(t.__args__) == 2
 
 
 def _is_union(t: Type) -> bool:

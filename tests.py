@@ -1,9 +1,9 @@
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Union
 
 import pytest
 from dataclasses import dataclass
 
-from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError
+from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError
 
 
 def test_from_dict_from_correct_data():
@@ -500,3 +500,110 @@ def test_from_dict_with_wrong_filed_name_in_flattened():
 
     assert exception_info.value.parameter == 'flattened'
     assert exception_info.value.value == 'z'
+
+
+def test_from_dict_with_union_of_data_classes_and_correct_data():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+
+    @dataclass
+    class Z:
+        x_or_y: Union[X, Y]
+
+    result = from_dict(Z, {'x_or_y': {'s': 'test'}})
+
+    assert result == Z(x_or_y=Y(s='test'))
+
+
+def test_from_dict_with_union_of_data_classes_and_wrong_data():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+
+    @dataclass
+    class Z:
+        x_or_y: Union[X, Y]
+
+    with pytest.raises(UnionMatchError) as exception_info:
+        from_dict(Z, {'x_or_y': {'f': 2.0}})
+
+    assert exception_info.value.field.name == 'x_or_y'
+
+
+def test_from_dict_with_union_of_data_classes_collections_with_correct_data():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+
+    @dataclass
+    class Z:
+        x_or_y: Union[List[X], List[Y]]
+
+    result = from_dict(Z, {'x_or_y': [{'s': 'test'}]})
+
+    assert result == Z(x_or_y=[Y(s='test')])
+
+
+def test_from_dict_with_union_of_builtin_types():
+    @dataclass
+    class X:
+        i: Union[int, str]
+
+    result = from_dict(X, {'i': 's'})
+
+    assert result == X(i='s')
+
+
+def test_from_dict_with_union_of_mixed_types_and_builtin_type_as_a_result():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        u: Union[X, List[X], str]
+
+    result = from_dict(Y, {'u': 'test'})
+
+    assert result == Y(u='test')
+
+
+def test_from_dict_with_union_of_mixed_types_and_data_class_as_a_result():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        u: Union[str, List[X], X]
+
+    result = from_dict(Y, {'u': {'i': 1}})
+
+    assert result == Y(u=X(i=1))
+
+
+def test_from_dict_with_union_of_mixed_types_and_collection_of_data_classes_as_a_result():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        u: Union[str, X, List[X]]
+
+    result = from_dict(Y, {'u': [{'i': 1}]})
+
+    assert result == Y(u=[X(i=1)])
