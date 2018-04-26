@@ -57,6 +57,7 @@ Dacite supports following features:
 - nested structures
 - (basic) types checking
 - optional fields (i.e. `typing.Optional`)
+- unions
 - collections
 - values casting and transformation
 - remapping of fields names
@@ -154,6 +155,39 @@ data = {
 result = from_dict(data_class=A, data=data)
 
 assert result == A(x='test', y=None)
+```
+
+### Unions
+
+If your field can accept multiple types, you should use `Union`. Dacite
+will try to match data with provided types one by one. If none will
+match, it will raise `UnionMatchError` exception.
+
+```python
+from typing import Union
+
+@dataclass
+class A:
+    x: str
+
+@dataclass
+class B:
+    y: int
+
+@dataclass
+class C:
+    u: Union[A, B]
+
+
+data = {
+    'u': {
+        'y': 1,
+    },
+}
+
+result = from_dict(data_class=C, data=data)
+
+assert result == C(u=B(y=1))
 ```
 
 ### Collections
@@ -328,6 +362,8 @@ with a type of a data class field
 required field
 - `InvalidConfigurationError` - raised when you provide a invalid value
 (a field name or a input data key) for a configuration
+- `UnionMatchError` - raised when provided data does not match any type
+of `Union`
 
 ## Authors
 
