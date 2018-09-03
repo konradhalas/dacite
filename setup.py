@@ -1,4 +1,11 @@
+import sys
+
 from setuptools import setup
+
+if sys.version_info < (3, 7):
+    requirements = ['dataclasses']
+else:
+    requirements = []
 
 setup(
     name='dacite',
@@ -17,10 +24,11 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     python_requires='>=3.6',
     keywords='dataclasses',
     py_modules=['dacite'],
-    install_requires=['dataclasses'],
+    install_requires=requirements,
 )

@@ -164,7 +164,11 @@ def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config
 
 
 def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config, field: Field) -> T:
-    return collection.__extra__(from_dict(
+    try:
+        collection_cls = collection.__extra__
+    except AttributeError:
+        collection_cls = collection.__origin__
+    return collection_cls(from_dict(
         data_class=_extract_data_class(collection),
         data=item,
         config=_make_inner_config(field, outer_config),
@@ -232,12 +236,12 @@ def _is_optional(t: Type) -> bool:
     return _is_union(t) and type(None) in t.__args__ and len(t.__args__) == 2
 
 
-def _is_union(t: Type) -> bool:
-    return type(t) == type(Union)
-
-
 def _is_generic(t: Type) -> bool:
-    return type(t) == type(Generic)
+    return hasattr(t, '__origin__')
+
+
+def _is_union(t: Type) -> bool:
+    return _is_generic(t) and t.__origin__ == Union
 
 
 def _is_instance(t: Type, value: Any) -> bool:
@@ -280,7 +284,7 @@ def _has_data_class_collection(t: Type) -> bool:
 
 
 def _is_data_class_collection(t: Type) -> bool:
-    return not _is_union(t) and issubclass(t, Collection) and _has_inner_data_class(t)
+    return not _is_union(t) and _is_generic(t) and issubclass(t.__origin__, Collection) and _has_inner_data_class(t)
 
 
 def _has_inner_data_class_collection(t: Type) -> bool:

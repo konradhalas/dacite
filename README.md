@@ -20,11 +20,6 @@ $ pip install dacite
 
 Minimum Python version supported by `dacite` is 3.6.
 
-Data classes will be available in Python 3.7 as a part of the standard
-library, but you can use `dataclasses` module now - it's available as
-an external package from PyPI. It will be installed automatically
-as a `dacite` dependence.
-
 ## Quick start
 
 ```python
