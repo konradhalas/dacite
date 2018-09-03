@@ -11,7 +11,7 @@ addons:
     - pandoc
 install:
 - pip install pipenv
-- pipenv install --dev
+- pipenv install --dev --system --ignore-pipfile
 script:
 - pytest tests.py
 deploy:

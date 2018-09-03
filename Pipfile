@@ -6,7 +6,7 @@ name = "pypi"
 
 [packages]
 
-dataclasses = "*"
+dataclasses = {version="*", markers="python_version == '3.6'"}
 
 [dev-packages]
 
