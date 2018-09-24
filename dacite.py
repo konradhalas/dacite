@@ -139,10 +139,12 @@ def _get_value_for_field(field: Field, data: Data, config: Config) -> Any:
     except KeyError:
         if _is_optional(field.type):
             return None
-        elif field.default == MISSING:
-            raise MissingValueError(field)
-        else:
+        elif field.default != MISSING:
             return field.default
+        elif field.default_factory != MISSING:
+            return field.default_factory()
+        else:
+            raise MissingValueError(field)
 
 
 def _make_inner_config(field: Field, config: Config) -> Config:
