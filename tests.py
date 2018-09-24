@@ -1,7 +1,7 @@
 from typing import Optional, List, Set, Union
 
 import pytest
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError
 
@@ -28,6 +28,17 @@ def test_from_dict_with_default_value():
     result = from_dict(X, {'s': 'test'})
 
     assert result == X(s='test', i=0)
+
+
+def test_from_dict_with_default_factory():
+    @dataclass
+    class X:
+        s: str
+        i: List[int] = field(default_factory=lambda: [42])
+
+    result = from_dict(X, {'s': 'test'})
+
+    assert result == X(s='test', i=[42])
 
 
 def test_from_dict_from_incorrect_data():
