@@ -618,3 +618,17 @@ def test_from_dict_with_union_of_mixed_types_and_collection_of_data_classes_as_a
     result = from_dict(Y, {'u': [{'i': 1}]})
 
     assert result == Y(u=[X(i=1)])
+
+
+def test_from_dict_with_nested_data_classes_and_default_factory():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        x: X = field(default_factory=lambda: X(i=42))
+
+    result = from_dict(Y, {})
+
+    assert result == Y(x=X(i=42))
