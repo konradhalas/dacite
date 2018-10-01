@@ -247,7 +247,9 @@ def _is_union(t: Type) -> bool:
 
 
 def _is_instance(t: Type, value: Any) -> bool:
-    if _is_union(t):
+    if t == Any:
+        return True
+    elif _is_union(t):
         types = tuple(t.__origin__ if _is_generic(t) else t for t in t.__args__)
         return isinstance(value, types)
     elif _is_generic(t):
