@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Collection, Optional, Set
 
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
@@ -179,7 +180,7 @@ def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer
 
 def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) -> Any:
     for t in field.type.__args__:
-        try:
+        with suppress(DaciteError):
             if is_dataclass(t) and isinstance(data, dict):
                 return _inner_from_dict_for_dataclass(
                     data_class=t,
@@ -196,8 +197,6 @@ def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) ->
                 )
             elif _is_instance(t, data):
                 return data
-        except DaciteError:
-            pass
     raise UnionMatchError(field)
 
 
