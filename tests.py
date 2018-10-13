@@ -1,7 +1,7 @@
-from typing import Optional, List, Set, Union
+from dataclasses import dataclass, field
+from typing import Optional, List, Set, Union, Any
 
 import pytest
-from dataclasses import dataclass, field
 
 from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError
 
@@ -618,3 +618,13 @@ def test_from_dict_with_union_of_mixed_types_and_collection_of_data_classes_as_a
     result = from_dict(Y, {'u': [{'i': 1}]})
 
     assert result == Y(u=[X(i=1)])
+
+
+def test_from_dict_with_any():
+    @dataclass
+    class X:
+        i: Any
+
+    result = from_dict(X, {'i': 1})
+
+    assert result == X(i=1)
