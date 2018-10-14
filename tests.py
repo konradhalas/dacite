@@ -630,7 +630,7 @@ def test_from_dict_with_any():
     assert result == X(i=1)
 
 
-def test_from_dict_with_nested_complex_type_and_default_factory():
+def test_from_dict_with_optional_field_and_default_value():
     @dataclass
     class X:
         i: Optional[int] = 1
