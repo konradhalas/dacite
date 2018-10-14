@@ -158,6 +158,8 @@ def _make_inner_config(field: Field, config: Config) -> Config:
 
 
 def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config: Config, field: Field) -> T:
+    if _is_instance(data_class, data):
+        return data
     return from_dict(
         data_class=data_class,
         data=data,
