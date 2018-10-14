@@ -1,4 +1,4 @@
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Generic, Collection, Optional, Set
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set
 
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
 
