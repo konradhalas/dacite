@@ -57,6 +57,9 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
+    # noinspection PyTypeHints
+    if isinstance(data, data_class):
+        return data
     config = config or Config()
     values: Data = {}
     _validate_config(data_class, data, config)
