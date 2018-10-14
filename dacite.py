@@ -137,12 +137,12 @@ def _get_value_for_field(field: Field, data: Data, config: Config) -> Any:
             key_name = config.remap.get(field.name, field.name)
             return data[key_name]
     except KeyError:
-        if _is_optional(field.type):
-            return None
-        elif field.default != MISSING:
+        if field.default != MISSING:
             return field.default
         elif field.default_factory != MISSING:
             return field.default_factory()
+        elif _is_optional(field.type):
+            return None
         else:
             raise MissingValueError(field)
 

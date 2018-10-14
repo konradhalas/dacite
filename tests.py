@@ -628,3 +628,13 @@ def test_from_dict_with_any():
     result = from_dict(X, {'i': 1})
 
     assert result == X(i=1)
+
+
+def test_from_dict_with_nested_complex_type_and_default_factory():
+    @dataclass
+    class X:
+        i: Optional[int] = 1
+
+    result = from_dict(X, {})
+
+    assert result == X()
