@@ -1,4 +1,4 @@
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping
 
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
 
@@ -167,16 +167,24 @@ def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config
     )
 
 
-def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config, field: Field) -> T:
+def _inner_from_dict_for_collection(collection: Type[T], data: Collection[Data], outer_config: Config,
+                                    field: Field) -> T:
     try:
         collection_cls = collection.__extra__
     except AttributeError:
         collection_cls = collection.__origin__
-    return collection_cls(from_dict(
-        data_class=_extract_data_class(collection),
-        data=item,
-        config=_make_inner_config(field, outer_config),
-    ) for item in data)
+    if isinstance(data, Mapping):
+        return collection_cls([(key, from_dict(
+            data_class=_extract_data_class(collection),
+            data=value,
+            config=_make_inner_config(field, outer_config),
+        )) for key, value in data.items()])
+    else:
+        return collection_cls(from_dict(
+            data_class=_extract_data_class(collection),
+            data=item,
+            config=_make_inner_config(field, outer_config),
+        ) for item in data)
 
 
 def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) -> Any:
