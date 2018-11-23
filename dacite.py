@@ -36,11 +36,18 @@ class InvalidConfigurationError(DaciteError):
         self.value = value
 
 
+class CanNotCastAnyUnionTypeError(DaciteError):
+    def __init__(self, field: Field, value: Any) -> None:
+        super().__init__(f'can not cast any of union type for field "{field.name}"')
+        self.field = field
+        self.value = value
+
 @dataclass
 class Config:
     remap: Dict[str, str] = dc_field(default_factory=dict)
     prefixed: Dict[str, str] = dc_field(default_factory=dict)
     cast: List[str] = dc_field(default_factory=list)
+    cast_all: bool = False
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
 
@@ -85,8 +92,23 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                     outer_config=config,
                     field=field,
                 )
-        if field.name in config.cast:
-            value = field.type(value)
+        if (field.name in config.cast or config.cast_all) and value is not None:
+            if _is_union(field.type):
+                type_to_try = field.type.__args__
+            else:
+                type_to_try = [field.type]
+            type_to_try = [x for x in type_to_try 
+                           if not is_dataclass(x) and x is not type(None)]
+            if type_to_try:
+                for sub_type in type_to_try:
+                    try:
+                        value = sub_type(value)
+                        break
+                    except:
+                        pass
+                else:
+                    print(type_to_try)
+                    raise CanNotCastAnyUnionTypeError(field, value)
         elif not _is_instance(field.type, value):
             raise WrongTypeError(field, value)
         values[field.name] = value
@@ -152,6 +174,7 @@ def _make_inner_config(field: Field, config: Config) -> Config:
         remap=_extract_nested_dict(field, config.remap),
         prefixed=_extract_nested_dict(field, config.prefixed),
         cast=_extract_nested_list(field, config.cast),
+        cast_all=config.cast_all,
         transform=_extract_nested_dict(field, config.transform),
         flattened=_extract_nested_list(field, config.flattened),
     )

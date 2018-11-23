@@ -652,3 +652,74 @@ def test_from_dict_with_nested_data_classes_and_default_factory():
     result = from_dict(Y, {})
 
     assert result == Y(x=X(i=42))
+
+
+
+def test_from_dict_with_cast_and_union():
+    @dataclass
+    class X:
+        i: Optional[int]
+        j: Optional[str]
+
+    @dataclass
+    class Y:
+        x: Optional[X]
+        z: Optional[int]
+
+    result = from_dict(Y, {'x':{'i':123, 'j':456}, 'z':789}, 
+                       config=Config(cast=['x.j']))
+
+    assert result == Y(x=X(i=123, j='456'), z=789)
+
+
+def test_from_dict_with_cast_all():
+    @dataclass
+    class X:
+        i: int
+        j: str
+
+    @dataclass
+    class Y:
+        x: X
+        z: int
+
+    result = from_dict(Y, {'x':{'i':'123', 'j':456}, 'z':'789'}, 
+                       config=Config(cast_all=True))
+
+    assert result == Y(x=X(i=123, j='456'), z=789)
+
+def test_from_dict_with_cast_all_optional():
+    @dataclass
+    class X:
+        i: Optional[int]
+        j: Optional[str]
+
+    @dataclass
+    class Y:
+        x: Optional[X]
+        z: Optional[int]
+
+    result = from_dict(Y, {'x':{'i':'123'}, 'z':'789'}, 
+                       config=Config(cast_all=True))
+    assert result == Y(x=X(i=123, j=None), z=789)
+
+
+def test_from_dict_with_dict_and_cast_all_optional():
+    @dataclass
+    class X:
+        i: Optional[int]
+        j: Optional[str]
+        k: Optional[dict]
+
+    @dataclass
+    class Y:
+        x: Optional[X]
+        z: Optional[int]
+
+    result = from_dict(Y, {'x':{'i':'123'}, 'z':'789'}, 
+                       config=Config(cast_all=True))
+    assert result == Y(x=X(i=123, j=None, k=None), z=789)
+
+    result = from_dict(Y, {'x':{'i':'123', 'k':{1:2}}, 'z':'789'}, 
+                       config=Config(cast_all=True))
+    assert result == Y(x=X(i=123, j=None, k={1:2}), z=789)
