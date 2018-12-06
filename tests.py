@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, List, Set, Union, Any
+from typing import Optional, List, Set, Union, Any, Dict
 
 import pytest
 
@@ -652,3 +652,17 @@ def test_from_dict_with_nested_data_classes_and_default_factory():
     result = from_dict(Y, {})
 
     assert result == Y(x=X(i=42))
+
+
+def test_from_dict_with_dict_of_data_classes():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        d: Dict[str, X]
+
+    result = from_dict(Y, {'d': {'x': {'i': 42}, 'z': {'i': 37}}})
+
+    assert result == Y(d={'x': X(i=42), 'z': X(i=37)})
