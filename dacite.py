@@ -195,7 +195,7 @@ def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) ->
                     outer_config=outer_config,
                     field=field,
                 )
-            elif _is_data_class_collection(t) and isinstance(data, list):
+            elif _is_data_class_collection(t) and _is_instance(t, data):
                 return _inner_from_dict_for_collection(
                     collection=t,
                     data=data,

@@ -1,7 +1,6 @@
+import pytest
 from dataclasses import dataclass, field
 from typing import Optional, List, Set, Union, Any, Dict
-
-import pytest
 
 from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError
 
@@ -662,6 +661,20 @@ def test_from_dict_with_dict_of_data_classes():
     @dataclass
     class Y:
         d: Dict[str, X]
+
+    result = from_dict(Y, {'d': {'x': {'i': 42}, 'z': {'i': 37}}})
+
+    assert result == Y(d={'x': X(i=42), 'z': X(i=37)})
+
+
+def test_from_dict_with_union_and_dict_of_data_classes():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        d: Union[int, List[X], Dict[str, X]]
 
     result = from_dict(Y, {'d': {'x': {'i': 42}, 'z': {'i': 37}}})
 
