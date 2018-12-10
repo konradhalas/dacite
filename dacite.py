@@ -85,7 +85,11 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                     field=field,
                 )
         if field.name in config.cast:
-            value = field.type(value)
+            if _is_optional(field.type):
+                cls = _extract_optional(field.type)
+            else:
+                cls = field.type
+            value = cls(value)
         elif not _is_instance(field.type, value):
             raise WrongTypeError(field, value)
         values[field.name] = value
@@ -244,6 +248,12 @@ def _extract_nested_list(field: Field, params: List[str]) -> List[str]:
 
 def _is_optional(t: Type) -> bool:
     return _is_union(t) and type(None) in t.__args__ and len(t.__args__) == 2
+
+
+def _extract_optional(optional: Optional[T]) -> T:
+    for t in optional.__args__:
+        if t is not None:
+            return t
 
 
 def _is_generic(t: Type) -> bool:

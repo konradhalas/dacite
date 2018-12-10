@@ -298,6 +298,17 @@ def test_from_dict_with_nested_cast():
     assert result == Y(x=X(i=1))
 
 
+def test_from_dict_with_cast_of_optional_field():
+    @dataclass
+    class X:
+        i: Optional[int]
+        s: str
+
+    result = from_dict(X, {'s': 'test', 'i': '1'}, Config(cast=['i']))
+
+    assert result == X(s='test', i=1)
+
+
 def test_from_dict_with_transform():
     @dataclass
     class X:
