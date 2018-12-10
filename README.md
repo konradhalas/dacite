@@ -100,6 +100,9 @@ Configuration is a (data) class with following fields:
 The examples below show all features of `from_dict` function and usage
 of all `Config` parameters.
 
+Use a dot-notation path if you want to point a nested data class field in
+a configuration, e.g. `"a.b"`. It works for all options.
+
 ### Nested structures
 
 You can pass a data with nested dictionaries and it will create a proper
