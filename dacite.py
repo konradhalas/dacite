@@ -58,11 +58,11 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :return: an instance of a data class
     """
     config = config or Config()
-    values: Data = {}
+    init_values: Data = {}
+    post_init_values: Data = {}
     _validate_config(data_class, data, config)
-    class_fields: FieldInfo = {f.name: f for f in fields(data_class)}
 
-    for field in class_fields.values():
+    for field in fields(data_class):
         value = _get_value_for_field(field, data, config)
         if field.name in config.transform:
             value = config.transform[field.name](value)
@@ -95,9 +95,11 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             value = cls(value)
         elif not _is_instance(field.type, value):
             raise WrongTypeError(field, value)
-        values[field.name] = value
+        if field.init:
+            init_values[field.name] = value
+        else:
+            post_init_values[field.name] = value
 
-    init_values, post_init_values = _seperate_post_init(values, class_fields)
     return _load_class(data_class, init_values, post_init_values)
 
 
@@ -329,21 +331,6 @@ def _extract_data_class_collection(t: Type) -> Any:
 
 def _get_type_name(t: Type) -> str:
     return t.__name__ if hasattr(t, '__name__') else str(t)
-
-
-def _seperate_post_init(values: Data, class_fields: FieldInfo) -> Tuple[Data, Data]:
-    """separates out fields where init=False"""
-    init_values: Data = {}
-    post_init_values: Data = {}
-
-    for key, value in values.items():
-        field = class_fields[key]
-        if field.init:
-            init_values[key] = value
-        else:
-            post_init_values[key] = value
-
-    return init_values, post_init_values
 
 
 def _load_class(data_class: Type[T], init_values: Data, post_init_values: Data) -> T:
