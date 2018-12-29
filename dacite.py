@@ -97,8 +97,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             raise WrongTypeError(field, value)
         values[field.name] = value
 
-    init_values, post_init_value = _seperate_post_init(values, class_fields)
-    return _load_class(data_class, init_values, post_init_value)
+    init_values, post_init_values = _seperate_post_init(values, class_fields)
+    return _load_class(data_class, init_values, post_init_values)
 
 
 def _validate_config(data_class: Type[T], data: Data, config: Config):
