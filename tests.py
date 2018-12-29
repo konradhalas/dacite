@@ -690,3 +690,21 @@ def test_from_dict_with_union_and_dict_of_data_classes():
     result = from_dict(Y, {'d': {'x': {'i': 42}, 'z': {'i': 37}}})
 
     assert result == Y(d={'x': X(i=42), 'z': X(i=37)})
+
+
+@pytest.mark.parametrize("frozen", [False, True])
+def test_from_dict_with_post_init(frozen):
+    @dataclass(frozen=frozen)
+    class X:
+        post: str = field(init=False)
+
+    data = {
+        "post": "gotcha!"
+    }
+
+    answer = X()
+    object.__setattr__(answer, "post", "gotcha!")
+
+    result = from_dict(X, data)
+
+    assert result == answer

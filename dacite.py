@@ -1,5 +1,5 @@
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping, Tuple
 
 
 class DaciteError(Exception):
@@ -46,6 +46,7 @@ class Config:
 
 T = TypeVar('T')
 Data = Dict[str, Any]
+FieldInfo = Dict[str, Field]
 
 
 def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) -> T:
@@ -59,7 +60,9 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     config = config or Config()
     values: Data = {}
     _validate_config(data_class, data, config)
-    for field in fields(data_class):
+    class_fields: FieldInfo = {f.name: f for f in fields(data_class)}
+
+    for field in class_fields.values():
         value = _get_value_for_field(field, data, config)
         if field.name in config.transform:
             value = config.transform[field.name](value)
@@ -93,7 +96,9 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         elif not _is_instance(field.type, value):
             raise WrongTypeError(field, value)
         values[field.name] = value
-    return data_class(**values)
+
+    init_values, post_init_value = _seperate_post_init(values, class_fields)
+    return _load_class(data_class, init_values, post_init_value)
 
 
 def _validate_config(data_class: Type[T], data: Data, config: Config):
@@ -324,3 +329,27 @@ def _extract_data_class_collection(t: Type) -> Any:
 
 def _get_type_name(t: Type) -> str:
     return t.__name__ if hasattr(t, '__name__') else str(t)
+
+
+def _seperate_post_init(values: Data, class_fields: FieldInfo) -> Tuple[Data, Data]:
+    """separates out fields where init=False"""
+    init_values: Data = {}
+    post_init_values: Data = {}
+
+    for key, value in values.items():
+        field = class_fields[key]
+        if field.init:
+            init_values[key] = value
+        else:
+            post_init_values[key] = value
+
+    return init_values, post_init_values
+
+
+def _load_class(data_class: Type[T], init_values: Data, post_init_values: Data) -> T:
+    """loads data into a new dataclass instance"""
+    new = data_class(**init_values)
+    for key, value in post_init_values.items():
+        # have to go through object here to get around frozen dataclasses
+        object.__setattr__(new, key, value)
+    return new
