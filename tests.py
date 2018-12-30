@@ -690,3 +690,20 @@ def test_from_dict_with_union_and_dict_of_data_classes():
     result = from_dict(Y, {'d': {'x': {'i': 42}, 'z': {'i': 37}}})
 
     assert result == Y(d={'x': X(i=42), 'z': X(i=37)})
+
+
+def test_from_dict_collection_loaded_items():
+    @dataclass
+    class X:
+        text: str = "default"
+
+    @dataclass
+    class Y:
+        x: X = X()
+
+    @dataclass
+    class Y:
+        x_list: List[X] = field(default_factory=list)
+
+    y_dict = {"x_list": [X(), X()]}
+    assert from_dict(Y, y_dict) == Y([X(), X()])

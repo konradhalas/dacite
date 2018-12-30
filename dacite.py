@@ -1,5 +1,5 @@
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping, Generator
 
 
 class DaciteError(Exception):
@@ -170,23 +170,49 @@ def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config
     )
 
 
+def _yield_collection_items(
+        collection: Type[T],
+        data: List[Data],
+        outer_config: Config,
+        field: Field
+) -> Generator[T, None, None]:
+    """yields loaded collection items as dataclasses"""
+    data_iter = data.items() if isinstance(data, Mapping) else data
+
+    for item in data_iter:
+        # If this is a mapping, we need to separate the keys and items.
+        if isinstance(data, Mapping):
+            key, item = item
+        else:
+            key = None
+
+        # We only need to load these inner objects if they are dicts. Otherwise we're
+        # gonna have a bad time.
+        if isinstance(item, dict):
+            loaded = from_dict(
+                data_class=_extract_data_class(collection),
+                data=item,
+                config=_make_inner_config(field, outer_config),
+            )
+        else:
+            loaded = item
+
+        if key is not None:
+            yield key, loaded
+        else:
+            yield loaded
+
+
 def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config, field: Field) -> T:
     try:
         collection_cls = collection.__extra__
     except AttributeError:
         collection_cls = collection.__origin__
-    if isinstance(data, Mapping):
-        return collection_cls((key, from_dict(
-            data_class=_extract_data_class(collection),
-            data=value,
-            config=_make_inner_config(field, outer_config),
-        )) for key, value in data.items())
-    else:
-        return collection_cls(from_dict(
-            data_class=_extract_data_class(collection),
-            data=item,
-            config=_make_inner_config(field, outer_config),
-        ) for item in data)
+
+    item_iter = _yield_collection_items(
+        collection=collection, data=data, outer_config=outer_config, field=field
+    )
+    return collection_cls(x for x in item_iter)
 
 
 def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) -> Any:
