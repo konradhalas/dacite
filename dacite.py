@@ -188,10 +188,11 @@ def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer
             config=_make_inner_config(field, outer_config),
         )) for key, value in data.items())
     else:
-        return collection_cls(from_dict(
+        return collection_cls(_inner_from_dict_for_dataclass(
             data_class=_extract_data_class(collection),
             data=item,
-            config=_make_inner_config(field, outer_config),
+            outer_config=outer_config,
+            field=field,
         ) for item in data)
 
 
