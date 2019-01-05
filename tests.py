@@ -690,3 +690,18 @@ def test_from_dict_with_union_and_dict_of_data_classes():
     result = from_dict(Y, {'d': {'x': {'i': 42}, 'z': {'i': 37}}})
 
     assert result == Y(d={'x': X(i=42), 'z': X(i=37)})
+
+
+def test_from_dict_with_already_created_data_class_instances():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        x: X
+        x_list: List[X]
+
+    result = from_dict(Y, {'x': X(37), 'x_list': [X(i=42)]})
+
+    assert result == Y(x=X(i=37), x_list=[X(i=42)])
