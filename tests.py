@@ -705,3 +705,16 @@ def test_from_dict_with_already_created_data_class_instances():
     result = from_dict(Y, {'x': X(37), 'x_list': [X(i=42)]})
 
     assert result == Y(x=X(i=37), x_list=[X(i=42)])
+
+
+def test_from_dict_with_post_init():
+    @dataclass
+    class X:
+        s: str = field(init=False)
+
+    x = X()
+    x.s = 'test'
+
+    result = from_dict(X, {'s': 'test'})
+
+    assert result == x

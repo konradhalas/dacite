@@ -57,7 +57,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :return: an instance of a data class
     """
     config = config or Config()
-    values: Data = {}
+    init_values: Data = {}
+    post_init_values: Data = {}
     _validate_config(data_class, data, config)
     for field in fields(data_class):
         value = _get_value_for_field(field, data, config)
@@ -92,8 +93,16 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             value = cls(value)
         elif not _is_instance(field.type, value):
             raise WrongTypeError(field, value)
-        values[field.name] = value
-    return data_class(**values)
+        if field.init:
+            init_values[field.name] = value
+        else:
+            post_init_values[field.name] = value
+
+    return _create_instance(
+        data_class=data_class,
+        init_values=init_values,
+        post_init_values=post_init_values,
+    )
 
 
 def _validate_config(data_class: Type[T], data: Data, config: Config):
@@ -325,3 +334,10 @@ def _extract_data_class_collection(t: Type) -> Any:
 
 def _get_type_name(t: Type) -> str:
     return t.__name__ if hasattr(t, '__name__') else str(t)
+
+
+def _create_instance(data_class: Type[T], init_values: Data, post_init_values: Data) -> T:
+    instance = data_class(**init_values)
+    for key, value in post_init_values.items():
+        setattr(instance, key, value)
+    return instance
