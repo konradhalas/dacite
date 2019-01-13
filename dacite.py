@@ -1,5 +1,5 @@
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping, Tuple
 
 
 class DaciteError(Exception):
@@ -61,38 +61,39 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     post_init_values: Data = {}
     _validate_config(data_class, data, config)
     for field in fields(data_class):
-        value = _get_value_for_field(field, data, config)
-        if field.name in config.transform:
-            value = config.transform[field.name](value)
-        if value is not None:
-            if _is_union(field.type) and not _is_optional(field.type):
-                value = _inner_from_dict_for_union(
-                    data=value,
-                    field=field,
-                    outer_config=config,
-                )
-            elif _has_data_class_collection(field.type):
-                value = _inner_from_dict_for_collection(
-                    collection=_extract_data_class_collection(field.type),
-                    data=value,
-                    outer_config=config,
-                    field=field,
-                )
-            elif _has_data_class(field.type):
-                value = _inner_from_dict_for_dataclass(
-                    data_class=_extract_data_class(field.type),
-                    data=value,
-                    outer_config=config,
-                    field=field,
-                )
-        if field.name in config.cast:
-            if _is_optional(field.type):
-                cls = _extract_optional(field.type)
-            else:
-                cls = field.type
-            value = cls(value)
-        elif not _is_instance(field.type, value):
-            raise WrongTypeError(field, value)
+        value, is_default = _get_value_for_field(field, data, config)
+        if not is_default:
+            if value is not None:
+                if field.name in config.transform:
+                    value = config.transform[field.name](value)
+                if _is_union(field.type) and not _is_optional(field.type):
+                    value = _inner_from_dict_for_union(
+                        data=value,
+                        field=field,
+                        outer_config=config,
+                    )
+                elif _has_data_class_collection(field.type):
+                    value = _inner_from_dict_for_collection(
+                        collection=_extract_data_class_collection(field.type),
+                        data=value,
+                        outer_config=config,
+                        field=field,
+                    )
+                elif _has_data_class(field.type):
+                    value = _inner_from_dict_for_dataclass(
+                        data_class=_extract_data_class(field.type),
+                        data=value,
+                        outer_config=config,
+                        field=field,
+                    )
+                if field.name in config.cast:
+                    if _is_optional(field.type):
+                        cls = _extract_optional(field.type)
+                    else:
+                        cls = field.type
+                    value = cls(value)
+            if not _is_instance(field.type, value):
+                raise WrongTypeError(field, value)
         if field.init:
             init_values[field.name] = value
         else:
@@ -107,9 +108,9 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 
 def _validate_config(data_class: Type[T], data: Data, config: Config):
     _validate_config_field_name(data_class, config, 'remap')
-    _validate_config_data_key(data, config, 'remap')
+    _validate_config_data_key(data_class, data, config, 'remap')
     _validate_config_field_name(data_class, config, 'prefixed')
-    _validate_config_data_key(data, config, 'prefixed', lambda v, c: any(n.startswith(v) for n in c))
+    _validate_config_data_key(data_class, data, config, 'prefixed', lambda v, c: any(n.startswith(v) for n in c))
     _validate_config_field_name(data_class, config, 'cast')
     _validate_config_field_name(data_class, config, 'transform')
     _validate_config_field_name(data_class, config, 'flattened')
@@ -127,11 +128,14 @@ def _validate_config_field_name(data_class: Type[T], config: Config, parameter: 
                 )
 
 
-def _validate_config_data_key(data: Data, config: Config, parameter: str, validator=lambda v, c: v in c) -> None:
+def _validate_config_data_key(data_class: Type[T], data: Data, config: Config, parameter: str,
+                              validator=lambda v, c: v in c) -> None:
     input_data_keys = set(data.keys())
-    for data_class_field, input_data_field in getattr(config, parameter).items():
-        if '.' not in data_class_field:
-            if not validator(input_data_field, input_data_keys):
+    data_class_fields = {field.name: field for field in fields(data_class)}
+    for field_name, input_data_field in getattr(config, parameter).items():
+        if '.' not in field_name:
+            field = data_class_fields[field_name]
+            if not validator(input_data_field, input_data_keys) and not _has_field_default_value(field):
                 raise InvalidConfigurationError(
                     parameter=parameter,
                     available_choices=input_data_keys,
@@ -139,24 +143,36 @@ def _validate_config_data_key(data: Data, config: Config, parameter: str, valida
                 )
 
 
-def _get_value_for_field(field: Field, data: Data, config: Config) -> Any:
+def _has_field_default_value(field: Field) -> bool:
+    return field.default != MISSING or field.default_factory != MISSING or _is_optional(field.type)
+
+
+def _get_value_for_field(field: Field, data: Data, config: Config) -> Tuple[Any, bool]:
     try:
-        if field.name in config.prefixed:
-            return _extract_nested_dict_for_prefix(config.prefixed[field.name], data)
-        elif field.name in config.flattened:
-            return _extract_flattened_fields(field, data, config.remap)
+        if field.name in config.prefixed or field.name in config.flattened:
+            if field.name in config.prefixed:
+                value = _extract_nested_dict_for_prefix(config.prefixed[field.name], data)
+            else:
+                value = _extract_flattened_fields(field, data, config.remap)
+            if not value:
+                return _get_default_value_for_field(field), True
         else:
             key_name = config.remap.get(field.name, field.name)
-            return data[key_name]
+            value = data[key_name]
+        return value, False
     except KeyError:
-        if field.default != MISSING:
-            return field.default
-        elif field.default_factory != MISSING:
-            return field.default_factory()
-        elif _is_optional(field.type):
-            return None
-        else:
-            raise MissingValueError(field)
+        return _get_default_value_for_field(field), True
+
+
+def _get_default_value_for_field(field: Field) -> Any:
+    if field.default != MISSING:
+        return field.default
+    elif field.default_factory != MISSING:
+        return field.default_factory()
+    elif _is_optional(field.type):
+        return None
+    else:
+        raise MissingValueError(field)
 
 
 def _make_inner_config(field: Field, config: Config) -> Config:

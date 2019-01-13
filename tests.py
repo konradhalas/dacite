@@ -116,6 +116,32 @@ def test_from_dict_with_nested_remap():
     assert result == Y(s='test', x=X(i=1))
 
 
+def test_from_dict_with_remap_and_existing_optional_field():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: Optional[X]
+
+    result = from_dict(Y, {'s': 'test', 'x': {'j': 1}}, Config(remap={'x.i': 'j'}))
+
+    assert result == Y(s='test', x=X(i=1))
+
+
+def test_from_dict_with_remap_and_missing_optional_field():
+    @dataclass
+    class X:
+        s: str
+        i: Optional[int]
+
+    result = from_dict(X, {'s': 'test'}, Config(remap={'i': 'j'}))
+
+    assert result == X(s='test', i=None)
+
+
 def test_from_dict_with_prefix():
     @dataclass
     class X:
@@ -129,6 +155,36 @@ def test_from_dict_with_prefix():
     result = from_dict(Y, {'s': 'test', 'x_i': 1}, Config(prefixed={'x': 'x_'}))
 
     assert result == Y(s='test', x=X(i=1))
+
+
+def test_from_dict_with_prefix_and_existing_optional_field():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: Optional[X]
+
+    result = from_dict(Y, {'s': 'test', 'x_i': 1}, Config(prefixed={'x': 'x_'}))
+
+    assert result == Y(s='test', x=X(i=1))
+
+
+def test_from_dict_with_prefix_and_missing_optional_field():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: Optional[X]
+
+    result = from_dict(Y, {'s': 'test'}, Config(prefixed={'x': 'x_'}))
+
+    assert result == Y(s='test', x=None)
 
 
 def test_from_dict_with_nested_prefix():
@@ -298,7 +354,7 @@ def test_from_dict_with_nested_cast():
     assert result == Y(x=X(i=1))
 
 
-def test_from_dict_with_cast_of_optional_field():
+def test_from_dict_with_cast_of_existing_optional_field():
     @dataclass
     class X:
         i: Optional[int]
@@ -307,6 +363,28 @@ def test_from_dict_with_cast_of_optional_field():
     result = from_dict(X, {'s': 'test', 'i': '1'}, Config(cast=['i']))
 
     assert result == X(s='test', i=1)
+
+
+def test_from_dict_with_cast_of_missing_optional_field():
+    @dataclass
+    class X:
+        i: Optional[int]
+        s: str
+
+    result = from_dict(X, {'s': 'test'}, Config(cast=['i']))
+
+    assert result == X(s='test', i=None)
+
+
+def test_from_dict_with_cast_of_none_optional_field():
+    @dataclass
+    class X:
+        i: Optional[int]
+        s: str
+
+    result = from_dict(X, {'s': 'test', 'i': None}, Config(cast=['i']))
+
+    assert result == X(s='test', i=None)
 
 
 def test_from_dict_with_transform():
@@ -333,6 +411,37 @@ def test_from_dict_with_nested_transform():
     assert result == Y(x=X(s='test'))
 
 
+def test_from_dict_with_transform_of_existing_optional_field():
+    @dataclass
+    class X:
+        s: Optional[str]
+
+    result = from_dict(X, {'s': 'TEST'}, Config(transform={'s': str.lower}))
+
+    assert result == X(s='test')
+
+
+def test_from_dict_with_transform_of_missing_optional_field():
+    @dataclass
+    class X:
+        s: Optional[str]
+
+    result = from_dict(X, {}, Config(transform={'s': str.lower}))
+
+    assert result == X(s=None)
+
+
+def test_from_dict_with_transform_of_none_optional_field():
+    @dataclass
+    class X:
+        s: Optional[str]
+
+    result = from_dict(X, {'s': None}, Config(transform={'s': str.lower}))
+
+    assert result == X(s=None)
+
+
+
 def test_from_dict_with_flat():
     @dataclass
     class X:
@@ -346,6 +455,36 @@ def test_from_dict_with_flat():
     result = from_dict(Y, {'s': 'test', 'i': 1}, Config(flattened=['x']))
 
     assert result == Y(s='test', x=X(i=1))
+
+
+def test_from_dict_with_flat_of_existing_optional_field():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: Optional[X]
+
+    result = from_dict(Y, {'s': 'test', 'i': 1}, Config(flattened=['x']))
+
+    assert result == Y(s='test', x=X(i=1))
+
+
+def test_from_dict_with_flat_of_missing_optional_field():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: Optional[X]
+
+    result = from_dict(Y, {'s': 'test'}, Config(flattened=['x']))
+
+    assert result == Y(s='test', x=None)
 
 
 def test_from_dict_with_nested_flat():
