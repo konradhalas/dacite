@@ -387,6 +387,36 @@ def test_from_dict_with_cast_of_none_optional_field():
     assert result == X(s='test', i=None)
 
 
+def test_from_dict_with_cast_of_list():
+    @dataclass
+    class X:
+        i_list: List[int]
+
+    result = from_dict(X, {'i_list': ['1', '2']}, Config(cast=['i_list']))
+
+    assert result == X(i_list=[1, 2])
+
+
+def test_from_dict_with_cast_of_optional_list():
+    @dataclass
+    class X:
+        i_list: Optional[List[int]]
+
+    result = from_dict(X, {'i_list': ['1', '2']}, Config(cast=['i_list']))
+
+    assert result == X(i_list=[1, 2])
+
+
+def test_from_dict_with_cast_of_dict():
+    @dataclass
+    class X:
+        i_dict: Dict[int, int]
+
+    result = from_dict(X, {'i_dict': {'1': 2}}, Config(cast=['i_dict']))
+
+    assert result == X(i_dict={1: 2})
+
+
 def test_from_dict_with_transform():
     @dataclass
     class X:
@@ -439,7 +469,6 @@ def test_from_dict_with_transform_of_none_optional_field():
     result = from_dict(X, {'s': None}, Config(transform={'s': str.lower}))
 
     assert result == X(s=None)
-
 
 
 def test_from_dict_with_flat():

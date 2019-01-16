@@ -87,11 +87,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                         field=field,
                     )
                 if field.name in config.cast:
-                    if _is_optional(field.type):
-                        cls = _extract_optional(field.type)
-                    else:
-                        cls = field.type
-                    value = cls(value)
+                    value = _cast_value(field.type, value)
             if not _is_instance(field.type, value):
                 raise WrongTypeError(field, value)
         if field.init:
@@ -104,6 +100,22 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         init_values=init_values,
         post_init_values=post_init_values,
     )
+
+
+def _cast_value(t: Type[T], value: Any) -> T:
+    if _is_optional(t):
+        t = _extract_optional(t)
+    if _is_generic_collection(t):
+        collection_cls = _extract_generic_collection(t)
+        if issubclass(collection_cls, Mapping):
+            key_cls = t.__args__[0]
+            item_cls = t.__args__[1]
+            return collection_cls({key_cls(key): item_cls(item) for key, item in value.items()})
+        else:
+            item_cls = t.__args__[0]
+            return collection_cls(item_cls(item) for item in value)
+    else:
+        return t(value)
 
 
 def _validate_config(data_class: Type[T], data: Data, config: Config):
@@ -196,10 +208,7 @@ def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config
 
 
 def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config, field: Field) -> T:
-    try:
-        collection_cls = collection.__extra__
-    except AttributeError:
-        collection_cls = collection.__origin__
+    collection_cls = _extract_generic_collection(collection)
     if isinstance(data, Mapping):
         return collection_cls((key, from_dict(
             data_class=_extract_data_class(collection),
@@ -213,6 +222,13 @@ def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer
             outer_config=outer_config,
             field=field,
         ) for item in data)
+
+
+def _extract_generic_collection(collection: Type) -> Type:
+    try:
+        return collection.__extra__
+    except AttributeError:
+        return collection.__origin__
 
 
 def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) -> Any:
@@ -332,7 +348,11 @@ def _has_data_class_collection(t: Type) -> bool:
 
 
 def _is_data_class_collection(t: Type) -> bool:
-    return not _is_union(t) and _is_generic(t) and issubclass(t.__origin__, Collection) and _has_inner_data_class(t)
+    return _is_generic_collection(t) and _has_inner_data_class(t)
+
+
+def _is_generic_collection(t: Type) -> bool:
+    return _is_generic(t) and issubclass(t.__origin__, Collection)
 
 
 def _has_inner_data_class_collection(t: Type) -> bool:
