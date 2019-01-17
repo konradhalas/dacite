@@ -20,7 +20,7 @@ class MissingValueError(DaciteError):
         self.field = field
 
 
-class UnionMatchError(DaciteError):
+class UnionMatchError(WrongTypeError):
     def __init__(self, field: Field) -> None:
         super().__init__(f'can not match the data to any type of "{field.name}" union: {_get_type_name(field.type)}')
         self.field = field
