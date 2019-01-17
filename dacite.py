@@ -250,7 +250,7 @@ def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) ->
                 return data
         except DaciteError:
             pass
-    raise UnionMatchError(field)
+    raise UnionMatchError(field, data)
 
 
 def _extract_flattened_fields(field: Field, data: Dict[str, Any], remap: Dict[str, str]):
