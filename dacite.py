@@ -42,6 +42,7 @@ class Config:
     cast: List[str] = dc_field(default_factory=list)
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
+    validate_type: bool = True
 
 
 T = TypeVar('T')
@@ -59,6 +60,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     config = config or Config()
     init_values: Data = {}
     post_init_values: Data = {}
+
     _validate_config(data_class, data, config)
     for field in fields(data_class):
         value, is_default = _get_value_for_field(field, data, config)
@@ -88,7 +90,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                     )
                 if field.name in config.cast:
                     value = _cast_value(field.type, value)
-            if not _is_instance(field.type, value):
+            if config.validate_type and not _is_instance(field.type, value):
                 raise WrongTypeError(field, value)
         if field.init:
             init_values[field.name] = value
@@ -194,6 +196,7 @@ def _make_inner_config(field: Field, config: Config) -> Config:
         cast=_extract_nested_list(field, config.cast),
         transform=_extract_nested_dict(field, config.transform),
         flattened=_extract_nested_list(field, config.flattened),
+        validate=config.validate_type
     )
 
 
@@ -248,7 +251,7 @@ def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) ->
                     outer_config=outer_config,
                     field=field,
                 )
-            elif _is_instance(t, data):
+            elif _is_instance(t, data) or not outer_config.validate_type:
                 return data
         except DaciteError:
             pass
