@@ -893,7 +893,7 @@ def test_validation_false_passes():
     class X:
         s: int
 
-    result = from_dict(X, {'s': 'text'}, config=Config(validate=False))
+    result = from_dict(X, {'s': 'text'}, config=Config(validate_types=False))
     assert result == X("text")
 
 
@@ -903,7 +903,7 @@ def test_validation_false_missing_data_raises():
         s: int
 
     with pytest.raises(MissingValueError):
-        from_dict(X, dict(), config=Config(validate=False))
+        from_dict(X, dict(), config=Config(validate_types=False))
 
 
 def test_validation_false_passes_union():
@@ -911,7 +911,7 @@ def test_validation_false_passes_union():
     class X:
         s: Union[int, float]
 
-    result = from_dict(X, {'s': "text"}, config=Config(validate=False))
+    result = from_dict(X, {'s': "text"}, config=Config(validate_types=False))
     assert result == X("text")
 
 
@@ -925,5 +925,5 @@ def test_validation_false_passes_nested():
     class Y:
         x: X
 
-    result = from_dict(Y, {'x': {'s': 'text1', 't': 'text2'}}, config=Config(validate=False))
+    result = from_dict(Y, {'x': {'s': 'text1', 't': 'text2'}}, config=Config(validate_types=False))
     assert result == Y(X('text1', 'text2'))
