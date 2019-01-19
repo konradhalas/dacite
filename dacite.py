@@ -35,6 +35,10 @@ class InvalidConfigurationError(DaciteError):
         self.value = value
 
 
+class ForwardRefError(DaciteError, TypeError):
+    pass
+
+
 @dataclass
 class Config:
     remap: Dict[str, str] = dc_field(default_factory=dict)
@@ -42,6 +46,7 @@ class Config:
     cast: List[str] = dc_field(default_factory=list)
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
+    forward_refs: Dict[str, Type] = dc_field(default_factory=dict)
 
 
 T = TypeVar('T')
@@ -66,29 +71,30 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             if value is not None:
                 if field.name in config.transform:
                     value = config.transform[field.name](value)
-                if _is_union(field.type) and not _is_optional(field.type):
+                if _is_union(field.type, config) and not _is_optional(field.type, config):
                     value = _inner_from_dict_for_union(
                         data=value,
                         field=field,
                         outer_config=config,
                     )
-                elif _has_data_class_collection(field.type):
+                elif _has_data_class_collection(field.type, config):
                     value = _inner_from_dict_for_collection(
-                        collection=_extract_data_class_collection(field.type),
+                        collection=_extract_data_class_collection(field.type, config),
                         data=value,
                         outer_config=config,
                         field=field,
                     )
-                elif _has_data_class(field.type):
+                elif _has_data_class(field.type, config):
                     value = _inner_from_dict_for_dataclass(
-                        data_class=_extract_data_class(field.type),
+                        data_class=_extract_data_class(field.type, config),
                         data=value,
                         outer_config=config,
                         field=field,
                     )
                 if field.name in config.cast:
-                    value = _cast_value(field.type, value)
-            if not _is_instance(field.type, value):
+                    value = _cast_value(field.type, value, config)
+
+            if not _is_instance(field.type, value, config):
                 raise WrongTypeError(field, value)
         if field.init:
             init_values[field.name] = value
@@ -102,11 +108,11 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     )
 
 
-def _cast_value(t: Type[T], value: Any) -> T:
-    if _is_optional(t):
-        t = _extract_optional(t)
-    if _is_generic_collection(t):
-        collection_cls = _extract_generic_collection(t)
+def _cast_value(t: Type[T], value: Any, config: Config) -> T:
+    if _is_optional(t, config):
+        t = _extract_optional(t, config)
+    if _is_generic_collection(t, config):
+        collection_cls = _extract_generic_collection(t, config)
         if issubclass(collection_cls, Mapping):
             key_cls = t.__args__[0]
             item_cls = t.__args__[1]
@@ -147,7 +153,7 @@ def _validate_config_data_key(data_class: Type[T], data: Data, config: Config, p
     for field_name, input_data_field in getattr(config, parameter).items():
         if '.' not in field_name:
             field = data_class_fields[field_name]
-            if not validator(input_data_field, input_data_keys) and not _has_field_default_value(field):
+            if not validator(input_data_field, input_data_keys) and not _has_field_default_value(field, config):
                 raise InvalidConfigurationError(
                     parameter=parameter,
                     available_choices=input_data_keys,
@@ -155,8 +161,8 @@ def _validate_config_data_key(data_class: Type[T], data: Data, config: Config, p
                 )
 
 
-def _has_field_default_value(field: Field) -> bool:
-    return field.default != MISSING or field.default_factory != MISSING or _is_optional(field.type)
+def _has_field_default_value(field: Field, config: Config) -> bool:
+    return field.default != MISSING or field.default_factory != MISSING or _is_optional(field.type, config)
 
 
 def _get_value_for_field(field: Field, data: Data, config: Config) -> Tuple[Any, bool]:
@@ -165,23 +171,23 @@ def _get_value_for_field(field: Field, data: Data, config: Config) -> Tuple[Any,
             if field.name in config.prefixed:
                 value = _extract_nested_dict_for_prefix(config.prefixed[field.name], data)
             else:
-                value = _extract_flattened_fields(field, data, config.remap)
+                value = _extract_flattened_fields(field, data, config.remap, config)
             if not value:
-                return _get_default_value_for_field(field), True
+                return _get_default_value_for_field(field, config), True
         else:
             key_name = config.remap.get(field.name, field.name)
             value = data[key_name]
         return value, False
     except KeyError:
-        return _get_default_value_for_field(field), True
+        return _get_default_value_for_field(field, config), True
 
 
-def _get_default_value_for_field(field: Field) -> Any:
+def _get_default_value_for_field(field: Field, config: Config) -> Any:
     if field.default != MISSING:
         return field.default
     elif field.default_factory != MISSING:
         return field.default_factory()
-    elif _is_optional(field.type):
+    elif _is_optional(field.type, config):
         return None
     else:
         raise MissingValueError(field)
@@ -194,11 +200,12 @@ def _make_inner_config(field: Field, config: Config) -> Config:
         cast=_extract_nested_list(field, config.cast),
         transform=_extract_nested_dict(field, config.transform),
         flattened=_extract_nested_list(field, config.flattened),
+        forward_refs=config.forward_refs
     )
 
 
 def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config: Config, field: Field) -> T:
-    if _is_instance(data_class, data):
+    if _is_instance(data_class, data, outer_config):
         return data
     return from_dict(
         data_class=data_class,
@@ -208,23 +215,24 @@ def _inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config
 
 
 def _inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config, field: Field) -> T:
-    collection_cls = _extract_generic_collection(collection)
+    collection_cls = _extract_generic_collection(collection, outer_config)
     if isinstance(data, Mapping):
         return collection_cls((key, from_dict(
-            data_class=_extract_data_class(collection),
+            data_class=_extract_data_class(collection, outer_config),
             data=value,
             config=_make_inner_config(field, outer_config),
         )) for key, value in data.items())
     else:
         return collection_cls(_inner_from_dict_for_dataclass(
-            data_class=_extract_data_class(collection),
+            data_class=_extract_data_class(collection, outer_config),
             data=item,
             outer_config=outer_config,
             field=field,
         ) for item in data)
 
 
-def _extract_generic_collection(collection: Type) -> Type:
+def _extract_generic_collection(collection: Type, config: Config) -> Type:
+    collection = _get_forward_ref_type(collection, config)
     try:
         return collection.__extra__
     except AttributeError:
@@ -233,6 +241,7 @@ def _extract_generic_collection(collection: Type) -> Type:
 
 def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) -> Any:
     for t in field.type.__args__:
+        t = _get_forward_ref_type(t, outer_config)
         try:
             if is_dataclass(t) and isinstance(data, dict):
                 return _inner_from_dict_for_dataclass(
@@ -241,23 +250,23 @@ def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) ->
                     outer_config=outer_config,
                     field=field,
                 )
-            elif _is_data_class_collection(t) and _is_instance(t, data):
+            elif _is_data_class_collection(t, outer_config) and _is_instance(t, data, outer_config):
                 return _inner_from_dict_for_collection(
                     collection=t,
                     data=data,
                     outer_config=outer_config,
                     field=field,
                 )
-            elif _is_instance(t, data):
+            elif _is_instance(t, data, outer_config):
                 return data
         except DaciteError:
             pass
     raise UnionMatchError(field)
 
 
-def _extract_flattened_fields(field: Field, data: Dict[str, Any], remap: Dict[str, str]):
+def _extract_flattened_fields(field: Field, data: Dict[str, Any], remap: Dict[str, str], config: Config):
     result = {}
-    for inner_field in fields(_extract_data_class(field.type)):
+    for inner_field in fields(_extract_data_class(field.type, config)):
         field_name = remap.get(field.name + '.' + inner_field.name, inner_field.name)
         if field_name in data:
             result[field_name] = data[field_name]
@@ -288,83 +297,110 @@ def _extract_nested_list(field: Field, params: List[str]) -> List[str]:
     return result
 
 
-def _is_optional(t: Type) -> bool:
-    return _is_union(t) and type(None) in t.__args__ and len(t.__args__) == 2
+def _is_optional(t: Type, config: Config) -> bool:
+    t = _get_forward_ref_type(t, config)
+    return _is_union(t, config) and type(None) in t.__args__ and len(t.__args__) == 2
 
 
-def _extract_optional(optional: Optional[T]) -> T:
+def _extract_optional(optional: Optional[T], config: Config) -> T:
+    t = _get_forward_ref_type(optional, config)
     for t in optional.__args__:
+        t = _get_forward_ref_type(t, config)
         if t is not None:
             return t
 
 
-def _is_generic(t: Type) -> bool:
+def _is_generic(t: Type, config: Config) -> bool:
+    t = _get_forward_ref_type(t, config)
     return hasattr(t, '__origin__')
 
 
-def _is_union(t: Type) -> bool:
-    return _is_generic(t) and t.__origin__ == Union
+def _is_union(t: Type, config: Config) -> bool:
+    t = _get_forward_ref_type(t, config)
+    return _is_generic(t, config) and t.__origin__ == Union
 
 
-def _is_instance(t: Type, value: Any) -> bool:
+def _get_forward_ref_type(t: Union[str, Type], config: Config) -> Type[Type]:
+    if hasattr(t, "__forward_arg__"):
+        t = t.__forward_arg__
+    if not isinstance(t, str):
+        return t
+    try:
+        t = config.forward_refs[t]
+    except KeyError:
+        raise ForwardRefError(f"no forward ref supplied for '{t}'")
+    return t
+
+
+def _is_instance(t: Union[str, Type], value: Any, config: Config) -> bool:
+    t = _get_forward_ref_type(t, config)
     if t == Any:
         return True
-    elif _is_union(t):
-        types = tuple(t.__origin__ if _is_generic(t) else t for t in t.__args__)
+    elif _is_union(t, config):
+        types = tuple(
+            t.__origin__ if _is_generic(t, config) else _get_forward_ref_type(t, config)
+            for t in t.__args__
+        )
         return isinstance(value, types)
-    elif _is_generic(t):
+    elif _is_generic(t, config):
         return isinstance(value, t.__origin__)
     else:
         return isinstance(value, t)
 
 
-def _has_data_class(t: Type) -> bool:
-    if _is_union(t):
-        return _has_inner_data_class(t)
+def _has_data_class(t: Type, config: Config) -> bool:
+    t = _get_forward_ref_type(t, config)
+    if _is_union(t, config):
+        return _has_inner_data_class(t, config)
     else:
         return is_dataclass(t)
 
 
-def _has_inner_data_class(t: Type) -> bool:
-    return hasattr(t, '__args__') and any(is_dataclass(it) for it in t.__args__)
+def _has_inner_data_class(t: Type, config: Config) -> bool:
+    return hasattr(t, '__args__') and any(is_dataclass(_get_forward_ref_type(it, config)) for it in t.__args__)
 
 
-def _extract_data_class(t: Type) -> Any:
-    if _has_data_class_collection(t):
-        t = _extract_data_class_collection(t)
-    if _has_inner_data_class(t):
+def _extract_data_class(t: Type, config: Config) -> Any:
+    t = _get_forward_ref_type(t, config)
+    if _has_data_class_collection(t, config):
+        t = _extract_data_class_collection(t, config)
+    if _has_inner_data_class(t, config):
         for inner_type in t.__args__:
+            inner_type = _get_forward_ref_type(inner_type, config)
             if is_dataclass(inner_type):
                 return inner_type
     elif is_dataclass(t):
         return t
 
 
-def _has_data_class_collection(t: Type) -> bool:
-    if _is_union(t):
-        return _has_inner_data_class_collection(t)
+def _has_data_class_collection(t: Type, config: Config) -> bool:
+    if _is_union(t, config):
+        return _has_inner_data_class_collection(t, config)
     else:
-        return _is_data_class_collection(t)
+        return _is_data_class_collection(t, config)
 
 
-def _is_data_class_collection(t: Type) -> bool:
-    return _is_generic_collection(t) and _has_inner_data_class(t)
+def _is_data_class_collection(t: Type, config: Config) -> bool:
+    return _is_generic_collection(t, config) and _has_inner_data_class(t, config)
 
 
-def _is_generic_collection(t: Type) -> bool:
-    return _is_generic(t) and issubclass(t.__origin__, Collection)
+def _is_generic_collection(t: Type, config: Config) -> bool:
+    t = _get_forward_ref_type(t, config)
+    return _is_generic(t, config) and issubclass(t.__origin__, Collection)
 
 
-def _has_inner_data_class_collection(t: Type) -> bool:
-    return hasattr(t, '__args__') and any(_is_data_class_collection(it) for it in t.__args__)
+def _has_inner_data_class_collection(t: Type, config: Config) -> bool:
+    return hasattr(t, '__args__') and any(_is_data_class_collection(it, config) for it in t.__args__)
 
 
-def _extract_data_class_collection(t: Type) -> Any:
-    if _has_inner_data_class_collection(t):
+def _extract_data_class_collection(t: Type, config: Config) -> Any:
+    t = _get_forward_ref_type(t, config)
+    if _has_inner_data_class_collection(t, config):
         for inner_type in t.__args__:
-            if _is_data_class_collection(inner_type):
+            inner_type = _get_forward_ref_type(inner_type, config)
+            if _is_data_class_collection(inner_type, config):
                 return inner_type
-    elif _is_data_class_collection(t):
+    elif _is_data_class_collection(t, config):
         return t
 
 
