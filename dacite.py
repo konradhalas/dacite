@@ -68,8 +68,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     _validate_config(data_class, data, config)
     try:
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
-    except NameError:
-        raise ForwardReferenceError
+    except NameError as error:
+        raise ForwardReferenceError(str(error))
     for field in fields(data_class):
         field = copy.copy(field)
         field.type = data_class_hints[field.name]
