@@ -53,6 +53,7 @@ Dacite supports following features:
 - (basic) types checking
 - optional fields (i.e. `typing.Optional`)
 - unions
+- forward references
 - collections
 - values casting and transformation
 - remapping of fields names
@@ -96,6 +97,7 @@ Configuration is a (data) class with following fields:
 - `prefixed`
 - `cast`
 - `transform`
+- `forward references`
 
 The examples below show all features of `from_dict` function and usage
 of all `Config` parameters.
@@ -221,6 +223,25 @@ data = {
 result = from_dict(data_class=B, data=data)
 
 assert result == B(a_list=[A(x='test1', y=1), A(x='test2', y=2)])
+```
+
+### Forward References
+
+Definition of forward references can be passed as a `{'name': Type}` mapping to 
+`Config.forward_references`. This dict is passed to `typing.get_type_hints()` as the 
+`globalns` param when evaluating each field's type.
+
+```python
+@dataclass
+class X:
+    y: "Y"
+
+@dataclass
+class Y:
+    s: str
+
+data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
+assert data == X(Y("text"))
 ```
 
 ### Remapping

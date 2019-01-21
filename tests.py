@@ -898,7 +898,7 @@ def test_forward_reference():
     class Y:
         s: str
 
-    data = from_dict(X, {"y": {"s": "text"}})
+    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
     assert data == X(Y("text"))
 
 
@@ -912,7 +912,7 @@ def test_forward_reference_in_union():
     class Y:
         s: str
 
-    data = from_dict(X, {"y": {"s": "text"}})
+    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
     assert data == X(Y("text"))
 
 
@@ -926,7 +926,7 @@ def test_forward_reference_in_list():
     class Y:
         s: str
 
-    data = from_dict(X, {"y": [{"s": "text"}]})
+    data = from_dict(X, {"y": [{"s": "text"}]}, Config(forward_references={"Y": Y}))
     assert data == X([Y("text")])
 
 
@@ -940,7 +940,7 @@ def test_forward_reference_in_dict():
     class Y:
         s: str
 
-    data = from_dict(X, {"y": {"key": {"s": "text"}}})
+    data = from_dict(X, {"y": {"key": {"s": "text"}}}, Config(forward_references={"Y": Y}))
     assert data == X({"key": Y("text")})
 
 

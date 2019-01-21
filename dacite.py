@@ -47,6 +47,7 @@ class Config:
     cast: List[str] = dc_field(default_factory=list)
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
+    forward_references: Optional[Dict[str, Any]] = None
 
 
 T = TypeVar('T')
@@ -65,11 +66,13 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     init_values: Data = {}
     post_init_values: Data = {}
     _validate_config(data_class, data, config)
-    data_class_hints = get_type_hints(data_class)
+    try:
+        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+    except NameError:
+        raise ForwardReferenceError
     for field in fields(data_class):
         field = copy.copy(field)
         field.type = data_class_hints[field.name]
-        print(data_class_hints[field.name])
         value, is_default = _get_value_for_field(field, data, config)
         if not is_default:
             if value is not None:
