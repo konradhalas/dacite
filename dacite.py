@@ -36,7 +36,7 @@ class InvalidConfigurationError(DaciteError):
         self.value = value
 
 
-class ForwardReferenceError(DaciteError, TypeError):
+class ForwardReferenceError(DaciteError):
     pass
 
 
