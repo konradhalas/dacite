@@ -383,6 +383,8 @@ required field
 (a field name or a input data key) for a configuration
 - `UnionMatchError` - raised when provided data does not match any type
 of `Union`
+- `ForwardReferenceError` - raised when undefined forward reference encountered in
+dataclass
 
 ## Authors
 
