@@ -1,3 +1,4 @@
+import enum
 import pytest
 from dataclasses import dataclass, field
 from typing import Optional, List, Set, Union, Any, Dict
@@ -884,5 +885,39 @@ def test_from_dict_with_post_init():
     x.s = 'test'
 
     result = from_dict(X, {'s': 'test'})
+
+    assert result == x
+
+
+def test_from_dict_with_enum():
+    class MyEnum(enum.Enum):
+        a: int = 1
+        b: int = 3
+
+    @dataclass
+    class X:
+        e: MyEnum = MyEnum.a
+
+    x = X()
+
+    result = from_dict(X, {"e": 1})
+
+    assert result == x
+
+
+def test_from_dict_with_enum_multiple_inheritance():
+    class StrEnum(str, enum.Enum):
+        pass
+
+    class YEnum(StrEnum):
+        b: str = "hello"
+
+    @dataclass
+    class X:
+        e: YEnum = YEnum.b
+
+    x = X()
+    
+    result = from_dict(X, {"e": "hello"})
 
     assert result == x

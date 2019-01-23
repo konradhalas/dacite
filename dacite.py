@@ -1,3 +1,5 @@
+import inspect
+import enum
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
 from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping, Tuple
 
@@ -88,8 +90,14 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                     )
                 if field.name in config.cast:
                     value = _cast_value(field.type, value)
-            if not _is_instance(field.type, value):
+
+            # do not raise WrongTypeError when its enum
+            # e.g. it can be enum of ints, but type is MyEnum
+            if inspect.isclass(field.type) and issubclass(field.type, enum.Enum):
+                value = field.type(value)
+            elif not _is_instance(field.type, value):
                 raise WrongTypeError(field, value)
+
         if field.init:
             init_values[field.name] = value
         else:
