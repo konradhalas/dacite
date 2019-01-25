@@ -289,7 +289,7 @@ def _extract_nested_list(field: Field, params: List[str]) -> List[str]:
 
 
 def _is_optional(t: Type) -> bool:
-    return _is_union(t) and type(None) in t.__args__ and len(t.__args__) == 2
+    return _is_union(t) and type(None) in t.__args__
 
 
 def _extract_optional(optional: Optional[T]) -> T:

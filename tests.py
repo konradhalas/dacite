@@ -142,6 +142,16 @@ def test_from_dict_with_remap_and_missing_optional_field():
     assert result == X(s='test', i=None)
 
 
+def test_from_dict_with_missing_optional_union():
+    @dataclass
+    class X:
+        i: Optional[Union[int, str]]
+
+    result = from_dict(X, {})
+
+    assert result == X(i=None)
+
+
 def test_from_dict_with_prefix():
     @dataclass
     class X:
