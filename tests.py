@@ -2,7 +2,7 @@ import pytest
 from dataclasses import dataclass, field
 from typing import Optional, List, Set, Union, Any, Dict
 
-from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError
+from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError, ForwardReferenceError
 
 
 def test_from_dict_from_correct_data():
@@ -896,3 +896,73 @@ def test_from_dict_with_post_init():
     result = from_dict(X, {'s': 'test'})
 
     assert result == x
+
+
+def test_forward_reference():
+
+    @dataclass
+    class X:
+        y: "Y"
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
+    assert data == X(Y("text"))
+
+
+def test_forward_reference_in_union():
+
+    @dataclass
+    class X:
+        y: Union["Y", str]
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
+    assert data == X(Y("text"))
+
+
+def test_forward_reference_in_list():
+
+    @dataclass
+    class X:
+        y: List["Y"]
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": [{"s": "text"}]}, Config(forward_references={"Y": Y}))
+    assert data == X([Y("text")])
+
+
+def test_forward_reference_in_dict():
+
+    @dataclass
+    class X:
+        y: Dict[str, "Y"]
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": {"key": {"s": "text"}}}, Config(forward_references={"Y": Y}))
+    assert data == X({"key": Y("text")})
+
+
+def test_forward_reference_error():
+
+    @dataclass
+    class X:
+        y: "Y"
+
+    @dataclass
+    class Y:
+        s: str
+
+    with pytest.raises(ForwardReferenceError):
+        from_dict(X, {"y": {"s": "text"}})
