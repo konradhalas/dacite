@@ -9,10 +9,12 @@ addons:
   apt_packages:
     - pandoc
 install:
-- pip install pipenv
+- pip install pipenv pytest-cov coveralls
 - pipenv install --dev --system --ignore-pipfile
 script:
-- pytest tests.py
+- pytest --cov=dacite tests.py
+after_success:
+  coveralls
 deploy:
   provider: pypi
   user: khalas

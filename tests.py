@@ -2,7 +2,7 @@ import pytest
 from dataclasses import dataclass, field
 from typing import Optional, List, Set, Union, Any, Dict
 
-from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError
+from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError, ForwardReferenceError
 
 
 def test_from_dict_from_correct_data():
@@ -140,6 +140,16 @@ def test_from_dict_with_remap_and_missing_optional_field():
     result = from_dict(X, {'s': 'test'}, Config(remap={'i': 'j'}))
 
     assert result == X(s='test', i=None)
+
+
+def test_from_dict_with_missing_optional_union():
+    @dataclass
+    class X:
+        i: Optional[Union[int, str]]
+
+    result = from_dict(X, {})
+
+    assert result == X(i=None)
 
 
 def test_from_dict_with_prefix():
@@ -888,6 +898,7 @@ def test_from_dict_with_post_init():
     assert result == x
 
 
+
 def test_validation_false_passes():
     @dataclass
     class X:
@@ -927,3 +938,73 @@ def test_validation_false_passes_nested():
 
     result = from_dict(Y, {'x': {'s': 'text1', 't': 'text2'}}, config=Config(validate_types=False))
     assert result == Y(X('text1', 'text2'))
+
+
+def test_forward_reference():
+
+    @dataclass
+    class X:
+        y: "Y"
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
+    assert data == X(Y("text"))
+
+
+def test_forward_reference_in_union():
+
+    @dataclass
+    class X:
+        y: Union["Y", str]
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
+    assert data == X(Y("text"))
+
+
+def test_forward_reference_in_list():
+
+    @dataclass
+    class X:
+        y: List["Y"]
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": [{"s": "text"}]}, Config(forward_references={"Y": Y}))
+    assert data == X([Y("text")])
+
+
+def test_forward_reference_in_dict():
+
+    @dataclass
+    class X:
+        y: Dict[str, "Y"]
+
+    @dataclass
+    class Y:
+        s: str
+
+    data = from_dict(X, {"y": {"key": {"s": "text"}}}, Config(forward_references={"Y": Y}))
+    assert data == X({"key": Y("text")})
+
+
+def test_forward_reference_error():
+
+    @dataclass
+    class X:
+        y: "Y"
+
+    @dataclass
+    class Y:
+        s: str
+
+    with pytest.raises(ForwardReferenceError):
+        from_dict(X, {"y": {"s": "text"}})

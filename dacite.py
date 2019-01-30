@@ -1,5 +1,6 @@
 from dataclasses import fields, MISSING, is_dataclass, Field, dataclass, field as dc_field
-from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping, Tuple
+from typing import Dict, Any, TypeVar, Type, Union, Callable, List, Collection, Optional, Set, Mapping, Tuple, get_type_hints
+import copy
 
 
 class DaciteError(Exception):
@@ -35,6 +36,10 @@ class InvalidConfigurationError(DaciteError):
         self.value = value
 
 
+class ForwardReferenceError(DaciteError):
+    pass
+
+
 @dataclass
 class Config:
     remap: Dict[str, str] = dc_field(default_factory=dict)
@@ -42,7 +47,9 @@ class Config:
     cast: List[str] = dc_field(default_factory=list)
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
+    disable_type_validation
     validate_types: bool = True
+    forward_references: Optional[Dict[str, Any]] = None
 
 
 T = TypeVar('T')
@@ -62,7 +69,13 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     post_init_values: Data = {}
 
     _validate_config(data_class, data, config)
+    try:
+        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+    except NameError as error:
+        raise ForwardReferenceError(str(error))
     for field in fields(data_class):
+        field = copy.copy(field)
+        field.type = data_class_hints[field.name]
         value, is_default = _get_value_for_field(field, data, config)
         if not is_default:
             if value is not None:
@@ -292,7 +305,7 @@ def _extract_nested_list(field: Field, params: List[str]) -> List[str]:
 
 
 def _is_optional(t: Type) -> bool:
-    return _is_union(t) and type(None) in t.__args__ and len(t.__args__) == 2
+    return _is_union(t) and type(None) in t.__args__
 
 
 def _extract_optional(optional: Optional[T]) -> T:
