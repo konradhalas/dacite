@@ -47,9 +47,8 @@ class Config:
     cast: List[str] = dc_field(default_factory=list)
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
-    disable_type_validation
-    validate_types: bool = True
     forward_references: Optional[Dict[str, Any]] = None
+    validate_types: bool = True
 
 
 T = TypeVar('T')
@@ -264,10 +263,12 @@ def _inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) ->
                     outer_config=outer_config,
                     field=field,
                 )
-            elif _is_instance(t, data) or not outer_config.validate_types:
+            elif _is_instance(t, data):
                 return data
         except DaciteError:
             pass
+    if not outer_config.validate_types:
+        return data
     raise UnionMatchError(field)
 
 
