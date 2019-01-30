@@ -898,48 +898,6 @@ def test_from_dict_with_post_init():
     assert result == x
 
 
-
-def test_validation_false_passes():
-    @dataclass
-    class X:
-        s: int
-
-    result = from_dict(X, {'s': 'text'}, config=Config(validate_types=False))
-    assert result == X("text")
-
-
-def test_validation_false_missing_data_raises():
-    @dataclass
-    class X:
-        s: int
-
-    with pytest.raises(MissingValueError):
-        from_dict(X, dict(), config=Config(validate_types=False))
-
-
-def test_validation_false_passes_union():
-    @dataclass
-    class X:
-        s: Union[int, float]
-
-    result = from_dict(X, {'s': "text"}, config=Config(validate_types=False))
-    assert result == X("text")
-
-
-def test_validation_false_passes_nested():
-    @dataclass
-    class X:
-        s: int
-        t: Union[int, float]
-
-    @dataclass
-    class Y:
-        x: X
-
-    result = from_dict(Y, {'x': {'s': 'text1', 't': 'text2'}}, config=Config(validate_types=False))
-    assert result == Y(X('text1', 'text2'))
-
-
 def test_forward_reference():
 
     @dataclass
@@ -1008,3 +966,45 @@ def test_forward_reference_error():
 
     with pytest.raises(ForwardReferenceError):
         from_dict(X, {"y": {"s": "text"}})
+
+
+def test_validation_false_passes():
+    @dataclass
+    class X:
+        s: int
+
+    result = from_dict(X, {'s': 'text'}, config=Config(validate_types=False))
+    assert result == X("text")
+
+
+def test_validation_false_missing_data_raises():
+    @dataclass
+    class X:
+        s: int
+
+    with pytest.raises(MissingValueError):
+        from_dict(X, dict(), config=Config(validate_types=False))
+
+
+def test_validation_false_passes_union():
+    @dataclass
+    class X:
+        s: Union[int, float]
+
+    result = from_dict(X, {'s': "text"}, config=Config(validate_types=False))
+    assert result == X("text")
+
+
+def test_validation_false_passes_nested():
+    @dataclass
+    class X:
+        s: int
+        t: Union[int, float]
+
+    @dataclass
+    class Y:
+        x: X
+
+    result = from_dict(Y, {'x': {'s': 'text1', 't': 'text2'}}, config=Config(validate_types=False))
+    assert result == Y(X('text1', 'text2'))
+
