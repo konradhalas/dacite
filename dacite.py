@@ -66,7 +66,6 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     config = config or Config()
     init_values: Data = {}
     post_init_values: Data = {}
-
     _validate_config(data_class, data, config)
     try:
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
