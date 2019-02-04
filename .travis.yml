@@ -12,7 +12,7 @@ install:
 - pip install pipenv pytest-cov coveralls
 - pipenv install --dev --system --ignore-pipfile
 script:
-- pytest --cov=dacite tests.py
+- pytest --cov=dacite
 after_success:
   coveralls
 deploy:

@@ -2,7 +2,8 @@ import pytest
 from dataclasses import dataclass, field
 from typing import Optional, List, Set, Union, Any, Dict
 
-from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError, ForwardReferenceError
+from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError, \
+    ForwardReferenceError
 
 
 def test_from_dict_from_correct_data():
@@ -899,7 +900,6 @@ def test_from_dict_with_post_init():
 
 
 def test_forward_reference():
-
     @dataclass
     class X:
         y: "Y"
@@ -913,7 +913,6 @@ def test_forward_reference():
 
 
 def test_forward_reference_in_union():
-
     @dataclass
     class X:
         y: Union["Y", str]
@@ -927,7 +926,6 @@ def test_forward_reference_in_union():
 
 
 def test_forward_reference_in_list():
-
     @dataclass
     class X:
         y: List["Y"]
@@ -941,7 +939,6 @@ def test_forward_reference_in_list():
 
 
 def test_forward_reference_in_dict():
-
     @dataclass
     class X:
         y: Dict[str, "Y"]
@@ -955,7 +952,6 @@ def test_forward_reference_in_dict():
 
 
 def test_forward_reference_error():
-
     @dataclass
     class X:
         y: "Y"

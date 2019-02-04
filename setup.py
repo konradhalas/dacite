@@ -29,6 +29,6 @@ setup(
     ],
     python_requires='>=3.6',
     keywords='dataclasses',
-    py_modules=['dacite'],
+    packages=['dacite'],
     install_requires=requirements,
 )
