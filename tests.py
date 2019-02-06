@@ -1,6 +1,8 @@
-import pytest
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import Optional, List, Set, Union, Any, Dict
+
+import pytest
 
 from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError, ForwardReferenceError
 
@@ -966,3 +968,14 @@ def test_forward_reference_error():
 
     with pytest.raises(ForwardReferenceError):
         from_dict(X, {"y": {"s": "text"}})
+
+
+def test_type_transform():
+    @dataclass
+    class X:
+        x: str
+        y: date
+
+    date_str = "2019-12-31"
+    data = from_dict(X, {"x": date_str, "y": date_str}, Config(type_transform={(date, str): lambda d: datetime.strptime(d, "%Y-%m-%d").date()}))
+    assert data == X(x=date_str, y=date(2019, 12, 31))

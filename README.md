@@ -99,6 +99,7 @@ Configuration is a (data) class with following fields:
 - `cast`
 - `transform`
 - `forward references`
+- `type_transform`
 
 The examples below show all features of `from_dict` function and usage
 of all `Config` parameters.
@@ -370,6 +371,29 @@ result = from_dict(data_class=A, data=data, config=Config(transform={'x': str.lo
 
 assert result == A(x='test')
 ```
+
+### Type Transformation
+
+You can use `Config.type_transform` argument if you want to transform the
+input data type into the new type. You have to pass a following mapping:
+`{(data_class_type, input_type): callable}`, where `callable` is a
+`Callable[[Any], Any]`.
+
+```python
+@dataclass
+class A:
+    x: str
+
+
+data = {
+    'x': datetime.date(2019, 12, 31),
+}
+
+result = from_dict(data_class=A, data=data, config=Config(type_transform={(str, datetime.date): datetime.date.isoformat}))
+
+assert result == A(x='2019-12-31')
+```
+
 
 ## Exceptions
 
