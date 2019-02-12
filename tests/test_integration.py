@@ -2,7 +2,7 @@ import pytest
 from dataclasses import dataclass, field
 from typing import Optional, List, Set, Union, Any, Dict
 
-from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError, \
+from dacite import from_dict, Config, MissingValueError, InvalidConfigurationError, WrongTypeError, \
     ForwardReferenceError
 
 
@@ -272,7 +272,7 @@ def test_from_dict_with_wrong_type_of_optional_value():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {'s': 1, 'i': 1})
 
-    assert exception_info.value.field.name == 's'
+    # assert exception_info.value.field.name == 's'
     assert exception_info.value.value == 1
 
 
@@ -338,6 +338,34 @@ def test_from_dict_with_generic():
     result = from_dict(X, {'l': [1]})
 
     assert result == X(l=[1])
+
+
+def test_from_dict_with_generic_and_union():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        l: List[Union[int, X]]
+
+    result = from_dict(Y, {'l': [1, {'i': 2}]})
+
+    assert result == Y(l=[1, X(i=2)])
+
+
+def test_from_dict_with_nested_generic():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        l: List[List[X]]
+
+    result = from_dict(Y, {'l': [[{'i': 2}]]})
+
+    assert result == Y(l=[[X(i=2)]])
 
 
 def test_from_dict_with_cast():
@@ -511,6 +539,23 @@ def test_from_dict_with_flat_of_existing_optional_field():
 
     assert result == Y(s='test', x=X(i=1))
 
+def test_from_dict_with_flat_of_existing_union_field():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Z:
+        z: int
+
+    @dataclass
+    class Y:
+        s: str
+        x: Union[X, Z]
+
+    result = from_dict(Y, {'s': 'test', 'i': 1}, Config(flattened=['x']))
+
+    assert result == Y(s='test', x=X(i=1))
 
 def test_from_dict_with_flat_of_missing_optional_field():
     @dataclass
@@ -574,18 +619,14 @@ def test_from_dict_with_list_of_dataclasses():
     assert result == Y(x_list=[X(i=1), X(i=2)])
 
 
-def test_from_dict_with_set_of_dataclasses():
-    @dataclass(frozen=True)
-    class X:
-        i: int
-
+def test_from_dict_with_set():
     @dataclass
-    class Y:
-        x_set: Set[X]
+    class X:
+        i_set: Set[int]
 
-    result = from_dict(Y, {'x_set': [{'i': 1}, {'i': 2}]})
+    result = from_dict(X, {'i_set': {1, 2}})
 
-    assert result == Y(x_set={X(i=1), X(i=2)})
+    assert result == X(i_set={1, 2})
 
 
 def test_from_dict_with_optional_list_of_dataclasses():
@@ -733,10 +774,10 @@ def test_from_dict_with_union_of_data_classes_and_wrong_data():
     class Z:
         x_or_y: Union[X, Y]
 
-    with pytest.raises(UnionMatchError) as exception_info:
+    with pytest.raises(WrongTypeError) as exception_info:
         from_dict(Z, {'x_or_y': {'f': 2.0}})
 
-    assert exception_info.value.field.name == 'x_or_y'
+    # assert exception_info.value.field.name == 'x_or_y'
 
 
 def test_from_dict_with_union_of_data_classes_collections_with_correct_data():
@@ -765,6 +806,19 @@ def test_from_dict_with_union_of_builtin_types():
     result = from_dict(X, {'i': 's'})
 
     assert result == X(i='s')
+
+
+def test_from_dict_with_union_and_optional():
+    @dataclass
+    class X:
+        i: Union[int, Optional[str]]
+
+    assert from_dict(X, {}) == X(i=None)
+    assert from_dict(X, {'i': 1}) == X(i=1)
+    assert from_dict(X, {'i': 's'}) == X(i='s')
+
+    with pytest.raises(WrongTypeError):
+        assert from_dict(X, {'i': 1.0})
 
 
 def test_from_dict_with_union_of_mixed_types_and_builtin_type_as_a_result():

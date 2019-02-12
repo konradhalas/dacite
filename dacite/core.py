@@ -1,14 +1,13 @@
 import copy
-from dataclasses import fields, is_dataclass, Field
-from typing import Dict, Any, TypeVar, Type, List, Optional, Mapping, Tuple, get_type_hints
+from dataclasses import fields, is_dataclass
+from typing import TypeVar, Type, List, Optional, get_type_hints, Mapping
 
-from dacite.config import Config, make_inner_config, extract_nested_dict_for_prefix, validate_config
+from dacite.config import Config
 from dacite.data import Data
 from dacite.dataclasses import get_default_value_for_field, create_instance
-from dacite.exceptions import ForwardReferenceError, WrongTypeError, DaciteError, UnionMatchError
-from dacite.types import cast_value, extract_generic_collection, is_optional, is_union, is_instance, \
-    has_data_class, extract_data_class, has_data_class_collection, is_data_class_collection, \
-    extract_data_class_collection
+from dacite.exceptions import ForwardReferenceError, WrongTypeError, DaciteError, MissingValueError
+from dacite.types import extract_origin_collection, is_instance, \
+    is_generic_collection, is_union
 
 T = TypeVar('T')
 
@@ -21,10 +20,10 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
-    config = config or Config()
     init_values: Data = {}
     post_init_values: Data = {}
-    validate_config(data_class, data, config)
+    config = config or Config()
+    config.validate(data_class, data)
     try:
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
     except NameError as error:
@@ -32,35 +31,14 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     for field in fields(data_class):
         field = copy.copy(field)
         field.type = data_class_hints[field.name]
-        value, is_default = get_value_for_field(field, data, config)
-        if not is_default:
+        try:
+            value = config.get_value(field, data)
             if value is not None:
-                if field.name in config.transform:
-                    value = config.transform[field.name](value)
-                if is_union(field.type) and not is_optional(field.type):
-                    value = inner_from_dict_for_union(
-                        data=value,
-                        field=field,
-                        outer_config=config,
-                    )
-                elif has_data_class_collection(field.type):
-                    value = inner_from_dict_for_collection(
-                        collection=extract_data_class_collection(field.type),
-                        data=value,
-                        outer_config=config,
-                        field=field,
-                    )
-                elif has_data_class(field.type):
-                    value = inner_from_dict_for_dataclass(
-                        data_class=extract_data_class(field.type),
-                        data=value,
-                        outer_config=config,
-                        field=field,
-                    )
-                if field.name in config.cast:
-                    value = cast_value(field.type, value)
-            if not is_instance(field.type, value):
+                value = _magic_inner_func(config.make_inner(field), field.type, value)
+            if not is_instance(value, field.type):
                 raise WrongTypeError(field, value)
+        except MissingValueError:
+            value = get_default_value_for_field(field)
         if field.init:
             init_values[field.name] = value
         else:
@@ -73,78 +51,57 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     )
 
 
-def get_value_for_field(field: Field, data: Data, config: Config) -> Tuple[Any, bool]:
-    try:
-        if field.name in config.prefixed or field.name in config.flattened:
-            if field.name in config.prefixed:
-                value = extract_nested_dict_for_prefix(config.prefixed[field.name], data)
-            else:
-                value = extract_flattened_fields(field, data, config.remap)
-            if not value:
-                return get_default_value_for_field(field), True
+def _magic_inner_func(config, type, value):
+    if is_union(type):
+        for inner_type in type.__args__:
+            try:
+                value = _magic_inner_func(
+                    config=config,
+                    type=inner_type,
+                    value=value
+                )
+                if is_instance(value, inner_type):
+                    break
+            except DaciteError:
+                pass
         else:
-            key_name = config.remap.get(field.name, field.name)
-            value = data[key_name]
-        return value, False
-    except KeyError:
-        return get_default_value_for_field(field), True
+            raise WrongTypeError(None, value)
+    elif is_generic_collection(type) and isinstance(value, extract_origin_collection(type)):
+        value = inner_from_dict_for_collection(
+            collection=type,
+            data=value,
+            outer_config=config,
+        )
+    elif is_dataclass(type) and isinstance(value, dict):
+        value = inner_from_dict_for_dataclass(
+            data_class=type,
+            data=value,
+            config=config,
+        )
+    return value
 
 
-def inner_from_dict_for_dataclass(data_class: Type[T], data: Data, outer_config: Config, field: Field) -> T:
-    if is_instance(data_class, data):
+def inner_from_dict_for_dataclass(data_class: Type[T], data: Data, config: Config) -> T:
+    if is_instance(data, data_class):
         return data
     return from_dict(
         data_class=data_class,
         data=data,
-        config=make_inner_config(field, outer_config),
+        config=config,
     )
 
 
-def inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config, field: Field) -> T:
-    collection_cls = extract_generic_collection(collection)
+def inner_from_dict_for_collection(collection: Type[T], data: List[Data], outer_config: Config) -> T:
+    collection_cls = extract_origin_collection(collection)
     if isinstance(data, Mapping):
-        return collection_cls((key, from_dict(
-            data_class=extract_data_class(collection),
-            data=value,
-            config=make_inner_config(field, outer_config),
+        return collection_cls((key, _magic_inner_func(
+            type=collection.__args__[1],
+            value=value,
+            config=Config(),  # TODO: is it OK?
         )) for key, value in data.items())
     else:
-        return collection_cls(inner_from_dict_for_dataclass(
-            data_class=extract_data_class(collection),
-            data=item,
-            outer_config=outer_config,
-            field=field,
+        return collection_cls(_magic_inner_func(
+            type=collection.__args__[0],
+            value=item,
+            config=Config(),  # TODO: is it OK?
         ) for item in data)
-
-
-def inner_from_dict_for_union(data: Any, field: Field, outer_config: Config) -> Any:
-    for t in field.type.__args__:
-        try:
-            if is_dataclass(t) and isinstance(data, dict):
-                return inner_from_dict_for_dataclass(
-                    data_class=t,
-                    data=data,
-                    outer_config=outer_config,
-                    field=field,
-                )
-            elif is_data_class_collection(t) and is_instance(t, data):
-                return inner_from_dict_for_collection(
-                    collection=t,
-                    data=data,
-                    outer_config=outer_config,
-                    field=field,
-                )
-            elif is_instance(t, data):
-                return data
-        except DaciteError:
-            pass
-    raise UnionMatchError(field)
-
-
-def extract_flattened_fields(field: Field, data: Data, remap: Dict[str, str]):
-    result = {}
-    for inner_field in fields(extract_data_class(field.type)):
-        field_name = remap.get(field.name + '.' + inner_field.name, inner_field.name)
-        if field_name in data:
-            result[field_name] = data[field_name]
-    return result

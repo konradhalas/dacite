@@ -12,8 +12,8 @@ class DaciteError(Exception):
 
 class WrongTypeError(DaciteError):
     def __init__(self, field: Field, value: Any) -> None:
-        super().__init__(f'wrong type for field "{field.name}" - should be "{_get_type_name(field.type)}" '
-                         f'instead of "{_get_type_name(type(value))}"')
+        # super().__init__(f'wrong type for field "{field.name}" - should be "{_get_type_name(field.type)}" '
+        #                  f'instead of "{_get_type_name(type(value))}"')
         self.field = field
         self.value = value
 
@@ -21,12 +21,6 @@ class WrongTypeError(DaciteError):
 class MissingValueError(DaciteError):
     def __init__(self, field: Field) -> None:
         super().__init__(f'missing value for field {field.name}')
-        self.field = field
-
-
-class UnionMatchError(DaciteError):
-    def __init__(self, field: Field) -> None:
-        super().__init__(f'can not match the data to any type of "{field.name}" union: {_get_type_name(field.type)}')
         self.field = field
 
 
