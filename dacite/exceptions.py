@@ -1,5 +1,4 @@
-from dataclasses import Field
-from typing import Any, Set
+from typing import Any, Set, Type
 
 
 def _get_type_name(t: type) -> str:
@@ -11,16 +10,16 @@ class DaciteError(Exception):
 
 
 class WrongTypeError(DaciteError):
-    def __init__(self, field: Field, value: Any) -> None:
-        # super().__init__(f'wrong type for field "{field.name}" - should be "{_get_type_name(field.type)}" '
-        #                  f'instead of "{_get_type_name(type(value))}"')
+    def __init__(self, field: str, t: Type, value: Any) -> None:
+        super().__init__(f'wrong type for field "{field}" - should be "{_get_type_name(t)}" '
+                         f'instead of "{_get_type_name(type(value))}"')
         self.field = field
         self.value = value
 
 
 class MissingValueError(DaciteError):
-    def __init__(self, field: Field) -> None:
-        super().__init__(f'missing value for field {field.name}')
+    def __init__(self, field: str) -> None:
+        super().__init__(f'missing value for field {field}')
         self.field = field
 
 

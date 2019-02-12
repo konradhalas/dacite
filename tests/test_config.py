@@ -1,7 +1,8 @@
 import pytest
 from dataclasses import dataclass, fields
 
-from dacite import Config, InvalidConfigurationError, MissingValueError
+from dacite import Config, InvalidConfigurationError
+from dacite.config import CanNotFindValue
 
 
 def test_validate_empty_config():
@@ -185,44 +186,8 @@ def test_get_value_for_missing_value():
 
     config = Config()
 
-    with pytest.raises(MissingValueError):
+    with pytest.raises(CanNotFindValue):
         config.get_value(
             field=fields(X)[0],
-            data={},
-        )
-
-
-def test_get_value_for_missing_prefixed_field_value():
-    @dataclass
-    class X:
-        i: int
-
-    @dataclass
-    class Y:
-        x: X
-
-    config = Config(prefixed={'x': 'x_'})
-
-    with pytest.raises(MissingValueError):
-        config.get_value(
-            field=fields(Y)[0],
-            data={},
-        )
-
-
-def test_get_value_for_missing_flattened_field_value():
-    @dataclass
-    class X:
-        i: int
-
-    @dataclass
-    class Y:
-        x: X
-
-    config = Config(flattened=['x'])
-
-    with pytest.raises(MissingValueError):
-        config.get_value(
-            field=fields(Y)[0],
             data={},
         )

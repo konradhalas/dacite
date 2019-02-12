@@ -3,8 +3,13 @@ from typing import Dict, Any, Callable, List, Optional, Type
 
 from dacite.data import Data
 from dacite.dataclasses import has_field_default_value
-from dacite.exceptions import InvalidConfigurationError, MissingValueError
-from dacite.types import cast_value, extract_optional, is_optional
+from dacite.exceptions import InvalidConfigurationError, DaciteError
+from dacite.types import cast_value
+
+
+# TODO: rename
+class CanNotFindValue(DaciteError):
+    pass
 
 
 @dataclass
@@ -37,17 +42,15 @@ class Config:
     def get_value(self, field: Field, data: Data) -> Any:
         if field.name in self.flattened or field.name in self.prefixed:
             if field.name in self.flattened:
-                value = self._extract_flattened_fields(field, data)
+                value = data
             else:
                 value = self._extract_nested_dict_for_prefix(self.prefixed[field.name], data)
-            if not value:
-                raise MissingValueError(field)
         else:
             try:
                 key_name = self.remap.get(field.name, field.name)
                 value = data[key_name]
             except KeyError:
-                raise MissingValueError(field)
+                raise CanNotFindValue()
             if value is not None:
                 if field.name in self.transform:
                     value = self.transform[field.name](value)
@@ -90,15 +93,6 @@ class Config:
         for name in params:
             if name.startswith(prefix):
                 result.append(name[prefix_len:])
-        return result
-
-    def _extract_flattened_fields(self, field: Field, data: Data):
-        result = {}
-        data_class = extract_optional(field.type) if is_optional(field.type) else field.type
-        for inner_field in fields(data_class):
-            field_name = self.remap.get(field.name + '.' + inner_field.name, inner_field.name)
-            if field_name in data:
-                result[field_name] = data[field_name]
         return result
 
     def _extract_nested_dict_for_prefix(self, prefix: str, data: Dict[str, Any]) -> Dict[str, Any]:

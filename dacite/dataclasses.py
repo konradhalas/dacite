@@ -20,7 +20,7 @@ def get_default_value_for_field(field: Field) -> Any:
     elif is_optional(field.type):
         return None
     else:
-        raise MissingValueError(field)
+        raise MissingValueError(field.name)
 
 
 def create_instance(data_class: Type[T], init_values: Data, post_init_values: Data) -> T:
