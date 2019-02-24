@@ -1,26 +1,64 @@
-from typing import Any, Set, Type
+from typing import Any, Set, Type, Optional
 
 
-def _get_type_name(t: type) -> str:
+def _name(t: type) -> str:
     return t.__name__ if hasattr(t, '__name__') else str(t)
 
 
 class DaciteError(Exception):
-    pass
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message = message
 
 
-class WrongTypeError(DaciteError):
-    def __init__(self, field: str, t: Type, value: Any) -> None:
-        super().__init__(f'wrong type for field "{field}" - should be "{_get_type_name(t)}" '
-                         f'instead of "{_get_type_name(type(value))}"')
-        self.field = field
+class DaciteFieldError(DaciteError):
+
+    def __init__(self, message: str, field_path: Optional[str] = None):
+        super().__init__(message)
+        self.field_path = field_path
+
+    def update_path(self, parent_field_path: str) -> None:
+        if self.field_path:
+            self.field_path = f'{parent_field_path}.{self.field_path}'
+        else:
+            self.field_path = parent_field_path
+
+
+class WrongTypeError(DaciteFieldError):
+    def __init__(self, field_type: Type, value: Any, field_path: Optional[str] = None) -> None:
+        if field_path:
+            message = f'wrong type for field "{field_path}" - should be ' \
+                f'"{_name(field_type)}" instead of "{_name(type(value))}"'
+        else:
+            message = None
+        super().__init__(
+            message=message,
+            field_path=field_path,
+        )
+        self.field_type = field_type
         self.value = value
 
 
-class MissingValueError(DaciteError):
-    def __init__(self, field: str) -> None:
-        super().__init__(f'missing value for field {field}')
-        self.field = field
+class MissingValueError(DaciteFieldError):
+    def __init__(self, field_path: Optional[str] = None):
+        super().__init__(
+            message=f'missing value for field {field_path}' if field_path else None,
+            field_path=field_path,
+        )
+
+
+class UnionMatchError(DaciteFieldError):
+    def __init__(self, field_type: Type, field_path: Optional[str] = None):
+        if field_path:
+            message = f'can not match the data to any type of "{field_path}" union: {_name(field_type)}'
+        else:
+            message = None
+        super().__init__(
+            message=message,
+            field_path=field_path,
+        )
+        self.field_type = field_type
 
 
 class InvalidConfigurationError(DaciteError):
@@ -33,4 +71,5 @@ class InvalidConfigurationError(DaciteError):
 
 
 class ForwardReferenceError(DaciteError):
-    pass
+    def __init__(self, message: str) -> None:
+        super().__init__(f'can not resolve forward reference: {message}')

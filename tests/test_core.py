@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Set, Union, Any, Dict
 
 from dacite import from_dict, Config, MissingValueError, InvalidConfigurationError, WrongTypeError, \
-    ForwardReferenceError
+    ForwardReferenceError, UnionMatchError
 
 
 def test_from_dict_from_correct_data():
@@ -50,7 +50,8 @@ def test_from_dict_from_incorrect_data():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {'s': 'test', 'i': 'wrong'})
 
-    assert exception_info.value.field == 'i'
+    assert exception_info.value.field_path == 'i'
+    assert exception_info.value.field_type == int
     assert exception_info.value.value == 'wrong'
 
 
@@ -63,7 +64,22 @@ def test_from_dict_without_required_value():
     with pytest.raises(MissingValueError) as exception_info:
         from_dict(X, {'s': 'test'})
 
-    # assert exception_info.value.field.name == 'i'
+    assert exception_info.value.field_path == 'i'
+
+
+def test_from_dict_without_required_value_of_nested_dataclass():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        x: X
+
+    with pytest.raises(MissingValueError) as exception_info:
+        from_dict(Y, {'x': {}})
+
+    assert exception_info.value.field_path == 'x.i'
 
 
 def test_from_dict_with_nested_data_class():
@@ -183,22 +199,6 @@ def test_from_dict_with_prefix_and_existing_optional_field():
     assert result == Y(s='test', x=X(i=1))
 
 
-@pytest.mark.skip('this should fail?')
-def test_from_dict_with_prefix_and_missing_optional_field():
-    @dataclass
-    class X:
-        i: int
-
-    @dataclass
-    class Y:
-        s: str
-        x: Optional[X]
-
-    result = from_dict(Y, {'s': 'test'}, Config(prefixed={'x': 'x_'}))
-
-    assert result == Y(s='test', x=None)
-
-
 def test_from_dict_with_prefix_and_missing_data():
     @dataclass
     class X:
@@ -285,11 +285,11 @@ def test_from_dict_with_wrong_type_of_optional_value():
         s: Optional[str]
         i: int
 
-    with pytest.raises(WrongTypeError) as exception_info:
+    with pytest.raises(UnionMatchError) as exception_info:
         from_dict(X, {'s': 1, 'i': 1})
 
-    # assert exception_info.value.field == 's'
-    # assert exception_info.value.value == 1
+    assert exception_info.value.field_path == 's'
+    assert exception_info.value.field_type == Optional[str]
 
 
 def test_from_dict_with_optional_nested_data_class():
@@ -356,7 +356,8 @@ def test_from_dict_with_none_for_non_optional_field():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {'s': None})
 
-    assert exception_info.value.field == 's'
+    assert exception_info.value.field_path == 's'
+    assert exception_info.value.field_type == str
     assert exception_info.value.value is None
 
 
@@ -587,22 +588,6 @@ def test_from_dict_with_flat_of_existing_union_field():
     result = from_dict(Y, {'s': 'test', 'i': 1}, Config(flattened=['x']))
 
     assert result == Y(s='test', x=X(i=1))
-
-
-@pytest.mark.skip('this should fail?')
-def test_from_dict_with_flat_of_missing_optional_field():
-    @dataclass
-    class X:
-        i: int
-
-    @dataclass
-    class Y:
-        s: str
-        x: Optional[X]
-
-    result = from_dict(Y, {'s': 'test'}, Config(flattened=['x']))
-
-    assert result == Y(s='test', x=None)
 
 
 def test_from_dict_with_flat_of_dataclass_with_optional_field():
@@ -851,10 +836,11 @@ def test_from_dict_with_union_of_data_classes_and_wrong_data():
     class Z:
         x_or_y: Union[X, Y]
 
-    with pytest.raises(WrongTypeError) as exception_info:
+    with pytest.raises(UnionMatchError) as exception_info:
         from_dict(Z, {'x_or_y': {'f': 2.0}})
 
-    # assert exception_info.value.field == 'x_or_y'
+    assert exception_info.value.field_path == 'x_or_y'
+    assert exception_info.value.field_type == Union[X, Y]
 
 
 def test_from_dict_with_union_of_data_classes_collections_with_correct_data():
@@ -894,7 +880,7 @@ def test_from_dict_with_union_and_optional():
     assert from_dict(X, {'i': 1}) == X(i=1)
     assert from_dict(X, {'i': 's'}) == X(i='s')
 
-    with pytest.raises(WrongTypeError):
+    with pytest.raises(UnionMatchError):
         assert from_dict(X, {'i': 1.0})
 
 
@@ -1033,53 +1019,53 @@ def test_from_dict_with_post_init():
 def test_forward_reference():
     @dataclass
     class X:
-        y: "Y"
+        y: 'Y'
 
     @dataclass
     class Y:
         s: str
 
-    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
-    assert data == X(Y("text"))
+    data = from_dict(X, {'y': {'s': 'text'}}, Config(forward_references={'Y': Y}))
+    assert data == X(Y('text'))
 
 
 def test_forward_reference_in_union():
     @dataclass
     class X:
-        y: Union["Y", str]
+        y: Union['Y', str]
 
     @dataclass
     class Y:
         s: str
 
-    data = from_dict(X, {"y": {"s": "text"}}, Config(forward_references={"Y": Y}))
-    assert data == X(Y("text"))
+    data = from_dict(X, {'y': {'s': 'text'}}, Config(forward_references={'Y': Y}))
+    assert data == X(Y('text'))
 
 
 def test_forward_reference_in_list():
     @dataclass
     class X:
-        y: List["Y"]
+        y: List['Y']
 
     @dataclass
     class Y:
         s: str
 
-    data = from_dict(X, {"y": [{"s": "text"}]}, Config(forward_references={"Y": Y}))
-    assert data == X([Y("text")])
+    data = from_dict(X, {'y': [{'s': 'text'}]}, Config(forward_references={'Y': Y}))
+    assert data == X([Y('text')])
 
 
 def test_forward_reference_in_dict():
     @dataclass
     class X:
-        y: Dict[str, "Y"]
+        y: Dict[str, 'Y']
 
     @dataclass
     class Y:
         s: str
 
-    data = from_dict(X, {"y": {"key": {"s": "text"}}}, Config(forward_references={"Y": Y}))
-    assert data == X({"key": Y("text")})
+    data = from_dict(X, {'y': {'key': {'s': 'text'}}}, Config(forward_references={'Y': Y}))
+    assert data == X({'key': Y('text')})
 
 
 def test_forward_reference_error():
@@ -1091,5 +1077,21 @@ def test_forward_reference_error():
     class Y:
         s: str
 
-    with pytest.raises(ForwardReferenceError):
+    with pytest.raises(ForwardReferenceError) as exception_info:
         from_dict(X, {"y": {"s": "text"}})
+
+    assert exception_info.value.message == 'can not resolve forward reference: name \'Y\' is not defined'
+
+
+def test_from_dict_with_generic_collection_and_config():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        l: List[X]
+
+    result = from_dict(Y, {'l': [{'j': 2}]}, config=Config(remap={'l.i': 'j'}))
+
+    assert result == Y(l=[X(i=2)])

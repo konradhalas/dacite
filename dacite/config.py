@@ -3,12 +3,11 @@ from typing import Dict, Any, Callable, List, Optional, Type
 
 from dacite.data import Data
 from dacite.dataclasses import has_field_default_value
-from dacite.exceptions import InvalidConfigurationError, DaciteError
+from dacite.exceptions import InvalidConfigurationError
 from dacite.types import cast_value
 
 
-# TODO: rename
-class CanNotFindValue(DaciteError):
+class ValueNotFoundError(Exception):
     pass
 
 
@@ -50,7 +49,7 @@ class Config:
                 key_name = self.remap.get(field.name, field.name)
                 value = data[key_name]
             except KeyError:
-                raise CanNotFindValue()
+                raise ValueNotFoundError()
             if value is not None:
                 if field.name in self.transform:
                     value = self.transform[field.name](value)

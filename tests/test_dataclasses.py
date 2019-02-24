@@ -2,8 +2,7 @@ import pytest
 from dataclasses import dataclass, fields, field
 from typing import Optional
 
-from dacite import MissingValueError
-from dacite.dataclasses import get_default_value_for_field, create_instance
+from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError
 
 
 def test_get_default_value_for_field_with_default_value():
@@ -41,7 +40,7 @@ def test_get_default_value_for_field_without_default_value():
     class X:
         i: int
 
-    with pytest.raises(MissingValueError):
+    with pytest.raises(DefaultValueNotFoundError):
         get_default_value_for_field(field=fields(X)[0])
 
 

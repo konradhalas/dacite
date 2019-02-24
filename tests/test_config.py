@@ -2,7 +2,7 @@ import pytest
 from dataclasses import dataclass, fields
 
 from dacite import Config, InvalidConfigurationError
-from dacite.config import CanNotFindValue
+from dacite.config import ValueNotFoundError
 
 
 def test_validate_empty_config():
@@ -186,7 +186,7 @@ def test_get_value_for_missing_value():
 
     config = Config()
 
-    with pytest.raises(CanNotFindValue):
+    with pytest.raises(ValueNotFoundError):
         config.get_value(
             field=fields(X)[0],
             data={},
