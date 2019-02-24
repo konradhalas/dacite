@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import dataclass, field
-from typing import Optional, List, Set, Union, Any, Dict
+from typing import Optional, List, Set, Union, Any, Dict, NewType
 
 from dacite import from_dict, Config, WrongTypeError, MissingValueError, InvalidConfigurationError, UnionMatchError, ForwardReferenceError
 
@@ -966,3 +966,15 @@ def test_forward_reference_error():
 
     with pytest.raises(ForwardReferenceError):
         from_dict(X, {"y": {"s": "text"}})
+
+
+def test_from_dict_with_new_type():
+    MyStr = NewType("MyStr", str)
+
+    @dataclass
+    class Data:
+        my_str: MyStr
+
+
+    data = from_dict(Data, {"my_str": "foo-bar"})
+    assert data == Data(my_str=MyStr("foo-bar"))

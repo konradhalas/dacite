@@ -314,6 +314,10 @@ def _is_generic(t: Type) -> bool:
     return hasattr(t, '__origin__')
 
 
+def _is_newtype(t: Type) -> bool:
+    return hasattr(t, '__supertype__')
+
+
 def _is_union(t: Type) -> bool:
     return _is_generic(t) and t.__origin__ == Union
 
@@ -326,6 +330,8 @@ def _is_instance(t: Type, value: Any) -> bool:
         return isinstance(value, types)
     elif _is_generic(t):
         return isinstance(value, t.__origin__)
+    elif _is_newtype(t):
+        return isinstance(value, t.__supertype__)
     else:
         return isinstance(value, t)
 
