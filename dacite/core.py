@@ -68,7 +68,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 def _build_value(type: Type, data: Any, config: Config) -> Any:
     if is_union(type):
         return _build_value_for_union(
-            type=type,
+            union=type,
             data=data,
             config=config,
         )
@@ -87,8 +87,15 @@ def _build_value(type: Type, data: Any, config: Config) -> Any:
     return data
 
 
-def _build_value_for_union(type: Type, data: Any, config: Config) -> Any:
-    for inner_type in extract_generic(type):
+def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
+    types = [t for t in extract_generic(union) if t is not type(None)]
+    if is_optional(union) and len(extract_generic(union)) == 2:
+        return _build_value(
+            type=types[0],
+            data=data,
+            config=config,
+        )
+    for inner_type in types:
         try:
             value = _build_value(
                 type=inner_type,
@@ -98,10 +105,9 @@ def _build_value_for_union(type: Type, data: Any, config: Config) -> Any:
             if is_instance(value, inner_type):
                 return value
         except DaciteError:
-            if is_optional(type) and len(extract_generic(type)) == 2:
-                raise
+            pass
     else:
-        raise UnionMatchError(field_type=type)
+        raise UnionMatchError(field_type=union)
 
 
 def _build_value_for_dataclass(data_class: Type[T], data: Data, config: Config) -> T:

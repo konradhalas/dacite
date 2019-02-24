@@ -1,4 +1,3 @@
-import pytest
 from typing import Optional, Union, List, Any, Dict
 
 from dacite.types import is_optional, extract_optional, is_generic, is_union, is_generic_collection, \
@@ -67,11 +66,6 @@ def test_is_instance_with_union_and_not_matching_value_type():
 
 def test_is_instance_with_generic_collection_and_matching_value_type():
     assert is_instance([1], List[int])
-
-
-@pytest.mark.skip('not implemented yet')
-def test_is_instance_with_generic_collection_and_not_matching_item_value_type():
-    assert not is_instance(['1'], List[int])
 
 
 def test_is_instance_with_generic_collection_and_not_matching_value_type():
