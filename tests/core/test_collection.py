@@ -100,6 +100,6 @@ def test_from_dict_with_already_created_data_class_instances():
         x: X
         x_list: List[X]
 
-    result = from_dict(Y, {'x': X(37), 'x_list': [X(i=42)]})
+    result = from_dict(Y, {'x': X(i=37), 'x_list': [X(i=42)]})
 
     assert result == Y(x=X(i=37), x_list=[X(i=42)])
