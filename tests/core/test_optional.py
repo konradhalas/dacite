@@ -1,6 +1,7 @@
-import pytest
 from dataclasses import dataclass
 from typing import Optional, Union, List
+
+import pytest
 
 from dacite import from_dict, MissingValueError, WrongTypeError
 

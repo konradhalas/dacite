@@ -1,6 +1,7 @@
-import pytest
 from dataclasses import dataclass, field
 from typing import Any
+
+import pytest
 
 from dacite import from_dict, MissingValueError, WrongTypeError
 

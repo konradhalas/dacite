@@ -1,6 +1,7 @@
-import pytest
 from dataclasses import dataclass
 from typing import Optional, List, Union, Dict
+
+import pytest
 
 from dacite import from_dict, Config, InvalidConfigurationError, ForwardReferenceError
 

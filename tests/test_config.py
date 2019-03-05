@@ -1,5 +1,6 @@
-import pytest
 from dataclasses import dataclass, fields
+
+import pytest
 
 from dacite import Config, InvalidConfigurationError
 from dacite.config import ValueNotFoundError

@@ -1,6 +1,7 @@
-import pytest
 from dataclasses import dataclass, fields, field
 from typing import Optional
+
+import pytest
 
 from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError
 
