@@ -42,14 +42,11 @@ class MissingValueError(DaciteFieldError):
         return f'missing value for field "{self.field_path}"'
 
 
-class UnionMatchError(DaciteFieldError):
-
-    def __init__(self, field_type: Type, field_path: Optional[str] = None):
-        super().__init__(field_path=field_path)
-        self.field_type = field_type
+class UnionMatchError(WrongTypeError):
 
     def __str__(self) -> str:
-        return f'can not match the data to any type of "{self.field_path}" union: {_name(self.field_type)}'
+        return f'can not match type "{_name(type(self.value))}" to any type ' \
+            f'of "{self.field_path}" union: {_name(self.field_type)}'
 
 
 class InvalidConfigurationError(DaciteError):

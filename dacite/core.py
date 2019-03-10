@@ -107,7 +107,7 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
         except DaciteError:
             pass
     else:
-        raise UnionMatchError(field_type=union)
+        raise UnionMatchError(field_type=union, value=data)
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:

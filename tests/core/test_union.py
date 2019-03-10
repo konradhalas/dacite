@@ -42,9 +42,10 @@ def test_from_dict_with_union_and_wrong_data():
     with pytest.raises(UnionMatchError) as exception_info:
         from_dict(X, {'i': 1.0})
 
-    assert str(exception_info.value) == 'can not match the data to any type of "i" union: typing.Union[int, str]'
+    assert str(exception_info.value) == 'can not match type "float" to any type of "i" union: typing.Union[int, str]'
     assert exception_info.value.field_path == 'i'
     assert exception_info.value.field_type == Union[int, str]
+    assert exception_info.value.value == 1.0
 
 
 def test_from_dict_with_union_of_data_classes_and_wrong_data():
@@ -65,6 +66,7 @@ def test_from_dict_with_union_of_data_classes_and_wrong_data():
 
     assert exception_info.value.field_path == 'x_or_y'
     assert exception_info.value.field_type == Union[X, Y]
+    assert exception_info.value.value == {'f': 2.0}
 
 
 def test_from_dict_with_union_of_generic_collecionts_of_data_classes():
@@ -114,6 +116,7 @@ def test_from_dict_with_union_and_optional_and_wrong_value():
 
     assert exception_info.value.field_path == 'i'
     assert exception_info.value.field_type == Union[int, str, None]
+    assert exception_info.value.value == 1.0
 
 
 def test_from_dict_with_union_of_mixed_types_and_builtin_type_as_a_result():
