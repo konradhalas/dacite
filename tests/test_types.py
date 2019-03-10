@@ -1,7 +1,7 @@
-from typing import Optional, Union, List, Any, Dict
+from typing import Optional, Union, List, Any, Dict, NewType
 
 from dacite.types import is_optional, extract_optional, is_generic, is_union, is_generic_collection, \
-    extract_origin_collection, is_instance, cast_value, extract_generic
+    extract_origin_collection, is_instance, cast_value, extract_generic, is_new_type
 
 
 def test_is_union_with_union():
@@ -48,6 +48,14 @@ def test_extract_generic_collection():
     assert extract_origin_collection(List[int]) == list
 
 
+def test_is_new_type_with_new_type():
+    assert is_new_type(NewType('NewType', int))
+
+
+def test_is_new_type_with_non_new_type():
+    assert not is_new_type(int)
+
+
 def test_is_instance_with_built_in_type_and_matching_value_type():
     assert is_instance(1, int)
 
@@ -74,6 +82,14 @@ def test_is_instance_with_generic_collection_and_not_matching_value_type():
 
 def test_is_instance_with_any_type():
     assert is_instance(1, Any)
+
+
+def test_is_instance_with_new_type_and_matching_value_type():
+    assert is_instance('test', NewType('MyStr', str))
+
+
+def test_is_instance_with_new_type_and_not_matching_value_type():
+    assert not is_instance(1, NewType('MyStr', str))
 
 
 def test_cast_value_with_built_in_type():

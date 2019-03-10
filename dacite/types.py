@@ -43,6 +43,10 @@ def is_union(t: Type) -> bool:
     return is_generic(t) and t.__origin__ == Union
 
 
+def is_new_type(t: Type) -> bool:
+    return hasattr(t, '__supertype__')
+
+
 def is_instance(value: Any, t: Type) -> bool:
     if t == Any:
         return True
@@ -51,6 +55,8 @@ def is_instance(value: Any, t: Type) -> bool:
         return isinstance(value, types)
     elif is_generic_collection(t):
         return isinstance(value, extract_origin_collection(t))
+    elif is_new_type(t):
+        return isinstance(value, t.__supertype__)
     else:
         return isinstance(value, t)
 

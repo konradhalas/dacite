@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, NewType
 
 import pytest
 
@@ -143,3 +143,15 @@ def test_from_dict_with_post_init():
     result = from_dict(X, {'s': 'test'})
 
     assert result == x
+
+
+def test_from_dict_with_new_type():
+    MyStr = NewType('MyStr', str)
+
+    @dataclass
+    class X:
+        s: MyStr
+
+    result = from_dict(X, {'s': 'test'})
+
+    assert result == X(s=MyStr('test'))
