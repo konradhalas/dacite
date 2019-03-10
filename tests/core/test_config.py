@@ -508,3 +508,25 @@ def test_from_dict_with_generic_collection_and_config():
     result = from_dict(Y, {'l': [{'j': 2}]}, config=Config(remap={'l.i': 'j'}))
 
     assert result == Y(l=[X(i=2)])
+
+
+def test_form_dict_with_disabled_type_checking():
+    @dataclass
+    class X:
+        i: int
+
+    result = from_dict(X, {'i': 'test'}, config=Config(check_types=False))
+
+    # noinspection PyTypeChecker
+    assert result == X(i='test')
+
+
+def test_form_dict_with_disabled_type_checking_and_union():
+    @dataclass
+    class X:
+        i: Union[int, float]
+
+    result = from_dict(X, {'i': 'test'}, config=Config(check_types=False))
+
+    # noinspection PyTypeChecker
+    assert result == X(i='test')

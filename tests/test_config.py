@@ -80,11 +80,11 @@ def test_make_inner():
     class Y:
         x: X
 
-    config = Config(remap={'x.i': 'y'})
+    config = Config(remap={'x.i': 'y'}, check_types=False)
 
     inner_config = config.make_inner(fields(Y)[0])
 
-    assert inner_config == Config(remap={'i': 'y'})
+    assert inner_config == Config(remap={'i': 'y'}, check_types=False)
 
 
 def test_get_value_for_field_with_empty_config():

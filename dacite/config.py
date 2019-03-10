@@ -19,6 +19,7 @@ class Config:
     transform: Dict[str, Callable[[Any], Any]] = dc_field(default_factory=dict)
     flattened: List[str] = dc_field(default_factory=list)
     forward_references: Optional[Dict[str, Any]] = None
+    check_types: bool = True
 
     def validate(self, data_class: Type, data: Data) -> None:
         self._validate_field_name(data_class, 'remap')
@@ -36,6 +37,7 @@ class Config:
             cast=self._extract_nested_list(field, self.cast),
             transform=self._extract_nested_dict(field, self.transform),
             flattened=self._extract_nested_list(field, self.flattened),
+            check_types=self.check_types,
         )
 
     def get_value(self, field: Field, data: Data) -> Any:

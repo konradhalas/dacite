@@ -99,6 +99,7 @@ Configuration is a (data) class with following fields:
 - `cast`
 - `transform`
 - `forward references`
+- `check_types`
 
 The examples below show all features of `from_dict` function and usage
 of all `Config` parameters.
@@ -369,6 +370,32 @@ data = {
 result = from_dict(data_class=A, data=data, config=Config(transform={'x': str.lower}))
 
 assert result == A(x='test')
+```
+
+### Types checking
+
+There are rare cases when `dacite` built-in type checker can not validate 
+your types (e.g. custom generic class) or you have such functionality 
+covered by other library and you don't want to validate your types twice. 
+In such case you can disable type checking with `Config(check_types=False)`.
+By default types checking is enabled.
+
+```python
+T = TypeVar('T')
+
+
+class X(Generic[T]):
+    pass
+
+
+@dataclass
+class A:
+    x: X[str]
+
+
+x = X[str]()
+
+assert from_dict(A, {'x': x}, config=Config(check_types=False)) == A(x=x)
 ```
 
 ## Exceptions

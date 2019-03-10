@@ -42,7 +42,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
-            if not is_instance(value, field.type):
+            if config.check_types and not is_instance(value, field.type):
                 raise WrongTypeError(
                     field_path=field.name,
                     field_type=field.type,
@@ -107,6 +107,8 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
         except DaciteError:
             pass
     else:
+        if not config.check_types:
+            return data
         raise UnionMatchError(field_type=union, value=data)
 
 
