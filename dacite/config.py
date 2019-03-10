@@ -50,11 +50,10 @@ class Config:
                 value = data[key_name]
             except KeyError:
                 raise ValueNotFoundError()
-            if value is not None:
-                if field.name in self.transform:
-                    value = self.transform[field.name](value)
-                if field.name in self.cast:
-                    value = cast_value(field.type, value)
+            if field.name in self.transform:
+                value = self.transform[field.name](value)
+            if field.name in self.cast:
+                value = cast_value(field.type, value)
         return value
 
     def _validate_field_name(self, data_class: Type, parameter: str) -> None:

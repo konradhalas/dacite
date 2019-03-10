@@ -182,17 +182,6 @@ def test_from_dict_with_cast_of_missing_optional_field():
     assert result == X(s='test', i=None)
 
 
-def test_from_dict_with_cast_of_none_optional_field():
-    @dataclass
-    class X:
-        i: Optional[int]
-        s: str
-
-    result = from_dict(X, {'s': 'test', 'i': None}, Config(cast=['i']))
-
-    assert result == X(s='test', i=None)
-
-
 def test_from_dict_with_cast_of_list():
     @dataclass
     class X:
@@ -263,16 +252,6 @@ def test_from_dict_with_transform_of_missing_optional_field():
         s: Optional[str]
 
     result = from_dict(X, {}, Config(transform={'s': str.lower}))
-
-    assert result == X(s=None)
-
-
-def test_from_dict_with_transform_of_none_optional_field():
-    @dataclass
-    class X:
-        s: Optional[str]
-
-    result = from_dict(X, {'s': None}, Config(transform={'s': str.lower}))
 
     assert result == X(s=None)
 
