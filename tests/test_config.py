@@ -45,11 +45,16 @@ def test_validate_config_with_wrong_remap_field_name():
 
     config = Config(remap={'x': 'y'})
 
-    with pytest.raises(InvalidConfigurationError):
+    with pytest.raises(InvalidConfigurationError) as exception_info:
         config.validate(
             data_class=X,
             data={'i': 1},
         )
+
+    assert str(exception_info.value) == 'invalid value in "remap" configuration: "x". Choices are: i'
+    assert exception_info.value.parameter == 'remap'
+    assert exception_info.value.available_choices == {'i'}
+    assert exception_info.value.value == 'x'
 
 
 def test_validate_config_with_wrong_data_key_name():

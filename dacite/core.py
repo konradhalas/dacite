@@ -79,7 +79,7 @@ def _build_value(type: Type, data: Any, config: Config) -> Any:
             config=config,
         )
     elif is_dataclass(type) and is_instance(data, Data):
-        return _build_value_for_dataclass(
+        return from_dict(
             data_class=type,
             data=data,
             config=config,
@@ -108,16 +108,6 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
             pass
     else:
         raise UnionMatchError(field_type=union)
-
-
-def _build_value_for_dataclass(data_class: Type[T], data: Data, config: Config) -> T:
-    if is_instance(data, data_class):
-        return data
-    return from_dict(
-        data_class=data_class,
-        data=data,
-        config=config,
-    )
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:

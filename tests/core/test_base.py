@@ -49,6 +49,7 @@ def test_from_dict_with_wrong_type():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {'s': 'test', 'i': 'wrong'})
 
+    assert str(exception_info.value) == 'wrong type for field "i" - should be "int" instead of "str"'
     assert exception_info.value.field_path == 'i'
     assert exception_info.value.field_type == int
     assert exception_info.value.value == 'wrong'
@@ -63,6 +64,7 @@ def test_from_dict_with_missing_value():
     with pytest.raises(MissingValueError) as exception_info:
         from_dict(X, {'s': 'test'})
 
+    assert str(exception_info.value) == 'missing value for field "i"'
     assert exception_info.value.field_path == 'i'
 
 

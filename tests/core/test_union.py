@@ -34,6 +34,19 @@ def test_from_dict_with_union_of_data_classes():
     assert result == Z(x_or_y=Y(s='test'))
 
 
+def test_from_dict_with_union_and_wrong_data():
+    @dataclass
+    class X:
+        i: Union[int, str]
+
+    with pytest.raises(UnionMatchError) as exception_info:
+        from_dict(X, {'i': 1.0})
+
+    assert str(exception_info.value) == 'can not match the data to any type of "i" union: typing.Union[int, str]'
+    assert exception_info.value.field_path == 'i'
+    assert exception_info.value.field_type == Union[int, str]
+
+
 def test_from_dict_with_union_of_data_classes_and_wrong_data():
     @dataclass
     class X:
