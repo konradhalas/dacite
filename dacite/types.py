@@ -58,7 +58,10 @@ def is_instance(value: Any, t: Type) -> bool:
     elif is_new_type(t):
         return isinstance(value, t.__supertype__)
     else:
-        return isinstance(value, t)
+        try:
+            return isinstance(value, t)
+        except TypeError:
+            return False
 
 
 def is_generic_collection(t: Type) -> bool:

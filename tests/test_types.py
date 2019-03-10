@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Any, Dict, NewType
+from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic
 
 from dacite.types import is_optional, extract_optional, is_generic, is_union, is_generic_collection, \
     extract_origin_collection, is_instance, cast_value, extract_generic, is_new_type
@@ -90,6 +90,15 @@ def test_is_instance_with_new_type_and_matching_value_type():
 
 def test_is_instance_with_new_type_and_not_matching_value_type():
     assert not is_instance(1, NewType('MyStr', str))
+
+
+def test_is_instance_with_not_supported_generic_types():
+    T = TypeVar("T")
+
+    class X(Generic[T]):
+        pass
+
+    assert not is_instance(X[str](), X[str])
 
 
 def test_cast_value_with_built_in_type():
