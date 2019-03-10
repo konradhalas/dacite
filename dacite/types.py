@@ -65,7 +65,10 @@ def is_instance(value: Any, t: Type) -> bool:
 
 
 def is_generic_collection(t: Type) -> bool:
-    return is_generic(t) and issubclass(extract_origin_collection(t), Collection)
+    if not is_generic(t):
+        return False
+    origin = extract_origin_collection(t)
+    return origin and issubclass(origin, Collection)
 
 
 def extract_generic(t: Type) -> tuple:
