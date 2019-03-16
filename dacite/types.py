@@ -31,7 +31,7 @@ def is_optional(t: Type) -> bool:
 
 def extract_optional(optional: Type[Optional[T]]) -> T:
     for t in extract_generic(optional):
-        if not isinstance(None, t):
+        if t is not type(None):
             return t
     raise ValueError("can not find not-none value")
 
