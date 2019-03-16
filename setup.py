@@ -31,4 +31,11 @@ setup(
     keywords='dataclasses',
     packages=['dacite'],
     install_requires=requirements,
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-cov',
+            'coveralls',
+        ],
+    },
 )
