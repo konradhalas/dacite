@@ -50,11 +50,7 @@ def test_create_instance_with_simple_data_class():
     class X:
         i: int
 
-    instance = create_instance(
-        data_class=X,
-        init_values={'i': 1},
-        post_init_values={},
-    )
+    instance = create_instance(data_class=X, init_values={"i": 1}, post_init_values={})
 
     assert instance == X(i=1)
 
@@ -65,11 +61,7 @@ def test_create_instance_with_post_init_values():
         i: int
         j: int = field(init=False)
 
-    instance = create_instance(
-        data_class=X,
-        init_values={'i': 1},
-        post_init_values={'j': 2},
-    )
+    instance = create_instance(data_class=X, init_values={"i": 1}, post_init_values={"j": 2})
 
     assert instance.i == 1
     assert instance.j == 2

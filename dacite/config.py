@@ -22,15 +22,15 @@ class Config:
     check_types: bool = True
 
     def validate(self, data_class: Type, data: Data) -> None:
-        self._validate_field_name(data_class, 'remap')
-        self._validate_data_key(data_class, data, 'remap')
-        self._validate_field_name(data_class, 'prefixed')
-        self._validate_data_key(data_class, data, 'prefixed', lambda v, c: any(n.startswith(v) for n in c))
-        self._validate_field_name(data_class, 'cast')
-        self._validate_field_name(data_class, 'transform')
-        self._validate_field_name(data_class, 'flattened')
+        self._validate_field_name(data_class, "remap")
+        self._validate_data_key(data_class, data, "remap")
+        self._validate_field_name(data_class, "prefixed")
+        self._validate_data_key(data_class, data, "prefixed", lambda v, c: any(n.startswith(v) for n in c))
+        self._validate_field_name(data_class, "cast")
+        self._validate_field_name(data_class, "transform")
+        self._validate_field_name(data_class, "flattened")
 
-    def make_inner(self, field: Field) -> 'Config':
+    def make_inner(self, field: Field) -> "Config":
         return Config(
             remap=self._extract_nested_dict(field, self.remap),
             prefixed=self._extract_nested_dict(field, self.prefixed),
@@ -61,34 +61,30 @@ class Config:
     def _validate_field_name(self, data_class: Type, parameter: str) -> None:
         data_class_fields = {field.name for field in fields(data_class)}
         for data_class_field in getattr(self, parameter):
-            if '.' not in data_class_field:
+            if "." not in data_class_field:
                 if data_class_field not in data_class_fields:
                     raise InvalidConfigurationError(
-                        parameter=parameter,
-                        available_choices=data_class_fields,
-                        value=data_class_field,
+                        parameter=parameter, available_choices=data_class_fields, value=data_class_field
                     )
 
     def _validate_data_key(self, data_class: Type, data: Data, parameter: str, validator=lambda v, c: v in c) -> None:
         input_data_keys = set(data.keys())
         data_class_fields = {field.name: field for field in fields(data_class)}
         for field_name, input_data_field in getattr(self, parameter).items():
-            if '.' not in field_name:
+            if "." not in field_name:
                 field = data_class_fields[field_name]
                 if not validator(input_data_field, input_data_keys) and not has_field_default_value(field):
                     raise InvalidConfigurationError(
-                        parameter=parameter,
-                        available_choices=input_data_keys,
-                        value=input_data_field,
+                        parameter=parameter, available_choices=input_data_keys, value=input_data_field
                     )
 
     def _extract_nested_dict(self, field: Field, params: Dict[str, Any]) -> Dict[str, Any]:
-        prefix = field.name + '.'
+        prefix = field.name + "."
         return self._extract_nested_dict_for_prefix(prefix=prefix, data=params)
 
     def _extract_nested_list(self, field: Field, params: List[str]) -> List[str]:
         result = []
-        prefix = field.name + '.'
+        prefix = field.name + "."
         prefix_len = len(prefix)
         for name in params:
             if name.startswith(prefix):

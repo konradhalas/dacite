@@ -1,7 +1,17 @@
 from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic
 
-from dacite.types import is_optional, extract_optional, is_generic, is_union, is_generic_collection, \
-    extract_origin_collection, is_instance, cast_value, extract_generic, is_new_type
+from dacite.types import (
+    is_optional,
+    extract_optional,
+    is_generic,
+    is_union,
+    is_generic_collection,
+    extract_origin_collection,
+    is_instance,
+    cast_value,
+    extract_generic,
+    is_new_type,
+)
 
 
 def test_is_union_with_union():
@@ -49,7 +59,7 @@ def test_extract_generic_collection():
 
 
 def test_is_new_type_with_new_type():
-    assert is_new_type(NewType('NewType', int))
+    assert is_new_type(NewType("NewType", int))
 
 
 def test_is_new_type_with_non_new_type():
@@ -61,7 +71,7 @@ def test_is_instance_with_built_in_type_and_matching_value_type():
 
 
 def test_is_instance_with_built_in_type_and_not_matching_value_type():
-    assert not is_instance('test', int)
+    assert not is_instance("test", int)
 
 
 def test_is_instance_with_union_and_matching_value_type():
@@ -69,7 +79,7 @@ def test_is_instance_with_union_and_matching_value_type():
 
 
 def test_is_instance_with_union_and_not_matching_value_type():
-    assert not is_instance('test', Union[int, float])
+    assert not is_instance("test", Union[int, float])
 
 
 def test_is_instance_with_generic_collection_and_matching_value_type():
@@ -85,11 +95,11 @@ def test_is_instance_with_any_type():
 
 
 def test_is_instance_with_new_type_and_matching_value_type():
-    assert is_instance('test', NewType('MyStr', str))
+    assert is_instance("test", NewType("MyStr", str))
 
 
 def test_is_instance_with_new_type_and_not_matching_value_type():
-    assert not is_instance(1, NewType('MyStr', str))
+    assert not is_instance(1, NewType("MyStr", str))
 
 
 def test_is_instance_with_not_supported_generic_types():
@@ -102,19 +112,19 @@ def test_is_instance_with_not_supported_generic_types():
 
 
 def test_cast_value_with_built_in_type():
-    assert cast_value(int, '1') == 1
+    assert cast_value(int, "1") == 1
 
 
 def test_cast_value_with_optional():
-    assert cast_value(Optional[int], '1') == 1
+    assert cast_value(Optional[int], "1") == 1
 
 
 def test_cast_value_with_generic_sequence():
-    assert cast_value(List[int], ['1']) == [1]
+    assert cast_value(List[int], ["1"]) == [1]
 
 
 def test_cast_value_with_generic_mapping():
-    assert cast_value(Dict[str, int], {1: '1'}) == {'1': 1}
+    assert cast_value(Dict[str, int], {1: "1"}) == {"1": 1}
 
 
 def test_extract_generic():

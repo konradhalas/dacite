@@ -9,6 +9,7 @@ install:
 - pip install -e .[dev]
 script:
 - pytest --cov=dacite
+- black --check .
 after_success:
   coveralls
 deploy:

@@ -12,7 +12,7 @@ def test_from_dict_with_missing_optional_value():
         s: Optional[str]
         i: int
 
-    result = from_dict(X, {'i': 1})
+    result = from_dict(X, {"i": 1})
 
     assert result == X(s=None, i=1)
 
@@ -23,9 +23,9 @@ def test_from_dict_with_existing_optional_value():
         s: Optional[str]
         i: int
 
-    result = from_dict(X, {'s': 'test', 'i': 1})
+    result = from_dict(X, {"s": "test", "i": 1})
 
-    assert result == X(s='test', i=1)
+    assert result == X(s="test", i=1)
 
 
 def test_from_dict_with_missing_optional_value_for_union():
@@ -44,7 +44,7 @@ def test_from_dict_with_none_as_optional_value():
         s: Optional[str]
         i: int
 
-    result = from_dict(X, {'s': None, 'i': 1})
+    result = from_dict(X, {"s": None, "i": 1})
 
     assert result == X(s=None, i=1)
 
@@ -56,9 +56,9 @@ def test_from_dict_with_wrong_type_of_optional_value():
         i: int
 
     with pytest.raises(WrongTypeError) as exception_info:
-        from_dict(X, {'s': 1, 'i': 1})
+        from_dict(X, {"s": 1, "i": 1})
 
-    assert exception_info.value.field_path == 's'
+    assert exception_info.value.field_path == "s"
     assert exception_info.value.field_type == Optional[str]
 
 
@@ -85,7 +85,7 @@ def test_from_dict_with_optional_nested_data_class():
     class Y:
         x: Optional[X]
 
-    result = from_dict(Y, {'x': {'i': 1}})
+    result = from_dict(Y, {"x": {"i": 1}})
 
     assert result == Y(x=X(i=1))
 
@@ -101,9 +101,9 @@ def test_from_dict_with_optional_nested_data_class_and_missing_value():
         x: Optional[X]
 
     with pytest.raises(MissingValueError) as exception_info:
-        from_dict(Y, {'x': {'i': 1}})
+        from_dict(Y, {"x": {"i": 1}})
 
-    assert exception_info.value.field_path == 'x.j'
+    assert exception_info.value.field_path == "x.j"
 
 
 def test_from_dict_with_null_as_optional_value_for_nested_data_class():
@@ -115,7 +115,7 @@ def test_from_dict_with_null_as_optional_value_for_nested_data_class():
     class Y:
         x: Optional[X]
 
-    result = from_dict(Y, {'x': None})
+    result = from_dict(Y, {"x": None})
 
     assert result == Y(x=None)
 
@@ -126,9 +126,9 @@ def test_from_dict_with_none_for_non_optional_field():
         s: str
 
     with pytest.raises(WrongTypeError) as exception_info:
-        from_dict(X, {'s': None})
+        from_dict(X, {"s": None})
 
-    assert exception_info.value.field_path == 's'
+    assert exception_info.value.field_path == "s"
     assert exception_info.value.field_type == str
     assert exception_info.value.value is None
 
@@ -142,7 +142,7 @@ def test_from_dict_with_optional_generic_collection_of_data_classes():
     class Y:
         x_list: Optional[List[X]]
 
-    result = from_dict(Y, {'x_list': [{'i': 1}, {'i': 2}]})
+    result = from_dict(Y, {"x_list": [{"i": 1}, {"i": 2}]})
 
     assert result == Y(x_list=[X(i=1), X(i=2)])
 

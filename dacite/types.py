@@ -1,6 +1,6 @@
 from typing import Type, Any, Mapping, Optional, Union, Collection, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def cast_value(t: Type[T], value: Any) -> T:
@@ -36,7 +36,7 @@ def extract_optional(optional: Optional[T]) -> T:
 
 
 def is_generic(t: Type) -> bool:
-    return hasattr(t, '__origin__')
+    return hasattr(t, "__origin__")
 
 
 def is_union(t: Type) -> bool:
@@ -44,7 +44,7 @@ def is_union(t: Type) -> bool:
 
 
 def is_new_type(t: Type) -> bool:
-    return hasattr(t, '__supertype__')
+    return hasattr(t, "__supertype__")
 
 
 def is_instance(value: Any, t: Type) -> bool:
