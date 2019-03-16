@@ -1,6 +1,6 @@
-from typing import Type, Any, Mapping, Optional, Union, Collection, TypeVar
+from typing import Type, Any, Optional, Union, Collection, TypeVar, cast
 
-T = TypeVar("T")
+T = TypeVar("T", bound=Any)
 
 
 def cast_value(t: Type[T], value: Any) -> T:
@@ -8,9 +8,9 @@ def cast_value(t: Type[T], value: Any) -> T:
         t = extract_optional(t)
     if is_generic_collection(t):
         collection_cls = extract_origin_collection(t)
-        if issubclass(collection_cls, Mapping):
+        if issubclass(collection_cls, dict):
             key_cls, item_cls = extract_generic(t)
-            return collection_cls({key_cls(key): item_cls(item) for key, item in value.items()})
+            return cast(T, collection_cls({key_cls(key): item_cls(item) for key, item in value.items()}))
         else:
             item_cls = extract_generic(t)[0]
             return collection_cls(item_cls(item) for item in value)
@@ -29,10 +29,11 @@ def is_optional(t: Type) -> bool:
     return is_union(t) and type(None) in extract_generic(t)
 
 
-def extract_optional(optional: Optional[T]) -> T:
+def extract_optional(optional: Type[Optional[T]]) -> T:
     for t in extract_generic(optional):
-        if t is not None:
+        if not isinstance(None, t):
             return t
+    raise ValueError("can not find not-none value")
 
 
 def is_generic(t: Type) -> bool:
@@ -68,8 +69,8 @@ def is_generic_collection(t: Type) -> bool:
     if not is_generic(t):
         return False
     origin = extract_origin_collection(t)
-    return origin and issubclass(origin, Collection)
+    return bool(origin and issubclass(origin, Collection))
 
 
 def extract_generic(t: Type) -> tuple:
-    return t.__args__
+    return t.__args__  # type: ignore

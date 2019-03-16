@@ -1,5 +1,7 @@
 from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic
 
+import pytest
+
 from dacite.types import (
     is_optional,
     extract_optional,
@@ -36,6 +38,11 @@ def test_is_optional_with_optional_of_union():
 
 def test_extract_optional():
     assert extract_optional(Optional[int]) == int
+
+
+def test_extract_optional_with_wrong_type():
+    with pytest.raises(ValueError):
+        extract_optional(List[None])
 
 
 def test_is_generic_with_generic():

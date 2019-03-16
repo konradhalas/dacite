@@ -4,7 +4,7 @@ from typing import Type, Any, TypeVar
 from dacite.data import Data
 from dacite.types import is_optional
 
-T = TypeVar("T")
+T = TypeVar("T", bound=Any)
 
 
 class DefaultValueNotFoundError(Exception):
@@ -12,14 +12,14 @@ class DefaultValueNotFoundError(Exception):
 
 
 def has_field_default_value(field: Field) -> bool:
-    return field.default != MISSING or field.default_factory != MISSING or is_optional(field.type)
+    return field.default != MISSING or field.default_factory != MISSING or is_optional(field.type)  # type: ignore
 
 
 def get_default_value_for_field(field: Field) -> Any:
     if field.default != MISSING:
         return field.default
-    elif field.default_factory != MISSING:
-        return field.default_factory()
+    elif field.default_factory != MISSING:  # type: ignore
+        return field.default_factory()  # type: ignore
     elif is_optional(field.type):
         return None
     raise DefaultValueNotFoundError()
