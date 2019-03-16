@@ -33,7 +33,7 @@ setup(
     install_requires=requirements,
     extras_require={
         'dev': [
-            'pytest',
+            'pytest>=4',
             'pytest-cov',
             'coveralls',
         ],
