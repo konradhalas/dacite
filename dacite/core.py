@@ -47,7 +47,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         try:
             try:
                 value = _build_value(
-                    type=field.type, data=config.get_value(field, data), config=config.make_inner(field)
+                    type_=field.type, data=config.get_value(field, data), config=config.make_inner(field)
                 )
             except DaciteFieldError as error:
                 error.update_path(field.name)
@@ -67,41 +67,37 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     return create_instance(data_class=data_class, init_values=init_values, post_init_values=post_init_values)
 
 
-def _build_value(type: Type, data: Any, config: Config) -> Any:
-    if is_union(type):
-        return _build_value_for_union(union=type, data=data, config=config)
-    elif is_generic_collection(type) and is_instance(data, type):
-        return _build_value_for_collection(collection=type, data=data, config=config)
-    elif is_dataclass(type) and is_instance(data, Data):
-        return from_dict(data_class=type, data=data, config=config)
+def _build_value(type_: Type, data: Any, config: Config) -> Any:
+    if is_union(type_):
+        return _build_value_for_union(union=type_, data=data, config=config)
+    elif is_generic_collection(type_) and is_instance(data, type_):
+        return _build_value_for_collection(collection=type_, data=data, config=config)
+    elif is_dataclass(type_) and is_instance(data, Data):
+        return from_dict(data_class=type_, data=data, config=config)
     return data
 
 
 def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
-    types = [t for t in extract_generic(union) if t is not type(None)]
+    types = [type_ for type_ in extract_generic(union) if type_ is not type(None)]
     if is_optional(union) and len(extract_generic(union)) == 2:
-        return _build_value(type=types[0], data=data, config=config)
+        return _build_value(type_=types[0], data=data, config=config)
     for inner_type in types:
         try:
-            value = _build_value(type=inner_type, data=data, config=config)
+            value = _build_value(type_=inner_type, data=data, config=config)
             if is_instance(value, inner_type):
                 return value
         except DaciteError:
             pass
-    else:
-        if not config.check_types:
-            return data
-        raise UnionMatchError(field_type=union, value=data)
+    if not config.check_types:
+        return data
+    raise UnionMatchError(field_type=union, value=data)
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
     collection_cls = extract_origin_collection(collection)
     if is_instance(data, Mapping):
         return collection_cls(
-            (key, _build_value(type=extract_generic(collection)[1], data=value, config=config))
+            (key, _build_value(type_=extract_generic(collection)[1], data=value, config=config))
             for key, value in data.items()
         )
-    else:
-        return collection_cls(
-            _build_value(type=extract_generic(collection)[0], data=item, config=config) for item in data
-        )
+    return collection_cls(_build_value(type_=extract_generic(collection)[0], data=item, config=config) for item in data)

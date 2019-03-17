@@ -31,5 +31,5 @@ setup(
     keywords="dataclasses",
     packages=["dacite"],
     install_requires=requirements,
-    extras_require={"dev": ["pytest>=4", "pytest-cov", "coveralls", "black", "mypy"]},
+    extras_require={"dev": ["pytest>=4", "pytest-cov", "coveralls", "black", "mypy", "pylint"]},
 )

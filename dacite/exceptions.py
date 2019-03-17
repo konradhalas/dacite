@@ -1,8 +1,8 @@
 from typing import Any, Set, Type, Optional
 
 
-def _name(t: type) -> str:
-    return t.__name__ if hasattr(t, "__name__") else str(t)
+def _name(type_: Type) -> str:
+    return type_.__name__ if hasattr(type_, "__name__") else str(type_)
 
 
 class DaciteError(Exception):
@@ -11,6 +11,7 @@ class DaciteError(Exception):
 
 class DaciteFieldError(DaciteError):
     def __init__(self, field_path: Optional[str] = None):
+        super().__init__()
         self.field_path = field_path
 
     def update_path(self, parent_field_path: str) -> None:
@@ -51,6 +52,7 @@ class UnionMatchError(WrongTypeError):
 
 class InvalidConfigurationError(DaciteError):
     def __init__(self, parameter: str, available_choices: Set[str], value: str) -> None:
+        super().__init__()
         self.parameter = parameter
         self.available_choices = available_choices
         self.value = value
@@ -64,6 +66,7 @@ class InvalidConfigurationError(DaciteError):
 
 class ForwardReferenceError(DaciteError):
     def __init__(self, message: str) -> None:
+        super().__init__()
         self.message = message
 
     def __str__(self) -> str:

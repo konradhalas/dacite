@@ -40,6 +40,7 @@ class Config:
             check_types=self.check_types,
         )
 
+    # pylint: disable=unsupported-membership-test,unsubscriptable-object,no-member
     def get_value(self, field: Field, data: Data) -> Any:
         if field.name in self.flattened or field.name in self.prefixed:
             if field.name in self.flattened:

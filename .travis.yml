@@ -11,6 +11,7 @@ script:
 - pytest --cov=dacite
 - black --check .
 - mypy dacite
+- pylint dacite
 after_success:
   coveralls
 deploy:
