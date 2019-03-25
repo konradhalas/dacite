@@ -1,10 +1,14 @@
-import copy
-from dataclasses import fields, is_dataclass
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
+from dataclasses import is_dataclass
+from typing import TypeVar, Type, Optional, Mapping, Any
 
 from dacite.config import Config, ValueNotFoundError
 from dacite.data import Data
-from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError
+from dacite.dataclasses import (
+    create_instance,
+    get_default_value_for_field,
+    DefaultValueNotFoundError,
+    fields_and_init_vars,
+)
 from dacite.exceptions import (
     ForwardReferenceError,
     WrongTypeError,
@@ -36,14 +40,11 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     init_values: Data = {}
     post_init_values: Data = {}
     config = config or Config()
-    config.validate(data_class, data)
     try:
-        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+        config.validate(data_class, data)
     except NameError as error:
         raise ForwardReferenceError(str(error))
-    for field in fields(data_class):
-        field = copy.copy(field)
-        field.type = data_class_hints[field.name]
+    for field in fields_and_init_vars(data_class, config.forward_references):
         try:
             try:
                 value = _build_value(

@@ -1,9 +1,14 @@
-from dataclasses import dataclass, fields, field
+from dataclasses import dataclass, fields, field, InitVar
 from typing import Optional
 
 import pytest
 
-from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError
+from dacite.dataclasses import (
+    get_default_value_for_field,
+    create_instance,
+    DefaultValueNotFoundError,
+    fields_and_init_vars,
+)
 
 
 def test_get_default_value_for_field_with_default_value():
@@ -43,6 +48,18 @@ def test_get_default_value_for_field_without_default_value():
 
     with pytest.raises(DefaultValueNotFoundError):
         get_default_value_for_field(field=fields(X)[0])
+
+
+def test_get_default_value_for_init_var_without_default_value():
+    @dataclass
+    class X:
+        i: InitVar[int]
+
+        def __post_init__(self, i: int):
+            assert i is not None
+
+    with pytest.raises(DefaultValueNotFoundError):
+        get_default_value_for_field(field=next(fields_and_init_vars(X, None)))
 
 
 def test_create_instance_with_simple_data_class():

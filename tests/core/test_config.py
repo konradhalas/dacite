@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field, InitVar
 from typing import Optional, List, Union, Dict
 
 import pytest
@@ -530,3 +530,17 @@ def test_form_dict_with_disabled_type_checking_and_union():
 
     # noinspection PyTypeChecker
     assert result == X(i="test")
+
+
+def test_from_dict_with_init_vars_remapped():
+    @dataclass
+    class X:
+        i: int = field(init=False)
+        j: InitVar[int]
+
+        def __post_init__(self, j: int):
+            self.i = 2 * j
+
+    instance = from_dict(X, {"z": 2}, config=Config(remap={"j": "z"}))
+    assert instance.i == 4
+    assert not hasattr(instance, "j")

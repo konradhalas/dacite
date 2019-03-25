@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from typing import Any, NewType
 
 import pytest
@@ -165,3 +165,49 @@ def test_from_dict_with_new_type():
     result = from_dict(X, {"s": "test"})
 
     assert result == X(s=MyStr("test"))
+
+
+def test_from_dict_with_init_vars():
+    @dataclass
+    class X:
+        i: int = field(init=False)
+        j: InitVar[int]
+
+        def __post_init__(self, j: int):
+            self.i = 2 * j
+
+    instance = from_dict(X, {"j": 2})
+    assert instance.i == 4
+    assert not hasattr(instance, "j")
+
+
+def test_from_dict_with_default_init_vars():
+    @dataclass
+    class X:
+        i: int = field(init=False)
+        j: InitVar[int] = 4
+
+        def __post_init__(self, j: int):
+            self.i = 2 * j
+
+    instance = from_dict(X, {})
+    assert instance.i == 8
+    assert "j" not in instance.__dict__  # it has a default, so it is a class member
+
+
+def test_from_dict_with_default_post_init():
+    """
+    Regression test for https://github.com/konradhalas/dacite/issues/44
+    """
+
+    @dataclass
+    class X:
+        a: int
+        b: str = field(init=False)
+
+        def __post_init__(self):
+            self.b = "expected"
+
+    instance = from_dict(X, {"a": 42})
+    assert instance.a == 42
+    assert instance.b == "expected"

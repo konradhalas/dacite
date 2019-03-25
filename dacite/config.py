@@ -1,8 +1,8 @@
-from dataclasses import dataclass, field as dc_field, fields, Field
+from dataclasses import dataclass, field as dc_field, Field
 from typing import Dict, Any, Callable, List, Optional, Type
 
 from dacite.data import Data
-from dacite.dataclasses import has_field_default_value
+from dacite.dataclasses import has_field_default_value, fields_and_init_vars
 from dacite.exceptions import InvalidConfigurationError
 from dacite.types import cast_value
 
@@ -60,7 +60,7 @@ class Config:
         return value
 
     def _validate_field_name(self, data_class: Type, parameter: str) -> None:
-        data_class_fields = {field.name for field in fields(data_class)}
+        data_class_fields = {field.name for field in fields_and_init_vars(data_class, self.forward_references)}
         for data_class_field in getattr(self, parameter):
             if "." not in data_class_field:
                 if data_class_field not in data_class_fields:
@@ -70,7 +70,7 @@ class Config:
 
     def _validate_data_key(self, data_class: Type, data: Data, parameter: str, validator=lambda v, c: v in c) -> None:
         input_data_keys = set(data.keys())
-        data_class_fields = {field.name: field for field in fields(data_class)}
+        data_class_fields = {field.name: field for field in fields_and_init_vars(data_class, self.forward_references)}
         for field_name, input_data_field in getattr(self, parameter).items():
             if "." not in field_name:
                 field = data_class_fields[field_name]
