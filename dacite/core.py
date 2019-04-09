@@ -78,8 +78,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
 
 
 def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
-    types = [type_ for type_ in extract_generic(union) if type_ is not type(None)]
-    if is_optional(union) and len(extract_generic(union)) == 2:
+    types = extract_generic(union)
+    if is_optional(union) and len(types) == 2:
         return _build_value(type_=types[0], data=data, config=config)
     for inner_type in types:
         try:
