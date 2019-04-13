@@ -145,6 +145,16 @@ def test_from_dict_with_post_init():
     assert result == x
 
 
+def test_from_dict_with_post_init_missing_value():
+    @dataclass
+    class X:
+        s: str = field(init=False)
+
+    result = from_dict(X, {})
+
+    assert not hasattr(result, "s")
+
+
 def test_from_dict_with_new_type():
     MyStr = NewType("MyStr", str)
 

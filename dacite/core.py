@@ -58,6 +58,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             try:
                 value = get_default_value_for_field(field)
             except DefaultValueNotFoundError:
+                if not field.init:
+                    continue
                 raise MissingValueError(field.name)
         if field.init:
             init_values[field.name] = value
