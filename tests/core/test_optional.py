@@ -38,6 +38,16 @@ def test_from_dict_with_missing_optional_value_for_union():
     assert result == X(i=None)
 
 
+def test_from_dict_with_none_optional_value_for_union():
+    @dataclass
+    class X:
+        i: Optional[Union[int, str]]
+
+    result = from_dict(X, {"i": None})
+
+    assert result == X(i=None)
+
+
 def test_from_dict_with_none_as_optional_value():
     @dataclass
     class X:

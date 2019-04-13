@@ -106,6 +106,15 @@ def test_from_dict_with_union_and_optional_and_missing_value():
     assert result == X(i=None)
 
 
+def test_from_dict_with_union_and_optional_and_none_value():
+    @dataclass
+    class X:
+        i: Union[int, Optional[str]]
+
+    result = from_dict(X, {"i": None})
+    assert result == X(i=None)
+
+
 def test_from_dict_with_union_and_optional_and_wrong_value():
     @dataclass
     class X:
