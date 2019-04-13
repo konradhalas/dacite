@@ -55,12 +55,12 @@ def is_instance(value: Any, type_: Type) -> bool:
         return True
     elif is_union(type_):
         types = []
-        for type_ in extract_generic(type_):
-            if is_generic(type_):
-                type_ = extract_origin_collection(type_)
-            if is_new_type(type_):
-                type_ = extract_new_type(type_)
-            types.append(type_)
+        for inner_type in extract_generic(type_):
+            if is_generic(inner_type):
+                inner_type = extract_origin_collection(inner_type)
+            if is_new_type(inner_type):
+                inner_type = extract_new_type(inner_type)
+            types.append(inner_type)
         return isinstance(value, tuple(types))
     elif is_generic_collection(type_):
         return isinstance(value, extract_origin_collection(type_))
