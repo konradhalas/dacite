@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Union, List
+from typing import Optional, Union, List, NewType
 
 import pytest
 
@@ -165,3 +165,15 @@ def test_from_dict_with_optional_field_and_default_value():
     result = from_dict(X, {})
 
     assert result == X(i=1)
+
+
+def test_from_dict_with_optional_new_type():
+    MyStr = NewType("MyStr", str)
+
+    @dataclass
+    class X:
+        s: Optional[MyStr]
+
+    result = from_dict(X, {"s": MyStr("test")})
+
+    assert result == X(s=MyStr("test"))

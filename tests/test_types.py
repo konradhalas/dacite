@@ -13,6 +13,7 @@ from dacite.types import (
     cast_value,
     extract_generic,
     is_new_type,
+    extract_new_type,
 )
 
 
@@ -71,6 +72,10 @@ def test_is_new_type_with_new_type():
 
 def test_is_new_type_with_non_new_type():
     assert not is_new_type(int)
+
+
+def test_extract_new_type():
+    assert extract_new_type(NewType("NewType", int)) == int
 
 
 def test_is_instance_with_built_in_type_and_matching_value_type():

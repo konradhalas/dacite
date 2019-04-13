@@ -46,16 +46,26 @@ def is_new_type(type_: Type) -> bool:
     return hasattr(type_, "__supertype__")
 
 
+def extract_new_type(type_: Type) -> Type:
+    return type_.__supertype__
+
+
 def is_instance(value: Any, type_: Type) -> bool:
     if type_ == Any:
         return True
     elif is_union(type_):
-        types = tuple(extract_origin_collection(t) if is_generic(t) else t for t in extract_generic(type_))
-        return isinstance(value, types)
+        types = []
+        for type_ in extract_generic(type_):
+            if is_generic(type_):
+                type_ = extract_origin_collection(type_)
+            if is_new_type(type_):
+                type_ = extract_new_type(type_)
+            types.append(type_)
+        return isinstance(value, tuple(types))
     elif is_generic_collection(type_):
         return isinstance(value, extract_origin_collection(type_))
     elif is_new_type(type_):
-        return isinstance(value, type_.__supertype__)
+        return isinstance(value, extract_new_type(type_))
     else:
         try:
             return isinstance(value, type_)
