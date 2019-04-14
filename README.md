@@ -82,6 +82,14 @@ This library was originally created to simplify creation of type hinted
 data transfer objects (DTO) which can cross the boundaries in the
 application architecture.
 
+It's important to mention that `dacite` is not a data validation library.
+There are dozens of awesome data validation projects and it doesn't make
+sense to duplicate this functionality within `dacite`. If you want to 
+validate your data first, you should combine `dacite` with one of data 
+validation library.
+
+Please check [Use Case](#use-case) section for a real-life example.
+
 ## Usage
 
 Dacite is based on a single function - `dacite.from_dict`. This function
@@ -459,6 +467,113 @@ To run tests you just have to fire:
 $ pytest
 ```
  
+ 
+## Use case
+
+There are many cases when we receive "raw" data (Python dicts) as a input to 
+our system. HTTP request payload is a very common use case. In most web 
+frameworks we receive request data as a simple dictionary. Instead of 
+passing this dict down to your "business" code, it's a good idea to create 
+something more "robust".
+
+Following example is a simple `flask` app - it has single `/products` endpoint.
+You can use this endpoint to "create" product in your system. Our core 
+`create_product` function expects data class as a parameter. Thanks to `dacite` 
+we can easily build such data class from `POST` request payload.
+
+
+```python
+from dataclasses import dataclass
+from typing import List
+
+from flask import Flask, request, Response
+
+import dacite
+
+app = Flask(__name__)
+
+
+@dataclass
+class ProductVariantData:
+    code: str
+    description: str = ''
+    stock: int = 0
+
+
+@dataclass
+class ProductData:
+    name: str
+    price: float
+    variants: List[ProductVariantData]
+
+
+def create_product(product_data: ProductData) -> None:
+    pass  # your business logic here
+
+
+@app.route("/products", methods=['POST'])
+def products():
+    product_data = dacite.from_dict(
+        data_class=ProductData,
+        data=request.get_json(),
+    )
+    create_product(product_data=product_data)
+    return Response(status=201)
+
+```
+
+What if we want to validate our data (e.g. check if `code` has 6 characters) or 
+use something different than simple built-in types (e.g. we want to use 
+`Decimal` as a type for `price` field)? Such features are out of scope of 
+`dacite` but we can easily combine it with one of data validation library. 
+Let's try with [marshmallow](https://marshmallow.readthedocs.io).
+
+First of all we have to define our data validation schemas:
+
+```python
+from marshmallow import Schema, fields, ValidationError
+
+
+def validate_code(code):
+    if len(code) != 6:
+        raise ValidationError('Code must have 6 characters.')
+
+
+class ProductVariantDataSchema(Schema):
+    code = fields.Str(required=True, validate=validate_code)
+    description = fields.Str(required=False)
+    stock = fields.Int(required=False)
+
+
+class ProductDataSchema(Schema):
+    name = fields.Str(required=True)
+    price = fields.Decimal(required=True)
+    variants = fields.Nested(ProductVariantDataSchema(many=True))
+```
+
+And use them within our endpoint:
+
+```python
+@app.route("/products", methods=['POST'])
+def products():
+    schema = ProductDataSchema()
+    result, errors = schema.load(request.get_json())
+    if errors:
+        return Response(
+        response=json.dumps(errors), 
+        status=400, 
+        mimetype='application/json',
+    )
+    product_data = dacite.from_dict(
+        data_class=ProductData,
+        data=result,
+    )
+    create_product(product_data=product_data)
+    return Response(status=201)
+```
+
+Still `dacite` helps us to create data class from "raw" dict with validated data.
+
 
 ## Authors
 
