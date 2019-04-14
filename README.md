@@ -415,6 +415,51 @@ of `Union`
 - `ForwardReferenceError` - raised when undefined forward reference encountered in
 dataclass
 
+
+## Development
+
+First of all - if you want to submit your pull request, thank you very much! 
+I really appreciate your support.
+
+Please remember that every new feature, bug fix or improvement should be tested. 
+100% code coverage is a must have. 
+
+We are using a few static code analysis tools to increase the code quality 
+(`black`, `mypy`, `pylint`). Please make sure that you are not generating any 
+errors/warnings before you submit your PR. You can find current configuration
+in `.travis.yml` file.
+
+Last but not least, if you want to introduce new feature, please discuss it 
+first within an issue.
+
+### How to start
+
+Clone `dacite` repository:
+
+```
+$ git clone git@github.com:konradhalas/dacite.git
+```
+
+Create and activate virtualenv in the way you like:
+
+```
+$ python3 -m venv dacite-env
+$ source dacite-env/bin/activate
+```
+
+Install all `dacite` dependencies:
+
+```
+$ pip install -e .[dev]
+```
+
+To run tests you just have to fire:
+
+```
+$ pytest
+```
+ 
+
 ## Authors
 
 Created by [Konrad Hałas][halas-homepage].
