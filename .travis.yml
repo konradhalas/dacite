@@ -14,11 +14,16 @@ script:
 - pylint dacite
 after_success:
   coveralls
-deploy:
-  provider: pypi
-  user: khalas
-  password:
-    secure: AsRZXKbagKofHu1JhqgKziomF/eIQZsGgp0scdAZxd1XwsDOwGvvzEJdgMmzxo3Wgvwa5rHBmZAjN8qYDyHLESCPUlVaE6bFztM5q2icZ7z6ReaY9807C5wb9xbDVwQ74GBLP3x1CAR0o2KcO2FS4Xc9TIGmHTY0yyrYzsose0Qn6hAEOpNcoAPR6eRUkIakyqVwj8JAdFBsB1EuqFIpgEwjmgQrv3ZUwTe+a7ERJE6Su3Q5qKU1tJFEbzMvhdBpTOfUujUdtNVx6A8FSivCBcGE1FgRz+ZEFcLxsnYNyw+cNgWjD7thyAE6RrSzNSn3ddMGwqYcXQkfOLICbdazDrcAAAhl+DJGPDilkbAo9cX8zoKY4v12bKAs5PFh6L/qArFAT6X7rMBDkqZ/i8O7Pxbvsm1G1yfupUzwBn+qlc4WxhrroqFa2/kLbPADrihiercyueoXU66+CzKHzmfvDhv7Yoz9bE1ZzgW0go7VsJXy93ZAuveB8i9+OMUsRBY8dTrIdBhd8IDpBet667ugStv+0yg2rhEQxw8q7mhLvwk2AAt2qX6dekhyrqKGrBVgxfWWqX0iyf/whIcUuKHZ6VBKFgwZ8DhCfvNw5FaRrKEbRc5TPhlNk0TyNNQh0rsSi7F+6hCwLcLl59MgWXoJkbpoK5yJZqA2YcSYXQAixFY=
-  on:
-    tags: true
-  distributions: "sdist bdist_wheel"
+jobs:
+  include:
+    - stage: deploy
+      script: skip
+      python: 3.7
+      deploy:
+        provider: pypi
+        user: khalas
+        password:
+          secure: AsRZXKbagKofHu1JhqgKziomF/eIQZsGgp0scdAZxd1XwsDOwGvvzEJdgMmzxo3Wgvwa5rHBmZAjN8qYDyHLESCPUlVaE6bFztM5q2icZ7z6ReaY9807C5wb9xbDVwQ74GBLP3x1CAR0o2KcO2FS4Xc9TIGmHTY0yyrYzsose0Qn6hAEOpNcoAPR6eRUkIakyqVwj8JAdFBsB1EuqFIpgEwjmgQrv3ZUwTe+a7ERJE6Su3Q5qKU1tJFEbzMvhdBpTOfUujUdtNVx6A8FSivCBcGE1FgRz+ZEFcLxsnYNyw+cNgWjD7thyAE6RrSzNSn3ddMGwqYcXQkfOLICbdazDrcAAAhl+DJGPDilkbAo9cX8zoKY4v12bKAs5PFh6L/qArFAT6X7rMBDkqZ/i8O7Pxbvsm1G1yfupUzwBn+qlc4WxhrroqFa2/kLbPADrihiercyueoXU66+CzKHzmfvDhv7Yoz9bE1ZzgW0go7VsJXy93ZAuveB8i9+OMUsRBY8dTrIdBhd8IDpBet667ugStv+0yg2rhEQxw8q7mhLvwk2AAt2qX6dekhyrqKGrBVgxfWWqX0iyf/whIcUuKHZ6VBKFgwZ8DhCfvNw5FaRrKEbRc5TPhlNk0TyNNQh0rsSi7F+6hCwLcLl59MgWXoJkbpoK5yJZqA2YcSYXQAixFY=
+        on:
+          tags: true
+        distributions: "sdist bdist_wheel"
