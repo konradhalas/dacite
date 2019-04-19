@@ -14,6 +14,9 @@ script:
 - pylint dacite
 after_success:
   coveralls
+stages:
+- test
+- deploy
 jobs:
   include:
     - stage: deploy
