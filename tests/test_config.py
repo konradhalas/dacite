@@ -19,46 +19,6 @@ def test_validate_empty_config():
         pytest.fail("empty config should be valid")
 
 
-def test_validate_config_with_correct_remap():
-    @dataclass
-    class X:
-        i: int
-
-    config = Config(remap={"i": "j"})
-
-    try:
-        config.validate(data_class=X, data={"j": 1})
-    except InvalidConfigurationError:
-        pytest.fail("this config should be valid")
-
-
-def test_validate_config_with_wrong_remap_field_name():
-    @dataclass
-    class X:
-        i: int
-
-    config = Config(remap={"x": "y"})
-
-    with pytest.raises(InvalidConfigurationError) as exception_info:
-        config.validate(data_class=X, data={"i": 1})
-
-    assert str(exception_info.value) == 'invalid value in "remap" configuration: "x". Choices are: i'
-    assert exception_info.value.parameter == "remap"
-    assert exception_info.value.available_choices == {"i"}
-    assert exception_info.value.value == "x"
-
-
-def test_validate_config_with_wrong_data_key_name():
-    @dataclass
-    class X:
-        i: int
-
-    config = Config(remap={"i": "y"})
-
-    with pytest.raises(InvalidConfigurationError):
-        config.validate(data_class=X, data={"i": 1})
-
-
 def test_make_inner():
     @dataclass
     class X:
@@ -68,11 +28,11 @@ def test_make_inner():
     class Y:
         x: X
 
-    config = Config(remap={"x.i": "y"}, check_types=False)
+    config = Config(transform={"x.i": int}, check_types=False)
 
     inner_config = config.make_inner(fields(Y)[0])
 
-    assert inner_config == Config(remap={"i": "y"}, check_types=False)
+    assert inner_config == Config(transform={"i": int}, check_types=False)
 
 
 def test_get_value_for_field_with_empty_config():
@@ -85,50 +45,6 @@ def test_get_value_for_field_with_empty_config():
     value = config.get_value(field=fields(X)[0], data={"i": 1})
 
     assert value == 1
-
-
-def test_get_value_for_remapped_field():
-    @dataclass
-    class X:
-        i: int
-
-    config = Config(remap={"i": "j"})
-
-    value = config.get_value(field=fields(X)[0], data={"j": 1})
-
-    assert value == 1
-
-
-def test_get_value_for_flattened_field():
-    @dataclass
-    class X:
-        i: int
-
-    @dataclass
-    class Y:
-        x: X
-
-    config = Config(flattened=["x"])
-
-    value = config.get_value(field=fields(Y)[0], data={"i": 1})
-
-    assert value == {"i": 1}
-
-
-def test_get_value_for_prefixed_field():
-    @dataclass
-    class X:
-        i: int
-
-    @dataclass
-    class Y:
-        x: X
-
-    config = Config(prefixed={"x": "x_"})
-
-    value = config.get_value(field=fields(Y)[0], data={"x_i": 1})
-
-    assert value == {"i": 1}
 
 
 def test_get_value_for_field_with_transform():
