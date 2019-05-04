@@ -132,30 +132,54 @@ def test_extract_generic():
 
 
 def test_transform_value_without_matching_type():
-    assert transform_value({}, str, "TEST") == "TEST"
+    assert transform_value({}, str, 1) == 1
 
 
 def test_transform_value_with_matching_type():
-    assert transform_value({str: str.lower}, str, "TEST") == "test"
+    assert transform_value({str: str}, str, 1) == "1"
 
 
-def test_transform_value_with_optional():
-    assert transform_value({str: str.lower}, Optional[str], "TEST") == "test"
+def test_transform_value_with_optional_and_not_none_value():
+    assert transform_value({str: str}, Optional[str], 1) == "1"
 
 
-def test_transform_value_with_generic_sequence():
-    assert transform_value({str: str.lower}, List[str], ["TEST"]) == ["test"]
+def test_transform_value_with_optional_and_none_value():
+    assert transform_value({str: str}, Optional[str], None) is None
+
+
+def test_transform_value_with_optional_3():
+    assert transform_value({Optional[str]: str}, Optional[str], None) == "None"
+
+
+def test_transform_value_with_generic_sequence_and_matching_item():
+    assert transform_value({str: str}, List[str], [1]) == ["1"]
+
+
+def test_transform_value_with_generic_sequence_and_matching_sequence():
+    assert transform_value({List[int]: lambda x: list(reversed(x))}, List[int], [1, 2]) == [2, 1]
+
+
+def test_transform_value_with_generic_sequence_and_matching_both_item_and_sequence():
+    assert transform_value({List[int]: lambda x: list(reversed(x)), int: int}, List[int], ["1", "2"]) == [2, 1]
+
+
+def test_transform_value_without_matching_generic_sequence():
+    assert transform_value({}, List[int], {1}) == {1}
 
 
 def test_transform_value_with_nested_generic_sequence():
-    assert transform_value({str: str.lower}, List[List[str]], [["TEST"]]) == [["test"]]
+    assert transform_value({str: str}, List[List[str]], [[1]]) == [["1"]]
 
 
 def test_transform_value_with_generic_mapping():
-    assert transform_value({str: str.lower, int: lambda x: x + 1}, Dict[int, str], {1: "TEST"}) == {2: "test"}
+    assert transform_value({str: str, int: int}, Dict[str, int], {1: "2"}) == {"1": 2}
 
 
 def test_transform_value_with_nested_generic_mapping():
-    assert transform_value({str: str.lower, int: lambda x: x + 1}, Dict[int, Dict[int, str]], {1: {2: "TEST"}}) == {
-        2: {3: "test"}
-    }
+    assert transform_value({str: str, int: int}, Dict[str, Dict[str, int]], {1: {2: "3"}}) == {"1": {"2": 3}}
+
+
+def test_transform_value_with_new_type():
+    MyStr = NewType("MyStr", str)
+
+    assert transform_value({MyStr: str.upper, str: str.lower}, MyStr, "Test") == "TEST"

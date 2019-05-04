@@ -16,7 +16,7 @@ def test_from_dict_with_transform():
     assert result == X(s="test")
 
 
-def test_from_dict_with_transform_of_existing_optional_field():
+def test_from_dict_with_transform_and_optional():
     @dataclass
     class X:
         s: Optional[str]
@@ -26,14 +26,14 @@ def test_from_dict_with_transform_of_existing_optional_field():
     assert result == X(s="test")
 
 
-def test_from_dict_with_transform_of_missing_optional_field():
+def test_from_dict_with_transform_and_generic_sequence():
     @dataclass
     class X:
-        s: Optional[str]
+        c: List[str]
 
-    result = from_dict(X, {}, Config(transform={str: str.lower}))
+    result = from_dict(X, {"c": ["TEST"]}, config=Config(transform={str: str.lower}))
 
-    assert result == X(s=None)
+    assert result == X(c=["test"])
 
 
 def test_from_dict_with_forward_reference():
@@ -62,16 +62,6 @@ def test_from_dict_with_missing_forward_reference():
         from_dict(X, {"y": {"s": "text"}})
 
     assert str(exception_info.value) == "can not resolve forward reference: name 'Y' is not defined"
-
-
-def test_from_dict_with_transform_of_item_in_generic_collection():
-    @dataclass
-    class X:
-        l: List[str]
-
-    result = from_dict(X, {"l": ["TEST"]}, config=Config(transform={str: str.lower}))
-
-    assert result == X(l=["test"])
 
 
 def test_form_dict_with_disabled_type_checking():

@@ -3,13 +3,17 @@ from typing import Type, Any, Optional, Union, Collection, TypeVar, cast, Dict, 
 T = TypeVar("T", bound=Any)
 
 
-def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], type_: Type[T], value: Any) -> T:
-    if is_optional(type_):
-        type_ = extract_optional(type_)
-    if is_generic_collection(type_):
-        collection_cls = extract_origin_collection(type_)
+def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], target_type: Type[T], value: Any) -> T:
+    if target_type in types_hooks:
+        value = types_hooks[target_type](value)
+    if is_optional(target_type):
+        if value is None:
+            return None
+        target_type = extract_optional(target_type)
+    if is_generic_collection(target_type) and isinstance(value, extract_origin_collection(target_type)):
+        collection_cls = extract_origin_collection(target_type)
         if issubclass(collection_cls, dict):
-            key_cls, item_cls = extract_generic(type_)
+            key_cls, item_cls = extract_generic(target_type)
             return cast(
                 T,
                 collection_cls(
@@ -19,10 +23,10 @@ def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], type_: Type[T
                     }
                 ),
             )
-        item_cls = extract_generic(type_)[0]
+        item_cls = extract_generic(target_type)[0]
         return collection_cls(transform_value(types_hooks, item_cls, item) for item in value)
-    elif type_ in types_hooks:
-        value = types_hooks[type_](value)
+    elif target_type in types_hooks:
+        value = types_hooks[target_type](value)
     return value
 
 
