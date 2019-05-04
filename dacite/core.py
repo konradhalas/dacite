@@ -36,7 +36,6 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     init_values: Data = {}
     post_init_values: Data = {}
     config = config or Config()
-    config.validate(data_class, data)
     try:
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
     except NameError as error:
@@ -46,9 +45,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         field.type = data_class_hints[field.name]
         try:
             try:
-                value = _build_value(
-                    type_=field.type, data=config.get_value(field, data), config=config.make_inner(field)
-                )
+                value = _build_value(type_=field.type, data=config.get_value(field, data), config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise

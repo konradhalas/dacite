@@ -10,10 +10,10 @@ from dacite.types import (
     is_generic_collection,
     extract_origin_collection,
     is_instance,
-    cast_value,
     extract_generic,
     is_new_type,
     extract_new_type,
+    transform_value,
 )
 
 
@@ -60,6 +60,10 @@ def test_is_generic_collection_with_generic_collection():
 
 def test_is_generic_collection_with_non_generic_collection():
     assert not is_generic_collection(list)
+
+
+def test_is_generic_collection_with_union():
+    assert not is_generic_collection(Union[int, str])
 
 
 def test_extract_generic_collection():
@@ -123,21 +127,35 @@ def test_is_instance_with_not_supported_generic_types():
     assert not is_instance(X[str](), X[str])
 
 
-def test_cast_value_with_built_in_type():
-    assert cast_value(int, "1") == 1
-
-
-def test_cast_value_with_optional():
-    assert cast_value(Optional[int], "1") == 1
-
-
-def test_cast_value_with_generic_sequence():
-    assert cast_value(List[int], ["1"]) == [1]
-
-
-def test_cast_value_with_generic_mapping():
-    assert cast_value(Dict[str, int], {1: "1"}) == {"1": 1}
-
-
 def test_extract_generic():
     assert extract_generic(List[int]) == (int,)
+
+
+def test_transform_value_without_matching_type():
+    assert transform_value({}, str, "TEST") == "TEST"
+
+
+def test_transform_value_with_matching_type():
+    assert transform_value({str: str.lower}, str, "TEST") == "test"
+
+
+def test_transform_value_with_optional():
+    assert transform_value({str: str.lower}, Optional[str], "TEST") == "test"
+
+
+def test_transform_value_with_generic_sequence():
+    assert transform_value({str: str.lower}, List[str], ["TEST"]) == ["test"]
+
+
+def test_transform_value_with_nested_generic_sequence():
+    assert transform_value({str: str.lower}, List[List[str]], [["TEST"]]) == [["test"]]
+
+
+def test_transform_value_with_generic_mapping():
+    assert transform_value({str: str.lower, int: lambda x: x + 1}, Dict[int, str], {1: "TEST"}) == {2: "test"}
+
+
+def test_transform_value_with_nested_generic_mapping():
+    assert transform_value({str: str.lower, int: lambda x: x + 1}, Dict[int, Dict[int, str]], {1: {2: "TEST"}}) == {
+        2: {3: "test"}
+    }

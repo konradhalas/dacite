@@ -11,10 +11,6 @@ class DefaultValueNotFoundError(Exception):
     pass
 
 
-def has_field_default_value(field: Field) -> bool:
-    return field.default != MISSING or field.default_factory != MISSING or is_optional(field.type)  # type: ignore
-
-
 def get_default_value_for_field(field: Field) -> Any:
     if field.default != MISSING:
         return field.default
