@@ -10,6 +10,7 @@ def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], target_type: 
         if value is None:
             return None
         target_type = extract_optional(target_type)
+        return transform_value(types_hooks, target_type, value)
     if is_generic_collection(target_type) and isinstance(value, extract_origin_collection(target_type)):
         collection_cls = extract_origin_collection(target_type)
         if issubclass(collection_cls, dict):
@@ -22,8 +23,6 @@ def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], target_type: 
             )
         item_cls = extract_generic(target_type)[0]
         return collection_cls(transform_value(types_hooks, item_cls, item) for item in value)
-    elif target_type in types_hooks:
-        value = types_hooks[target_type](value)
     return value
 
 

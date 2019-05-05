@@ -136,7 +136,7 @@ def test_transform_value_without_matching_type():
 
 
 def test_transform_value_with_matching_type():
-    assert transform_value({str: str}, str, 1) == "1"
+    assert transform_value({int: lambda x: x + 1}, int, 1) == 2
 
 
 def test_transform_value_with_optional_and_not_none_value():
