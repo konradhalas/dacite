@@ -1,9 +1,9 @@
-from typing import Type, Any, Optional, Union, Collection, TypeVar, cast, Dict, Callable
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable
 
 T = TypeVar("T", bound=Any)
 
 
-def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], target_type: Type[T], value: Any) -> T:
+def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], target_type: Type, value: Any) -> Any:
     if target_type in types_hooks:
         value = types_hooks[target_type](value)
     if is_optional(target_type):
@@ -14,14 +14,11 @@ def transform_value(types_hooks: Dict[Type, Callable[[Any], Any]], target_type: 
         collection_cls = extract_origin_collection(target_type)
         if issubclass(collection_cls, dict):
             key_cls, item_cls = extract_generic(target_type)
-            return cast(
-                T,
-                collection_cls(
-                    {
-                        transform_value(types_hooks, key_cls, key): transform_value(types_hooks, item_cls, item)
-                        for key, item in value.items()
-                    }
-                ),
+            return collection_cls(
+                {
+                    transform_value(types_hooks, key_cls, key): transform_value(types_hooks, item_cls, item)
+                    for key, item in value.items()
+                }
             )
         item_cls = extract_generic(target_type)[0]
         return collection_cls(transform_value(types_hooks, item_cls, item) for item in value)
