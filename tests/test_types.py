@@ -147,7 +147,7 @@ def test_transform_value_with_optional_and_none_value():
     assert transform_value({str: str}, Optional[str], None) is None
 
 
-def test_transform_value_with_optional_3():
+def test_transform_value_with_optional_and_exact_matching_type():
     assert transform_value({Optional[str]: str}, Optional[str], None) == "None"
 
 
