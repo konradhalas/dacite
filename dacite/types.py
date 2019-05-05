@@ -90,7 +90,7 @@ def is_generic_collection(type_: Type) -> bool:
     origin = extract_origin_collection(type_)
     try:
         return bool(origin and issubclass(origin, Collection))
-    except TypeError:
+    except (TypeError, AttributeError):
         return False
 
 
