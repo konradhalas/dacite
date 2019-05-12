@@ -6,32 +6,32 @@ import pytest
 from dacite import from_dict, Config, ForwardReferenceError
 
 
-def test_from_dict_with_transform():
+def test_from_dict_with_type_hooks():
     @dataclass
     class X:
         s: str
 
-    result = from_dict(X, {"s": "TEST"}, Config(transform={str: str.lower}))
+    result = from_dict(X, {"s": "TEST"}, Config(type_hooks={str: str.lower}))
 
     assert result == X(s="test")
 
 
-def test_from_dict_with_transform_and_optional():
+def test_from_dict_with_type_hooks_and_optional():
     @dataclass
     class X:
         s: Optional[str]
 
-    result = from_dict(X, {"s": "TEST"}, Config(transform={str: str.lower}))
+    result = from_dict(X, {"s": "TEST"}, Config(type_hooks={str: str.lower}))
 
     assert result == X(s="test")
 
 
-def test_from_dict_with_transform_and_generic_sequence():
+def test_from_dict_with_type_hooks_and_generic_sequence():
     @dataclass
     class X:
         c: List[str]
 
-    result = from_dict(X, {"c": ["TEST"]}, config=Config(transform={str: str.lower}))
+    result = from_dict(X, {"c": ["TEST"]}, config=Config(type_hooks={str: str.lower}))
 
     assert result == X(c=["test"])
 
