@@ -12,7 +12,7 @@ from dictionaries.
 
 ## Installation
 
-To install dacite, simply use `pip` (or `pipenv`):
+To install dacite, simply use `pip`:
 
 ```
 $ pip install dacite
@@ -37,14 +37,14 @@ class User:
 
 
 data = {
-    'name': 'john',
+    'name': 'John',
     'age': 30,
     'is_active': True,
 }
 
 user = from_dict(data_class=User, data=data)
 
-assert user == User(name='john', age=30, is_active=True)
+assert user == User(name='John', age=30, is_active=True)
 ```
 
 ## Features
