@@ -104,6 +104,7 @@ Configuration is a (data) class with following fields:
 - `type_hooks`
 - `forward references`
 - `check_types`
+- `strict`
 
 The examples below show all features of `from_dict` function and usage
 of all `Config` parameters.
@@ -300,6 +301,13 @@ x = X[str]()
 assert from_dict(A, {'x': x}, config=Config(check_types=False)) == A(x=x)
 ```
 
+### Strict mode
+
+By default `from_dict` ignores additional keys (not matching data class field) 
+in the input data. If you want change this behaviour set `Config.strict` to 
+`True`. In case of unexpected key `from_dict` will raise `UnexpectedDataError` 
+exception.
+
 ## Exceptions
 
 Whenever something goes wrong, `from_dict` will raise adequate
@@ -313,6 +321,8 @@ required field
 of `Union`
 - `ForwardReferenceError` - raised when undefined forward reference encountered in
 dataclass
+- `UnexpectedDataError` - raised when `strict` mode is enabled and the input 
+data has not matching keys
 
 ## Development
 

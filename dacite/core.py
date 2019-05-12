@@ -12,7 +12,7 @@ from dacite.exceptions import (
     UnionMatchError,
     MissingValueError,
     DaciteFieldError,
-)
+    UnexpectedDataError)
 from dacite.types import (
     extract_origin_collection,
     is_instance,
@@ -41,7 +41,12 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
-    for field in fields(data_class):
+    data_class_fields = fields(data_class)
+    if config.strict:
+        extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
+        if extra_fields:
+            raise UnexpectedDataError(keys=extra_fields)
+    for field in data_class_fields:
         field = copy.copy(field)
         field.type = data_class_hints[field.name]
         try:

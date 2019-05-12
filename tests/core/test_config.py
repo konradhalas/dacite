@@ -3,7 +3,7 @@ from typing import Optional, List, Union
 
 import pytest
 
-from dacite import from_dict, Config, ForwardReferenceError
+from dacite import from_dict, Config, ForwardReferenceError, UnexpectedDataError
 
 
 def test_from_dict_with_type_hooks():
@@ -84,3 +84,14 @@ def test_form_dict_with_disabled_type_checking_and_union():
 
     # noinspection PyTypeChecker
     assert result == X(i="test")
+
+
+def test_from_dict_with_strict():
+    @dataclass
+    class X:
+        s: str
+
+    with pytest.raises(UnexpectedDataError) as exception_info:
+        from_dict(X, {"s": "test", "i": 1}, Config(strict=True))
+
+    assert str(exception_info.value) == 'can not match "i" to any data class field'
