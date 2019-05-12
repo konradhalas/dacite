@@ -102,7 +102,7 @@ of `dacite.Config` class
 Configuration is a (data) class with following fields:
 
 - `type_hooks`
-- `forward references`
+- `forward_references`
 - `check_types`
 - `strict`
 
