@@ -12,7 +12,8 @@ from dacite.exceptions import (
     UnionMatchError,
     MissingValueError,
     DaciteFieldError,
-    UnexpectedDataError)
+    UnexpectedDataError,
+)
 from dacite.types import (
     extract_origin_collection,
     is_instance,

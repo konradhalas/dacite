@@ -66,4 +66,4 @@ class UnexpectedDataError(DaciteError):
 
     def __str__(self) -> str:
         formatted_keys = ", ".join(f'"{key}"' for key in self.keys)
-        return f'can not match {formatted_keys} to any data class field'
+        return f"can not match {formatted_keys} to any data class field"
