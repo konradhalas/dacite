@@ -10,10 +10,10 @@ from dacite.types import (
     is_generic_collection,
     extract_origin_collection,
     is_instance,
-    cast_value,
     extract_generic,
     is_new_type,
     extract_new_type,
+    transform_value,
 )
 
 
@@ -60,6 +60,10 @@ def test_is_generic_collection_with_generic_collection():
 
 def test_is_generic_collection_with_non_generic_collection():
     assert not is_generic_collection(list)
+
+
+def test_is_generic_collection_with_union():
+    assert not is_generic_collection(Union[int, str])
 
 
 def test_extract_generic_collection():
@@ -123,21 +127,59 @@ def test_is_instance_with_not_supported_generic_types():
     assert not is_instance(X[str](), X[str])
 
 
-def test_cast_value_with_built_in_type():
-    assert cast_value(int, "1") == 1
-
-
-def test_cast_value_with_optional():
-    assert cast_value(Optional[int], "1") == 1
-
-
-def test_cast_value_with_generic_sequence():
-    assert cast_value(List[int], ["1"]) == [1]
-
-
-def test_cast_value_with_generic_mapping():
-    assert cast_value(Dict[str, int], {1: "1"}) == {"1": 1}
-
-
 def test_extract_generic():
     assert extract_generic(List[int]) == (int,)
+
+
+def test_transform_value_without_matching_type():
+    assert transform_value({}, str, 1) == 1
+
+
+def test_transform_value_with_matching_type():
+    assert transform_value({int: lambda x: x + 1}, int, 1) == 2
+
+
+def test_transform_value_with_optional_and_not_none_value():
+    assert transform_value({str: str}, Optional[str], 1) == "1"
+
+
+def test_transform_value_with_optional_and_none_value():
+    assert transform_value({str: str}, Optional[str], None) is None
+
+
+def test_transform_value_with_optional_and_exact_matching_type():
+    assert transform_value({Optional[str]: str}, Optional[str], None) == "None"
+
+
+def test_transform_value_with_generic_sequence_and_matching_item():
+    assert transform_value({str: str}, List[str], [1]) == ["1"]
+
+
+def test_transform_value_with_generic_sequence_and_matching_sequence():
+    assert transform_value({List[int]: lambda x: list(reversed(x))}, List[int], [1, 2]) == [2, 1]
+
+
+def test_transform_value_with_generic_sequence_and_matching_both_item_and_sequence():
+    assert transform_value({List[int]: lambda x: list(reversed(x)), int: int}, List[int], ["1", "2"]) == [2, 1]
+
+
+def test_transform_value_without_matching_generic_sequence():
+    assert transform_value({}, List[int], {1}) == {1}
+
+
+def test_transform_value_with_nested_generic_sequence():
+    assert transform_value({str: str}, List[List[str]], [[1]]) == [["1"]]
+
+
+def test_transform_value_with_generic_mapping():
+    assert transform_value({str: str, int: int}, Dict[str, int], {1: "2"}) == {"1": 2}
+
+
+def test_transform_value_with_nested_generic_mapping():
+    assert transform_value({str: str, int: int}, Dict[str, Dict[str, int]], {1: {2: "3"}}) == {"1": {"2": 3}}
+
+
+def test_transform_value_with_new_type():
+    MyStr = NewType("MyStr", str)
+
+    assert transform_value({MyStr: str.upper, str: str.lower}, MyStr, "Test") == "TEST"

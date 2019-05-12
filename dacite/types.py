@@ -1,19 +1,29 @@
-from typing import Type, Any, Optional, Union, Collection, TypeVar, cast
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable
 
 T = TypeVar("T", bound=Any)
 
 
-def cast_value(type_: Type[T], value: Any) -> T:
-    if is_optional(type_):
-        type_ = extract_optional(type_)
-    if is_generic_collection(type_):
-        collection_cls = extract_origin_collection(type_)
+def transform_value(type_hooks: Dict[Type, Callable[[Any], Any]], target_type: Type, value: Any) -> Any:
+    if target_type in type_hooks:
+        value = type_hooks[target_type](value)
+    if is_optional(target_type):
+        if value is None:
+            return None
+        target_type = extract_optional(target_type)
+        return transform_value(type_hooks, target_type, value)
+    if is_generic_collection(target_type) and isinstance(value, extract_origin_collection(target_type)):
+        collection_cls = extract_origin_collection(target_type)
         if issubclass(collection_cls, dict):
-            key_cls, item_cls = extract_generic(type_)
-            return cast(T, collection_cls({key_cls(key): item_cls(item) for key, item in value.items()}))
-        item_cls = extract_generic(type_)[0]
-        return collection_cls(item_cls(item) for item in value)
-    return type_(value)
+            key_cls, item_cls = extract_generic(target_type)
+            return collection_cls(
+                {
+                    transform_value(type_hooks, key_cls, key): transform_value(type_hooks, item_cls, item)
+                    for key, item in value.items()
+                }
+            )
+        item_cls = extract_generic(target_type)[0]
+        return collection_cls(transform_value(type_hooks, item_cls, item) for item in value)
+    return value
 
 
 def extract_origin_collection(collection: Type) -> Type:
@@ -77,7 +87,10 @@ def is_generic_collection(type_: Type) -> bool:
     if not is_generic(type_):
         return False
     origin = extract_origin_collection(type_)
-    return bool(origin and issubclass(origin, Collection))
+    try:
+        return bool(origin and issubclass(origin, Collection))
+    except (TypeError, AttributeError):
+        return False
 
 
 def extract_generic(type_: Type) -> tuple:

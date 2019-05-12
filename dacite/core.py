@@ -2,7 +2,7 @@ import copy
 from dataclasses import fields, is_dataclass
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
 
-from dacite.config import Config, ValueNotFoundError
+from dacite.config import Config
 from dacite.data import Data
 from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError
 from dacite.exceptions import (
@@ -20,6 +20,7 @@ from dacite.types import (
     is_union,
     extract_generic,
     is_optional,
+    transform_value,
 )
 
 T = TypeVar("T")
@@ -36,7 +37,6 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     init_values: Data = {}
     post_init_values: Data = {}
     config = config or Config()
-    config.validate(data_class, data)
     try:
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
     except NameError as error:
@@ -46,15 +46,17 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         field.type = data_class_hints[field.name]
         try:
             try:
-                value = _build_value(
-                    type_=field.type, data=config.get_value(field, data), config=config.make_inner(field)
+                field_data = data[field.name]
+                transformed_value = transform_value(
+                    type_hooks=config.type_hooks, target_type=field.type, value=field_data
                 )
+                value = _build_value(type_=field.type, data=transformed_value, config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
             if config.check_types and not is_instance(value, field.type):
                 raise WrongTypeError(field_path=field.name, field_type=field.type, value=value)
-        except ValueNotFoundError:
+        except KeyError:
             try:
                 value = get_default_value_for_field(field)
             except DefaultValueNotFoundError:

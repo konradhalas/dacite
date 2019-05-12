@@ -1,4 +1,4 @@
-from typing import Any, Set, Type, Optional
+from typing import Any, Type, Optional
 
 
 def _name(type_: Type) -> str:
@@ -47,20 +47,6 @@ class UnionMatchError(WrongTypeError):
         return (
             f'can not match type "{_name(type(self.value))}" to any type '
             f'of "{self.field_path}" union: {_name(self.field_type)}'
-        )
-
-
-class InvalidConfigurationError(DaciteError):
-    def __init__(self, parameter: str, available_choices: Set[str], value: str) -> None:
-        super().__init__()
-        self.parameter = parameter
-        self.available_choices = available_choices
-        self.value = value
-
-    def __str__(self):
-        return (
-            f'invalid value in "{self.parameter}" configuration: "{self.value}". '
-            f'Choices are: {", ".join(self.available_choices)}'
         )
 
 
