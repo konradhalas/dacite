@@ -9,7 +9,7 @@ else:
 
 setup(
     name="dacite",
-    version="1.0.1",
+    version="1.0.2",
     description="Simple creation of data classes from dictionaries.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
