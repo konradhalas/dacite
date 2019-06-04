@@ -14,15 +14,7 @@ from dacite.exceptions import (
     DaciteFieldError,
     UnexpectedDataError,
 )
-from dacite.types import (
-    extract_origin_collection,
-    is_instance,
-    is_generic_collection,
-    is_union,
-    extract_generic,
-    is_optional,
-    transform_value,
-)
+from dacite.types import is_instance, is_generic_collection, is_union, extract_generic, is_optional, transform_value
 
 T = TypeVar("T")
 
@@ -104,10 +96,9 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
-    collection_cls = extract_origin_collection(collection)
     if is_instance(data, Mapping):
-        return collection_cls(
+        return data.__class__(
             (key, _build_value(type_=extract_generic(collection)[1], data=value, config=config))
             for key, value in data.items()
         )
-    return collection_cls(_build_value(type_=extract_generic(collection)[0], data=item, config=config) for item in data)
+    return data.__class__(_build_value(type_=extract_generic(collection)[0], data=item, config=config) for item in data)

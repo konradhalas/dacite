@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic
+from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection
 
 import pytest
 
@@ -102,6 +102,10 @@ def test_is_instance_with_generic_collection_and_matching_value_type():
     assert is_instance([1], List[int])
 
 
+def test_is_instance_with_generic_abstract_collection_and_matching_value_type():
+    assert is_instance([1], Collection[int])
+
+
 def test_is_instance_with_generic_collection_and_not_matching_value_type():
     assert not is_instance({1}, List[int])
 
@@ -169,6 +173,10 @@ def test_transform_value_without_matching_generic_sequence():
 
 def test_transform_value_with_nested_generic_sequence():
     assert transform_value({str: str}, List[List[str]], [[1]]) == [["1"]]
+
+
+def test_transform_value_with_generic_abstract_collection():
+    assert transform_value({str: str}, Collection[str], [1]) == ["1"]
 
 
 def test_transform_value_with_generic_mapping():

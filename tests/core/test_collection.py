@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Set, Union, Dict
+from typing import List, Set, Union, Dict, Collection
 
 from dacite import from_dict
 
@@ -103,3 +103,13 @@ def test_from_dict_with_already_created_data_class_instances():
     result = from_dict(Y, {"x": X(i=37), "x_list": [X(i=42)]})
 
     assert result == Y(x=X(i=37), x_list=[X(i=42)])
+
+
+def test_from_dict_with_generic_abstract_collection():
+    @dataclass
+    class X:
+        l: Collection[int]
+
+    result = from_dict(X, {"l": [1]})
+
+    assert result == X(l=[1])
