@@ -459,10 +459,10 @@ def products():
     result, errors = schema.load(request.get_json())
     if errors:
         return Response(
-        response=json.dumps(errors), 
-        status=400, 
-        mimetype='application/json',
-    )
+            response=json.dumps(errors), 
+            status=400, 
+            mimetype='application/json',
+        )
     product_data = dacite.from_dict(
         data_class=ProductData,
         data=result,
