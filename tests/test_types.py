@@ -1,19 +1,21 @@
-from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection
+from enum import Enum, IntEnum
+from typing import Any, Collection, Dict, Generic, List, NewType, Optional, TypeVar, Union
 
 import pytest
 
 from dacite.types import (
-    is_optional,
-    extract_optional,
-    is_generic,
-    is_union,
-    is_generic_collection,
-    extract_origin_collection,
-    is_instance,
     extract_generic,
-    is_new_type,
     extract_new_type,
+    extract_optional,
+    extract_origin_collection,
+    is_generic,
+    is_generic_collection,
+    is_instance,
+    is_new_type,
+    is_optional,
+    is_union,
     transform_value,
+    is_enum,
 )
 
 
@@ -191,3 +193,36 @@ def test_transform_value_with_new_type():
     MyStr = NewType("MyStr", str)
 
     assert transform_value({MyStr: str.upper, str: str.lower}, MyStr, "Test") == "TEST"
+
+
+def test_transform_value_with_enum():
+    class A(Enum):
+        B = "B"
+
+    assert transform_value({}, A, "B") == A.B
+
+
+def test_transform_invalid_enum_value_raises():
+    class A(Enum):
+        B = "B"
+
+    with pytest.raises(ValueError):
+        transform_value({}, A, "C")
+
+
+def test_is_enum_detects_simple_enum():
+    class P(Enum):
+        Q = "R"
+
+    assert is_enum(P)
+
+
+def test_is_enum_detects_int_enum():
+    class S(IntEnum):
+        T = 1
+
+    assert is_enum(S)
+
+
+def test_is_enum_can_test_non_class_type():
+    assert not is_enum(Union)

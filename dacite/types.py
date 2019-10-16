@@ -1,4 +1,6 @@
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable
+from enum import Enum
+from inspect import isclass
+from typing import Any, Callable, Collection, Dict, Optional, Type, TypeVar, Union
 
 T = TypeVar("T", bound=Any)
 
@@ -23,6 +25,8 @@ def transform_value(type_hooks: Dict[Type, Callable[[Any], Any]], target_type: T
             )
         item_cls = extract_generic(target_type)[0]
         return collection_cls(transform_value(type_hooks, item_cls, item) for item in value)
+    if is_enum(target_type):
+        return target_type(value)
     return value
 
 
@@ -95,3 +99,7 @@ def is_generic_collection(type_: Type) -> bool:
 
 def extract_generic(type_: Type) -> tuple:
     return type_.__args__  # type: ignore
+
+
+def is_enum(type_: Type) -> bool:
+    return isclass(type_) and issubclass(type_, Enum)
