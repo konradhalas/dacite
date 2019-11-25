@@ -1,4 +1,4 @@
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping
 
 T = TypeVar("T", bound=Any)
 
@@ -73,7 +73,18 @@ def is_instance(value: Any, type_: Type) -> bool:
             types.append(inner_type)
         return isinstance(value, tuple(types))
     elif is_generic_collection(type_):
-        return isinstance(value, extract_origin_collection(type_))
+        origin = extract_origin_collection(type_)
+        if not isinstance(value, origin):
+            return False
+        if not _has_specified_inner_types(type_):
+            return True
+        if isinstance(value, Mapping):
+            key_type, val_type = extract_generic(type_)
+            for key, val in value.items():
+                if not is_instance(key, key_type) or not is_instance(val, val_type):
+                    return False
+            return True
+        return all(is_instance(item, extract_generic(type_)[0]) for item in value)
     elif is_new_type(type_):
         return isinstance(value, extract_new_type(type_))
     else:
@@ -81,6 +92,13 @@ def is_instance(value: Any, type_: Type) -> bool:
             return isinstance(value, type_)
         except TypeError:
             return False
+
+
+def _has_specified_inner_types(type_: Type) -> bool:
+    try:
+        return not type_._special
+    except AttributeError:
+        return bool(extract_generic(type_))
 
 
 def is_generic_collection(type_: Type) -> bool:

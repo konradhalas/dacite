@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from typing import List, Set, Union, Dict, Collection
 
-from dacite import from_dict
+import pytest
+
+from dacite import from_dict, WrongTypeError
 
 
 def test_from_dict_with_generic_collection():
@@ -113,3 +115,27 @@ def test_from_dict_with_generic_abstract_collection():
     result = from_dict(X, {"l": [1]})
 
     assert result == X(l=[1])
+
+
+def test_from_dict_with_wrong_type_of_collection_item():
+    @dataclass
+    class X:
+        l: List[int]
+
+    with pytest.raises(WrongTypeError) as exception_info:
+        from_dict(X, {"l": ["1"]})
+
+    assert exception_info.value.field_path == "l"
+    assert exception_info.value.field_type == List[int]
+
+
+def test_from_dict_with_wrong_type_of_dict_value():
+    @dataclass
+    class X:
+        d: Dict[str, int]
+
+    with pytest.raises(WrongTypeError) as exception_info:
+        from_dict(X, {"d": {"a": "test"}})
+
+    assert exception_info.value.field_path == "d"
+    assert exception_info.value.field_type == Dict[str, int]

@@ -102,6 +102,26 @@ def test_is_instance_with_generic_collection_and_matching_value_type():
     assert is_instance([1], List[int])
 
 
+def test_is_instance_with_generic_collection_and_not_matching_item_type():
+    assert not is_instance(["test"], List[int])
+
+
+def test_is_instance_with_nested_generic_collection_and_matching_value_type():
+    assert is_instance([[1]], List[List[int]])
+
+
+def test_is_instance_with_nested_generic_collection_and_not_matching_item_type():
+    assert not is_instance([["test"]], List[List[int]])
+
+
+def test_is_instance_with_generic_collection_without_specified_inner_types_and_matching_value_type():
+    assert is_instance([1], List)
+
+
+def test_is_instance_with_generic_collection_without_specified_inner_types_and_not_matching_value_type():
+    assert not is_instance([1], Dict)
+
+
 def test_is_instance_with_generic_abstract_collection_and_matching_value_type():
     assert is_instance([1], Collection[int])
 
@@ -129,6 +149,18 @@ def test_is_instance_with_not_supported_generic_types():
         pass
 
     assert not is_instance(X[str](), X[str])
+
+
+def test_is_instance_with_generic_mapping_and_matching_value_type():
+    assert is_instance({"test": 1}, Dict[str, int])
+
+
+def test_is_instance_with_generic_mapping_and_not_matching_mapping_key_type():
+    assert not is_instance({1: 1}, Dict[str, int])
+
+
+def test_is_instance_with_generic_mapping_and_not_matching_mapping_value_type():
+    assert not is_instance({"test": "test"}, Dict[str, int])
 
 
 def test_extract_generic():
