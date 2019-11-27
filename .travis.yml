@@ -3,6 +3,7 @@ language: python
 python:
 - 3.6
 - 3.7
+- 3.8
 install:
 - pip install -e .[dev]
 script:
@@ -19,7 +20,7 @@ jobs:
   include:
     - stage: deploy
       script: skip
-      python: 3.7
+      python: 3.8
       deploy:
         provider: pypi
         user: khalas
