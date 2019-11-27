@@ -102,6 +102,7 @@ of `dacite.Config` class
 Configuration is a (data) class with following fields:
 
 - `type_hooks`
+- `cast`
 - `forward_references`
 - `check_types`
 - `strict`
@@ -255,6 +256,35 @@ If a data class field type is a `Optional[T]` you can pass both -
 `Optional[T]` or just `T` - as a key in `type_hooks`. The same with generic 
 collections, e.g. when a field has type `List[T]` you can use `List[T]` to 
 transform whole collection or `T` to transform each item. 
+
+### Casting
+
+It's a very common case that you want to create an instance of a field type 
+from the input data with just calling your type with the input value. Of 
+course you can use `type_hooks={T: T}` to achieve this goal but `cast=[T]` is 
+an easier and more expressive way.
+
+```python
+from enum import Enum
+
+class E(Enum):
+    X = 'x'
+    Y = 'y'
+    Z = 'z'
+
+@dataclass
+class A:
+    e: E
+
+
+data = {
+    'e': 'x',
+}
+
+result = from_dict(data_class=A, data=data, config=Config(cast=[E]))
+
+assert result == A(e=E.X)
+```
 
 ### Forward References
 

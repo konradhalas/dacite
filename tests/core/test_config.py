@@ -26,6 +26,16 @@ def test_from_dict_with_type_hooks_and_optional():
     assert result == X(s="test")
 
 
+def test_from_dict_with_cast():
+    @dataclass
+    class X:
+        s: str
+
+    result = from_dict(X, {"s": 1}, Config(cast=[str]))
+
+    assert result == X(s="1")
+
+
 def test_from_dict_with_type_hooks_and_generic_sequence():
     @dataclass
     class X:

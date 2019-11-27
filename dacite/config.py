@@ -1,10 +1,15 @@
-from dataclasses import dataclass, field as dc_field
-from typing import Dict, Any, Callable, Optional, Type
+from dataclasses import dataclass, field
+from typing import Dict, Any, Callable, Optional, Type, List
 
 
 @dataclass
 class Config:
-    type_hooks: Dict[Type, Callable[[Any], Any]] = dc_field(default_factory=dict)
+    type_hooks: Dict[Type, Callable[[Any], Any]] = field(default_factory=dict)
+    cast: List[Type] = field(default_factory=list)
     forward_references: Optional[Dict[str, Any]] = None
     check_types: bool = True
     strict: bool = False
+
+    def __post_init__(self):
+        for type_ in self.cast:
+            self.type_hooks[type_] = type_
