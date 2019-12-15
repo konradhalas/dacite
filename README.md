@@ -262,7 +262,8 @@ transform whole collection or `T` to transform each item.
 It's a very common case that you want to create an instance of a field type 
 from the input data with just calling your type with the input value. Of 
 course you can use `type_hooks={T: T}` to achieve this goal but `cast=[T]` is 
-an easier and more expressive way.
+an easier and more expressive way. It also works with base classes - if `T` 
+is a base class of type `S`, all fields of type `S` will be also "casted".
 
 ```python
 from enum import Enum
@@ -282,6 +283,10 @@ data = {
 }
 
 result = from_dict(data_class=A, data=data, config=Config(cast=[E]))
+
+# or
+
+result = from_dict(data_class=A, data=data, config=Config(cast=[Enum]))
 
 assert result == A(e=E.X)
 ```

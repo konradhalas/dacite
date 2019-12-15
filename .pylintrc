@@ -145,7 +145,8 @@ disable=print-statement,
         no-else-return,
         too-many-return-statements,
         too-many-branches,
-        protected-access
+        protected-access,
+        bad-continuation
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

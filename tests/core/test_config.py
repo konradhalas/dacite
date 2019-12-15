@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional, List, Union
 
 import pytest
@@ -34,6 +35,19 @@ def test_from_dict_with_cast():
     result = from_dict(X, {"s": 1}, Config(cast=[str]))
 
     assert result == X(s="1")
+
+
+def test_from_dict_with_base_class_cast():
+    class E(Enum):
+        A = "a"
+
+    @dataclass
+    class X:
+        e: E
+
+    result = from_dict(X, {"e": "a"}, Config(cast=[Enum]))
+
+    assert result == X(e=E.A)
 
 
 def test_from_dict_with_type_hooks_and_generic_sequence():
