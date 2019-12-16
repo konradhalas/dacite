@@ -24,6 +24,8 @@ setup(
     python_requires=">=3.6",
     keywords="dataclasses",
     packages=["dacite"],
+    package_data={"dacite": ["py.typed"]},
+    include_package_data=True,
     install_requires=['dataclasses;python_version<"3.7"'],
     extras_require={"dev": ["pytest>=4", "pytest-cov", "coveralls", "black", "mypy", "pylint"]},
 )
