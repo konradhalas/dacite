@@ -39,7 +39,13 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     post_init_values: Data = {}
     config = config or Config()
     try:
-        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+        forward_references = config.forward_references
+        # an empty forward_references dict causes `get_type_hints` to misbehave,
+        # and not pick up the correct types.
+        if forward_references is None or len(forward_references.keys()) == 0:
+            forward_references = None
+        
+        data_class_hints = get_type_hints(data_class, globalns=forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
     data_class_fields = fields(data_class)
