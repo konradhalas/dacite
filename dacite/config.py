@@ -9,7 +9,3 @@ class Config:
     forward_references: Optional[Dict[str, Any]] = None
     check_types: bool = True
     strict: bool = False
-
-    def __post_init__(self):
-        for type_ in self.cast:
-            self.type_hooks[type_] = type_

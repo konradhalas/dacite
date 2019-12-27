@@ -54,7 +54,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             try:
                 field_data = data[field.name]
                 transformed_value = transform_value(
-                    type_hooks=config.type_hooks, target_type=field.type, value=field_data
+                    type_hooks=config.type_hooks, cast=config.cast, target_type=field.type, value=field_data
                 )
                 value = _build_value(type_=field.type, data=transformed_value, config=config)
             except DaciteFieldError as error:
