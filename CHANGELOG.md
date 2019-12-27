@@ -29,7 +29,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate type for generic collection fields
 
 
-[Unreleased]
-
 [Unreleased]: https://github.com/konradhalas/dacite/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/konradhalas/dacite/compare/v1.0.2...v1.1.0
