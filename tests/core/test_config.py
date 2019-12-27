@@ -50,6 +50,19 @@ def test_from_dict_with_base_class_cast():
     assert result == X(e=E.A)
 
 
+def test_from_dict_with_base_class_cast_and_optional():
+    class E(Enum):
+        A = "a"
+
+    @dataclass
+    class X:
+        e: Optional[E]
+
+    result = from_dict(X, {"e": "a"}, Config(cast=[Enum]))
+
+    assert result == X(e=E.A)
+
+
 def test_from_dict_with_type_hooks_and_generic_sequence():
     @dataclass
     class X:

@@ -10,7 +10,7 @@ def transform_value(
         value = type_hooks[target_type](value)
     else:
         for cast_type in cast:
-            if issubclass(target_type, cast_type):
+            if is_subclass(target_type, cast_type):
                 value = target_type(value)
                 break
     if is_optional(target_type):
@@ -120,3 +120,10 @@ def is_generic_collection(type_: Type) -> bool:
 
 def extract_generic(type_: Type) -> tuple:
     return type_.__args__  # type: ignore
+
+
+def is_subclass(sub_type: Type, base_type: Type) -> bool:
+    try:
+        return issubclass(sub_type, base_type)
+    except TypeError:
+        return False
