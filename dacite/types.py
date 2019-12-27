@@ -11,7 +11,10 @@ def transform_value(
     else:
         for cast_type in cast:
             if is_subclass(target_type, cast_type):
-                value = target_type(value)
+                if is_generic_collection(target_type):
+                    value = extract_origin_collection(target_type)(value)
+                else:
+                    value = target_type(value)
                 break
     if is_optional(target_type):
         if value is None:
@@ -123,6 +126,8 @@ def extract_generic(type_: Type) -> tuple:
 
 
 def is_subclass(sub_type: Type, base_type: Type) -> bool:
+    if is_generic_collection(sub_type):
+        sub_type = extract_origin_collection(sub_type)
     try:
         return issubclass(sub_type, base_type)
     except TypeError:

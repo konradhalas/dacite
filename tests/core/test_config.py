@@ -63,6 +63,16 @@ def test_from_dict_with_base_class_cast_and_optional():
     assert result == X(e=E.A)
 
 
+def test_from_dict_with_cast_and_generic_collection():
+    @dataclass
+    class X:
+        s: List[int]
+
+    result = from_dict(X, {"s": (1,)}, Config(cast=[List]))
+
+    assert result == X(s=[1])
+
+
 def test_from_dict_with_type_hooks_and_generic_sequence():
     @dataclass
     class X:
