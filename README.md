@@ -508,6 +508,9 @@ def products():
 
 Still `dacite` helps us to create data class from "raw" dict with validated data.
 
+## Changelog
+
+Follow `dacite` updates in [CHANGELOG][changelog].
 
 ## Authors
 
@@ -515,3 +518,4 @@ Created by [Konrad Hałas][halas-homepage].
 
 [pep-557]: https://www.python.org/dev/peps/pep-0557/
 [halas-homepage]: https://konradhalas.pl
+[changelog]: https://github.com/konradhalas/dacite/blob/master/CHANGELOG.md
