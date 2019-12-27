@@ -163,6 +163,10 @@ def test_is_instance_with_generic_mapping_and_not_matching_mapping_value_type():
     assert not is_instance({"test": "test"}, Dict[str, int])
 
 
+def test_is_instance_with_numeric_tower():
+    assert is_instance(1, float)
+
+
 def test_extract_generic():
     assert extract_generic(List[int]) == (int,)
 

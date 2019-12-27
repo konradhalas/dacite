@@ -99,6 +99,9 @@ def is_instance(value: Any, type_: Type) -> bool:
         return isinstance(value, extract_new_type(type_))
     else:
         try:
+            # As described in PEP 484 - section: "The numeric tower"
+            if isinstance(value, (int, float)) and type_ in [float, complex]:
+                return True
             return isinstance(value, type_)
         except TypeError:
             return False
