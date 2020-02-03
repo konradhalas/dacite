@@ -22,7 +22,7 @@ def get_default_value_for_field(field: Field, allow_missing_fields_as_none: bool
 
 
 def create_instance(data_class: Type[T], init_values: Data, post_init_values: Data) -> T:
-    instance = data_class(**init_values)
+    instance: T = data_class(**init_values)
     for key, value in post_init_values.items():
         setattr(instance, key, value)
     return instance
