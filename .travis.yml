@@ -9,7 +9,7 @@ install:
 script:
 - pytest --cov=dacite
 - black --check .
-- mypy dacite
+- mypy
 - pylint dacite
 after_success:
   coveralls

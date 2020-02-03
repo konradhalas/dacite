@@ -125,7 +125,7 @@ def is_generic_collection(type_: Type) -> bool:
 
 
 def extract_generic(type_: Type) -> tuple:
-    return type_.__args__  # type: ignore
+    return type_.__args__
 
 
 def is_subclass(sub_type: Type, base_type: Type) -> bool:
