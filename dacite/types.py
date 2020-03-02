@@ -81,7 +81,7 @@ def is_instance(value: Any, type_: Type) -> bool:
             if is_new_type(inner_type):
                 inner_type = extract_new_type(inner_type)
             types.append(inner_type)
-        return isinstance(value, tuple(types))
+        return any(is_instance(value, t) for t in types)
     elif is_generic_collection(type_):
         origin = extract_origin_collection(type_)
         if not isinstance(value, origin):
@@ -96,7 +96,7 @@ def is_instance(value: Any, type_: Type) -> bool:
             return True
         return all(is_instance(item, extract_generic(type_)[0]) for item in value)
     elif is_new_type(type_):
-        return isinstance(value, extract_new_type(type_))
+        return is_instance(value, extract_new_type(type_))
     else:
         try:
             # As described in PEP 484 - section: "The numeric tower"

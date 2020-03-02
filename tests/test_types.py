@@ -98,6 +98,14 @@ def test_is_instance_with_union_and_not_matching_value_type():
     assert not is_instance("test", Union[int, float])
 
 
+def test_is_instance_with_optional_and_matching_value_type():
+    assert is_instance(1, Optional[int])
+
+
+def test_is_instance_with_optional_and_not_matching_value_type():
+    assert not is_instance(1, Optional[str])
+
+
 def test_is_instance_with_generic_collection_and_matching_value_type():
     assert is_instance([1], List[int])
 
@@ -165,6 +173,14 @@ def test_is_instance_with_generic_mapping_and_not_matching_mapping_value_type():
 
 def test_is_instance_with_numeric_tower():
     assert is_instance(1, float)
+
+
+def test_is_instance_with_numeric_tower_and_optional():
+    assert is_instance(1, Optional[float])
+
+
+def test_is_instance_with_numeric_tower_and_new_type():
+    assert is_instance(1, NewType("NewType", float))
 
 
 def test_extract_generic():
