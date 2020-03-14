@@ -14,7 +14,9 @@ from dacite.types import (
     is_new_type,
     extract_new_type,
     transform_value,
+    is_literal,
 )
+from tests.common import literal_support
 
 
 def test_is_union_with_union():
@@ -23,6 +25,17 @@ def test_is_union_with_union():
 
 def test_is_union_with_non_union():
     assert not is_union(int)
+
+
+@literal_support
+def test_is_literal_with_literal():
+    from typing import Literal
+
+    assert is_literal(Literal["A", "B"])
+
+
+def test_is_literal_with_non_literal():
+    assert not is_literal(int)
 
 
 def test_is_optional_with_optional():
@@ -181,6 +194,41 @@ def test_is_instance_with_numeric_tower_and_optional():
 
 def test_is_instance_with_numeric_tower_and_new_type():
     assert is_instance(1, NewType("NewType", float))
+
+
+@literal_support
+def test_is_instance_with_literal_and_matching_type():
+    from typing import Literal
+
+    assert is_instance("A", Literal["A", "B"])
+
+
+@literal_support
+def test_is_instance_with_literal_and_not_matching_type():
+    from typing import Literal
+
+    assert not is_instance("C", Literal["A", "B"])
+
+
+@literal_support
+def test_is_instance_with_optional_literal_and_matching_type():
+    from typing import Literal
+
+    assert is_instance("A", Optional[Literal["A", "B"]])
+
+
+@literal_support
+def test_is_instance_with_optional_literal_and_not_matching_type():
+    from typing import Literal
+
+    assert not is_instance("C", Optional[Literal["A", "B"]])
+
+
+@literal_support
+def test_is_instance_with_optional_literal_and_none():
+    from typing import Literal
+
+    assert is_instance(None, Optional[Literal["A", "B"]])
 
 
 def test_extract_generic():

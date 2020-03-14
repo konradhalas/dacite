@@ -49,7 +49,10 @@ def test_from_dict_with_wrong_type():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {"s": "test", "i": "wrong"})
 
-    assert str(exception_info.value) == 'wrong type for field "i" - should be "int" instead of "str"'
+    assert (
+        str(exception_info.value)
+        == 'wrong value type for field "i" - should be "int" instead of value "wrong" of type "str"'
+    )
     assert exception_info.value.field_path == "i"
     assert exception_info.value.field_type == int
     assert exception_info.value.value == "wrong"

@@ -29,8 +29,8 @@ class WrongTypeError(DaciteFieldError):
 
     def __str__(self) -> str:
         return (
-            f'wrong type for field "{self.field_path}" - should be '
-            f'"{_name(self.field_type)}" instead of "{_name(type(self.value))}"'
+            f'wrong value type for field "{self.field_path}" - should be "{_name(self.field_type)}" '
+            f'instead of value "{self.value}" of type "{_name(type(self.value))}"'
         )
 
 

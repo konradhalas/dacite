@@ -62,6 +62,15 @@ def is_union(type_: Type) -> bool:
     return is_generic(type_) and type_.__origin__ == Union
 
 
+def is_literal(type_: Type) -> bool:
+    try:
+        from typing import Literal  # type: ignore
+
+        return is_generic(type_) and type_.__origin__ == Literal
+    except ImportError:
+        return False
+
+
 def is_new_type(type_: Type) -> bool:
     return hasattr(type_, "__supertype__")
 
@@ -76,7 +85,7 @@ def is_instance(value: Any, type_: Type) -> bool:
     elif is_union(type_):
         types = []
         for inner_type in extract_generic(type_):
-            if is_generic(inner_type):
+            if is_generic(inner_type) and not is_literal(inner_type):
                 inner_type = extract_origin_collection(inner_type)
             if is_new_type(inner_type):
                 inner_type = extract_new_type(inner_type)
@@ -97,6 +106,8 @@ def is_instance(value: Any, type_: Type) -> bool:
         return all(is_instance(item, extract_generic(type_)[0]) for item in value)
     elif is_new_type(type_):
         return is_instance(value, extract_new_type(type_))
+    elif is_literal(type_):
+        return value in extract_generic(type_)
     else:
         try:
             # As described in PEP 484 - section: "The numeric tower"
