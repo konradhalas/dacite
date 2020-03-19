@@ -1,5 +1,11 @@
+import sys
 from dataclasses import InitVar
 from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+elif sys.version_info < (3, 8) and sys.version_info > (3, 6):
+    from typing_extensions import Literal
 
 import pytest
 
@@ -31,8 +37,6 @@ def test_is_union_with_non_union():
 
 @literal_support
 def test_is_literal_with_literal():
-    from typing import Literal
-
     assert is_literal(Literal["A", "B"])
 
 
@@ -218,36 +222,26 @@ def test_is_instance_with_numeric_tower_and_new_type():
 
 @literal_support
 def test_is_instance_with_literal_and_matching_type():
-    from typing import Literal
-
     assert is_instance("A", Literal["A", "B"])
 
 
 @literal_support
 def test_is_instance_with_literal_and_not_matching_type():
-    from typing import Literal
-
     assert not is_instance("C", Literal["A", "B"])
 
 
 @literal_support
 def test_is_instance_with_optional_literal_and_matching_type():
-    from typing import Literal
-
     assert is_instance("A", Optional[Literal["A", "B"]])
 
 
 @literal_support
 def test_is_instance_with_optional_literal_and_not_matching_type():
-    from typing import Literal
-
     assert not is_instance("C", Optional[Literal["A", "B"]])
 
 
 @literal_support
 def test_is_instance_with_optional_literal_and_none():
-    from typing import Literal
-
     assert is_instance(None, Optional[Literal["A", "B"]])
 
 

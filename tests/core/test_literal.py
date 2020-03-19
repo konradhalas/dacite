@@ -1,5 +1,12 @@
 from dataclasses import dataclass
+import sys
 from typing import Optional
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+elif sys.version_info < (3, 8) and sys.version_info > (3, 6):
+    from typing_extensions import Literal
+
 
 import pytest
 
@@ -10,8 +17,6 @@ from tests.common import literal_support
 
 @literal_support
 def test_from_dict_with_literal():
-    from typing import Literal
-
     @dataclass
     class X:
         l: Literal["A", "B"]
@@ -23,8 +28,6 @@ def test_from_dict_with_literal():
 
 @literal_support
 def test_from_dict_with_literal_and_wrong_value():
-    from typing import Literal
-
     @dataclass
     class X:
         l: Literal["A", "B"]
@@ -35,8 +38,6 @@ def test_from_dict_with_literal_and_wrong_value():
 
 @literal_support
 def test_from_dict_with_optional_literal_and_none():
-    from typing import Literal
-
     @dataclass
     class X:
         l: Optional[Literal["A", "B"]]
@@ -48,8 +49,6 @@ def test_from_dict_with_optional_literal_and_none():
 
 @literal_support
 def test_from_dict_with_optional_literal_and_not_none():
-    from typing import Literal
-
     @dataclass
     class X:
         l: Optional[Literal["A", "B"]]

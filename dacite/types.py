@@ -1,3 +1,4 @@
+import sys
 from dataclasses import InitVar
 from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List
 
@@ -65,7 +66,10 @@ def is_union(type_: Type) -> bool:
 
 def is_literal(type_: Type) -> bool:
     try:
-        from typing import Literal  # type: ignore
+        if sys.version_info >= (3, 8):
+            from typing import Literal
+        else:
+            from typing_extensions import Literal
 
         return is_generic(type_) and type_.__origin__ == Literal
     except ImportError:
