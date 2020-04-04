@@ -1,4 +1,4 @@
-from typing import Any, Type, Optional, Set
+from typing import Any, Type, Optional, Set, Dict
 
 
 def _name(type_: Type) -> str:
@@ -47,6 +47,18 @@ class UnionMatchError(WrongTypeError):
         return (
             f'can not match type "{_name(type(self.value))}" to any type '
             f'of "{self.field_path}" union: {_name(self.field_type)}'
+        )
+
+class AmbiguousResolutionError(DaciteError):
+    def __init__(self, resolutions: Dict) -> None:
+        super().__init__()
+        self.resolutions = resolutions
+
+    def __str__(self) -> str:
+        conflicting_types = ', '.join(f'{key}' for key in self.resolutions.keys())
+        return (
+            f'cannot choose between possible Union member resolutions:\n'
+            '{}'.format(conflicting_types)
         )
 
 

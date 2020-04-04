@@ -4,7 +4,13 @@ from typing import Optional, List, Union
 
 import pytest
 
-from dacite import from_dict, Config, ForwardReferenceError, UnexpectedDataError
+from dacite import (
+    from_dict,
+    Config,
+    ForwardReferenceError,
+    UnexpectedDataError,
+    AmbiguousResolutionError,
+)
 
 
 def test_from_dict_with_type_hooks():
@@ -152,3 +158,26 @@ def test_from_dict_with_strict():
         from_dict(X, {"s": "test", "i": 1}, Config(strict=True))
 
     assert str(exception_info.value) == 'can not match "i" to any data class field'
+
+
+def test_no_ambiguous_resolution():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        i: int
+
+    @dataclass
+    class Z:
+        u: Union[X, Y]
+
+    data = {
+        'u': {
+            'i': 0,
+        },
+    }
+
+    with pytest.raises(AmbiguousResolutionError):
+        result = from_dict(data_class=Z, data=data, config=Config(no_ambiguous_resolution=True))

@@ -9,3 +9,4 @@ class Config:
     forward_references: Optional[Dict[str, Any]] = None
     check_types: bool = True
     strict: bool = False
+    no_ambiguous_resolution: bool = False
