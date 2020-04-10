@@ -27,6 +27,16 @@ def test_from_dict_with_type_hooks_and_optional():
     assert result == X(s="test")
 
 
+def test_from_dict_with_type_hooks_and_union():
+    @dataclass
+    class X:
+        s: Union[str, int]
+
+    result = from_dict(X, {"s": "TEST"}, Config(type_hooks={str: str.lower}))
+
+    assert result == X(s="test")
+
+
 def test_from_dict_with_cast():
     @dataclass
     class X:

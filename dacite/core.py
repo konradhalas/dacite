@@ -95,7 +95,9 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
         try:
             value = _build_value(type_=inner_type, data=data, config=config)
             if is_instance(value, inner_type):
-                return value
+                return transform_value(
+                    type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=value
+                )
         except DaciteError:
             pass
     if not config.check_types:
