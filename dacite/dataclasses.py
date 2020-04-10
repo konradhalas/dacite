@@ -1,5 +1,5 @@
-from dataclasses import Field, MISSING
-from typing import Type, Any, TypeVar
+from dataclasses import Field, MISSING, _FIELDS, _FIELD, _FIELD_INITVAR  # type: ignore
+from typing import Type, Any, TypeVar, List
 
 from dacite.data import Data
 from dacite.types import is_optional
@@ -26,3 +26,8 @@ def create_instance(data_class: Type[T], init_values: Data, post_init_values: Da
     for key, value in post_init_values.items():
         setattr(instance, key, value)
     return instance
+
+
+def get_fields(data_class: Type[T]) -> List[Field]:
+    fields = getattr(data_class, _FIELDS)
+    return [f for f in fields.values() if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR]

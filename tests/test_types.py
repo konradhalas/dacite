@@ -1,3 +1,4 @@
+from dataclasses import InitVar
 from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection
 
 import pytest
@@ -15,8 +16,9 @@ from dacite.types import (
     extract_new_type,
     transform_value,
     is_literal,
+    is_init_var,
 )
-from tests.common import literal_support
+from tests.common import literal_support, init_var_type_support
 
 
 def test_is_union_with_union():
@@ -36,6 +38,14 @@ def test_is_literal_with_literal():
 
 def test_is_literal_with_non_literal():
     assert not is_literal(int)
+
+
+def test_is_init_var_with_init_var():
+    assert is_init_var(InitVar[int])
+
+
+def test_is_init_var_with_non_init_var():
+    assert not is_init_var(int)
 
 
 def test_is_optional_with_optional():
@@ -161,6 +171,16 @@ def test_is_instance_with_new_type_and_matching_value_type():
 
 def test_is_instance_with_new_type_and_not_matching_value_type():
     assert not is_instance(1, NewType("MyStr", str))
+
+
+@init_var_type_support
+def test_is_instance_with_init_var_and_matching_value_type():
+    assert is_instance(1, InitVar[int])
+
+
+@init_var_type_support
+def test_is_instance_with_init_var_and_not_matching_value_type():
+    assert not is_instance(1, InitVar[str])
 
 
 def test_is_instance_with_not_supported_generic_types():

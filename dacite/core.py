@@ -1,10 +1,10 @@
 import copy
-from dataclasses import fields, is_dataclass
+from dataclasses import is_dataclass
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
 
 from dacite.config import Config
 from dacite.data import Data
-from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError
+from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError, get_fields
 from dacite.exceptions import (
     ForwardReferenceError,
     WrongTypeError,
@@ -42,7 +42,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
-    data_class_fields = fields(data_class)
+    data_class_fields = get_fields(data_class)
     if config.strict:
         extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
         if extra_fields:

@@ -1,3 +1,4 @@
+from dataclasses import InitVar
 from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List
 
 T = TypeVar("T", bound=Any)
@@ -79,6 +80,10 @@ def extract_new_type(type_: Type) -> Type:
     return type_.__supertype__
 
 
+def is_init_var(type_: Type) -> bool:
+    return isinstance(type_, InitVar) or type_ is InitVar
+
+
 def is_instance(value: Any, type_: Type) -> bool:
     if type_ == Any:
         return True
@@ -108,6 +113,10 @@ def is_instance(value: Any, type_: Type) -> bool:
         return is_instance(value, extract_new_type(type_))
     elif is_literal(type_):
         return value in extract_generic(type_)
+    elif is_init_var(type_):
+        if hasattr(type_, "type"):
+            return is_instance(value, type_.type)
+        return True
     else:
         try:
             # As described in PEP 484 - section: "The numeric tower"
