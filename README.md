@@ -258,7 +258,7 @@ collections, e.g. when a field has type `List[T]` you can use `List[T]` to
 transform whole collection or `T` to transform each item. 
 
 To target all types use `Any`.  Targeting collections without their sub-types
-will target all collections of those types. 
+will target all collections of those types, such as `List` and `Dict`. 
 
 ```python
 @dataclass
@@ -286,7 +286,7 @@ result = from_dict(
     config=Config(
         type_hooks={
             Any: print_value, 
-            list: print_collection
+            List: print_collection
         }
     )
 )
