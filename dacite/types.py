@@ -1,15 +1,24 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple
 
 T = TypeVar("T", bound=Any)
 
 
 def transform_value(
-    type_hooks: Dict[Type, Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
+    type_hooks: Dict[Union[Type, object], Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
 ) -> Any:
+    # Generic hook type match
+    if Any in type_hooks:
+        value = type_hooks[Any](value)
+    if is_generic_collection(target_type):
+        collection_type = extract_origin_type(target_type)
+        if collection_type and collection_type in type_hooks:
+            value = type_hooks[collection_type](value)
+    # Exact hook type match
     if target_type in type_hooks:
         value = type_hooks[target_type](value)
     else:
+        # Cast to types in cast list
         for cast_type in cast:
             if is_subclass(target_type, cast_type):
                 if is_generic_collection(target_type):
@@ -17,11 +26,13 @@ def transform_value(
                 else:
                     value = target_type(value)
                 break
+    # Peel optional types
     if is_optional(target_type):
         if value is None:
             return None
         target_type = extract_optional(target_type)
         return transform_value(type_hooks, cast, target_type, value)
+    # For collections (dict/list), transform each item
     if is_generic_collection(target_type) and isinstance(value, extract_origin_collection(target_type)):
         collection_cls = value.__class__
         if issubclass(collection_cls, dict):
@@ -42,6 +53,16 @@ def extract_origin_collection(collection: Type) -> Type:
         return collection.__extra__
     except AttributeError:
         return collection.__origin__
+
+
+
+def extract_origin_type(collection: Type) -> Optional[Type]:
+    collection_type = extract_origin_collection(collection)
+    if collection_type is list:
+        return List
+    elif collection_type is dict:
+        return Dict
+    return None
 
 
 def is_optional(type_: Type) -> bool:

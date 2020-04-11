@@ -257,6 +257,56 @@ If a data class field type is a `Optional[T]` you can pass both -
 collections, e.g. when a field has type `List[T]` you can use `List[T]` to 
 transform whole collection or `T` to transform each item. 
 
+To target all types use `Any`.  Targeting collections without their sub-types
+will target all collections of those types. 
+
+```python
+@dataclass
+class ShoppingCart:
+    store: str
+    item_ids: List[int]
+
+data = {
+    'store': '7-Eleven',
+    'item_ids': [1, 2, 3],
+}
+
+def print_value(value):
+    print(value)
+    return value
+
+def print_collection(collection):
+    for item in collection:
+        print(item)
+    return collection
+
+result = from_dict(
+    data_class=ShoppingCart, 
+    data=data, 
+    config=Config(
+        type_hooks={
+            Any: print_value, 
+            list: print_collection
+        }
+    )
+)
+```
+
+prints
+
+```
+7-Eleven
+[1, 2, 3]
+1
+2
+3
+```
+
+If a data class field type is a `Optional[T]` you can pass both - 
+`Optional[T]` or just `T` - as a key in `type_hooks`. The same with generic 
+collections, e.g. when a field has type `List[T]` you can use `List[T]` to 
+transform whole collection or `T` to transform each item. 
+
 ### Casting
 
 It's a very common case that you want to create an instance of a field type 

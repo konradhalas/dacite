@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, List, Union
+from typing import Any, Dict, Optional, List, Union
 
 import pytest
 
@@ -35,6 +35,40 @@ def test_from_dict_with_type_hooks_and_union():
     result = from_dict(X, {"s": "TEST"}, Config(type_hooks={str: str.lower}))
 
     assert result == X(s="test")
+
+
+def test_from_dict_with_generic_type_hooks():
+    @dataclass
+    class X:
+        s: str
+
+    result = from_dict(X, {"s": "TEST"}, Config(type_hooks={Any: str.lower}))
+
+    assert result == X(s="test")
+
+
+def test_from_dict_with_generic_list_type_hooks():
+    @dataclass
+    class X:
+        l: List[int]
+
+    result = from_dict(X, {"l": [3,1,2]}, Config(type_hooks={List: sorted}))
+
+    assert result == X(l=[1,2,3])
+
+
+def test_from_dict_with_generic_dict_type_hooks():
+    @dataclass
+    class X:
+        d: Dict[str, int]
+    
+    def add_b(value):
+        value["b"] = 2
+        return value
+
+    result = from_dict(X, {"d": {"a": 1}}, Config(type_hooks={Dict: add_b}))
+
+    assert result == X(d={"a": 1, "b": 2})
 
 
 def test_from_dict_with_cast():
