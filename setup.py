@@ -4,7 +4,7 @@ setup(
     name="dacite",
     version="1.6.0",
     description="Simple creation of data classes from dictionaries.",
-    long_description=open("README.md").read(),
+    long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="Konrad Hałas",
     author_email="halas.konrad@gmail.com",
