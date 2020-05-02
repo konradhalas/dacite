@@ -13,7 +13,7 @@ from dacite.exceptions import (
     MissingValueError,
     DaciteFieldError,
     UnexpectedDataError,
-    AmbiguousResolutionError,
+    StrictUnionMatchError,
 )
 from dacite.types import (
     is_instance,
@@ -92,7 +92,7 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     types = extract_generic(union)
     if is_optional(union) and len(types) == 2:
         return _build_value(type_=types[0], data=data, config=config)
-    valid_resolutions = {}
+    union_matches = {}
     for inner_type in types:
         try:
             # noinspection PyBroadException
@@ -104,17 +104,16 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
                 continue
             value = _build_value(type_=inner_type, data=data, config=config)
             if is_instance(value, inner_type):
-                if config.no_ambiguous_resolution:
-                    valid_resolutions[inner_type] = value
+                if config.strict_unions_match:
+                    union_matches[inner_type] = value
                 else:
                     return value
         except DaciteError:
             pass
-    if config.no_ambiguous_resolution:
-        if len(valid_resolutions) > 1:
-            raise AmbiguousResolutionError(valid_resolutions)
-        else:
-            return valid_resolutions.popitem()[1]
+    if config.strict_unions_match:
+        if len(union_matches) > 1:
+            raise StrictUnionMatchError(union_matches)
+        return union_matches.popitem()[1]
     if not config.check_types:
         return data
     raise UnionMatchError(field_type=union, value=data)

@@ -9,7 +9,7 @@ from dacite import (
     Config,
     ForwardReferenceError,
     UnexpectedDataError,
-    AmbiguousResolutionError,
+    StrictUnionMatchError,
 )
 
 
@@ -160,7 +160,7 @@ def test_from_dict_with_strict():
     assert str(exception_info.value) == 'can not match "i" to any data class field'
 
 
-def test_no_ambiguous_resolution():
+def test_from_dict_with_strict_unions_match_and_ambiguous_match():
     @dataclass
     class X:
         i: int
@@ -174,10 +174,32 @@ def test_no_ambiguous_resolution():
         u: Union[X, Y]
 
     data = {
-        'u': {
-            'i': 0,
-        },
+        "u": {"i": 1},
     }
 
-    with pytest.raises(AmbiguousResolutionError):
-        result = from_dict(data_class=Z, data=data, config=Config(no_ambiguous_resolution=True))
+    with pytest.raises(StrictUnionMatchError) as exception_info:
+        from_dict(Z, data, Config(strict_unions_match=True))
+
+    assert str(exception_info.value) == 'can not choose between possible Union matches for field "u": X, Y'
+
+
+def test_from_dict_with_strict_unions_match_and_single_match():
+    @dataclass
+    class X:
+        f: str
+
+    @dataclass
+    class Y:
+        f: int
+
+    @dataclass
+    class Z:
+        u: Union[X, Y]
+
+    data = {
+        "u": {"f": 1},
+    }
+
+    result = from_dict(Z, data, Config(strict_unions_match=True))
+
+    assert result == Z(u=Y(f=1))
