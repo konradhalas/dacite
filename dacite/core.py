@@ -93,11 +93,16 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
         return _build_value(type_=types[0], data=data, config=config)
     for inner_type in types:
         try:
+            # noinspection PyBroadException
+            try:
+                data = transform_value(
+                    type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=data
+                )
+            except Exception:  # pylint: disable=broad-except
+                continue
             value = _build_value(type_=inner_type, data=data, config=config)
             if is_instance(value, inner_type):
-                return transform_value(
-                    type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=value
-                )
+                return value
         except DaciteError:
             pass
     if not config.check_types:
