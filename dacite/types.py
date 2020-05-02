@@ -102,6 +102,16 @@ def is_instance(value: Any, type_: Type) -> bool:
             return False
         if not _has_specified_inner_types(type_):
             return True
+        if isinstance(value, tuple):
+            tuple_types = extract_generic(type_)
+            if len(tuple_types) == 1 and tuple_types[0] == ():
+                return len(value) == 0
+            elif len(tuple_types) == 2 and tuple_types[1] is ...:
+                return all(is_instance(item, tuple_types[0]) for item in value)
+            else:
+                if len(tuple_types) != len(value):
+                    return False
+                return all(is_instance(item, item_type) for item, item_type in zip(value, tuple_types))
         if isinstance(value, Mapping):
             key_type, val_type = extract_generic(type_)
             for key, val in value.items():
