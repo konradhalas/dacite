@@ -95,24 +95,26 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     valid_resolutions = {}
     for inner_type in types:
         try:
+            # noinspection PyBroadException
+            try:
+                data = transform_value(
+                    type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=data
+                )
+            except Exception:  # pylint: disable=broad-except
+                continue
             value = _build_value(type_=inner_type, data=data, config=config)
             if is_instance(value, inner_type):
                 if config.no_ambiguous_resolution:
                     valid_resolutions[inner_type] = value
                 else:
-                    return transform_value(
-                        type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=value
-                    )
+                    return value
         except DaciteError:
             pass
     if config.no_ambiguous_resolution:
         if len(valid_resolutions) > 1:
             raise AmbiguousResolutionError(valid_resolutions)
         else:
-            unique_value = valid_resolutions.popitem()[1]
-            return transform_value(
-                type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=value
-            )
+            return valid_resolutions.popitem()[1]
     if not config.check_types:
         return data
     raise UnionMatchError(field_type=union, value=data)

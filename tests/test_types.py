@@ -1,5 +1,5 @@
 from dataclasses import InitVar
-from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection
+from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple
 
 import pytest
 
@@ -249,6 +249,30 @@ def test_is_instance_with_optional_literal_and_none():
     from typing import Literal
 
     assert is_instance(None, Optional[Literal["A", "B"]])
+
+
+def test_is_instance_with_tuple_and_matching_type():
+    assert is_instance((1, "test"), Tuple[int, str])
+
+
+def test_is_instance_with_tuple_and_not_matching_type():
+    assert not is_instance((1, 2), Tuple[int, str])
+
+
+def test_is_instance_with_variable_length_tuple_and_matching_type():
+    assert is_instance((1, 2, 3), Tuple[int, ...])
+
+
+def test_is_instance_with_variable_length_tuple_and_not_matching_type():
+    assert not is_instance((1, 2, "test"), Tuple[int, ...])
+
+
+def test_is_instance_with_empty_tuple_and_matching_type():
+    assert is_instance((), Tuple[()])
+
+
+def test_is_instance_with_empty_tuple_and_not_matching_type():
+    assert not is_instance((1, 2), Tuple[()])
 
 
 def test_extract_generic():
