@@ -4,7 +4,13 @@ from typing import Optional, List, Union
 
 import pytest
 
-from dacite import from_dict, Config, ForwardReferenceError, UnexpectedDataError
+from dacite import (
+    from_dict,
+    Config,
+    ForwardReferenceError,
+    UnexpectedDataError,
+    StrictUnionMatchError,
+)
 
 
 def test_from_dict_with_type_hooks():
@@ -152,3 +158,48 @@ def test_from_dict_with_strict():
         from_dict(X, {"s": "test", "i": 1}, Config(strict=True))
 
     assert str(exception_info.value) == 'can not match "i" to any data class field'
+
+
+def test_from_dict_with_strict_unions_match_and_ambiguous_match():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        i: int
+
+    @dataclass
+    class Z:
+        u: Union[X, Y]
+
+    data = {
+        "u": {"i": 1},
+    }
+
+    with pytest.raises(StrictUnionMatchError) as exception_info:
+        from_dict(Z, data, Config(strict_unions_match=True))
+
+    assert str(exception_info.value) == 'can not choose between possible Union matches for field "u": X, Y'
+
+
+def test_from_dict_with_strict_unions_match_and_single_match():
+    @dataclass
+    class X:
+        f: str
+
+    @dataclass
+    class Y:
+        f: int
+
+    @dataclass
+    class Z:
+        u: Union[X, Y]
+
+    data = {
+        "u": {"f": 1},
+    }
+
+    result = from_dict(Z, data, Config(strict_unions_match=True))
+
+    assert result == Z(u=Y(f=1))

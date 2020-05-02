@@ -106,6 +106,7 @@ Configuration is a (data) class with following fields:
 - `forward_references`
 - `check_types`
 - `strict`
+- `strict_unions_match`
 
 The examples below show all features of `from_dict` function and usage
 of all `Config` parameters.
@@ -343,6 +344,14 @@ in the input data. If you want change this behaviour set `Config.strict` to
 `True`. In case of unexpected key `from_dict` will raise `UnexpectedDataError` 
 exception.
 
+### Strict unions match
+
+`Union` allows to define multiple possible types for a given field. By default 
+`dacite` is trying to find the first matching type for a provided data and it 
+returns instance of this type. It means that it's possible that there are other 
+matching types further on the `Union` types list. With `strict_unions_match` 
+only a single match is allowed, otherwise `dacite` raises `StrictUnionMatchError`.
+
 ## Exceptions
 
 Whenever something goes wrong, `from_dict` will raise adequate
@@ -358,6 +367,8 @@ of `Union`
 dataclass
 - `UnexpectedDataError` - raised when `strict` mode is enabled and the input 
 data has not matching keys
+- `StrictUnionMatchError` - raised when `strict_unions_match` mode is enabled 
+and the input data has ambiguous `Union` match
 
 ## Development
 
