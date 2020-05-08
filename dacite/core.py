@@ -1,4 +1,3 @@
-import copy
 from dataclasses import is_dataclass
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
 
@@ -49,20 +48,19 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         if extra_fields:
             raise UnexpectedDataError(keys=extra_fields)
     for field in data_class_fields:
-        field = copy.copy(field)
-        field.type = data_class_hints[field.name]
+        field_type = data_class_hints[field.name]
         try:
             try:
                 field_data = data[field.name]
                 transformed_value = transform_value(
-                    type_hooks=config.type_hooks, cast=config.cast, target_type=field.type, value=field_data
+                    type_hooks=config.type_hooks, cast=config.cast, target_type=field_type, value=field_data
                 )
-                value = _build_value(type_=field.type, data=transformed_value, config=config)
+                value = _build_value(type_=field_type, data=transformed_value, config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
-            if config.check_types and not is_instance(value, field.type):
-                raise WrongTypeError(field_path=field.name, field_type=field.type, value=value)
+            if config.check_types and not is_instance(value, field_type):
+                raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
         except KeyError:
             try:
                 value = get_default_value_for_field(field)
