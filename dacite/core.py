@@ -1,5 +1,5 @@
 from dataclasses import is_dataclass
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
+from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Dict
 
 from dacite.config import Config
 from dacite.data import Data
@@ -35,8 +35,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
-    init_values: Data = {}
-    post_init_values: Data = {}
+    init_values: Dict[str, Any] = {}
+    post_init_values: Dict[str, Any] = {}
     config = config or Config()
     try:
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
@@ -79,9 +79,9 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_union(type_):
         return _build_value_for_union(union=type_, data=data, config=config)
-    elif is_generic_collection(type_) and is_instance(data, extract_origin_collection(type_)):
+    elif is_generic_collection(type_) and isinstance(data, extract_origin_collection(type_)):
         return _build_value_for_collection(collection=type_, data=data, config=config)
-    elif is_dataclass(type_) and is_instance(data, Data):
+    elif is_dataclass(type_) and isinstance(data, Mapping):
         return from_dict(data_class=type_, data=data, config=config)
     return data
 
@@ -118,9 +118,9 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
-    if is_instance(data, Mapping):
+    if isinstance(data, Mapping):
         return data.__class__(
             (key, _build_value(type_=extract_generic(collection)[1], data=value, config=config))
             for key, value in data.items()
-        )
+        )  # type: ignore
     return data.__class__(_build_value(type_=extract_generic(collection)[0], data=item, config=config) for item in data)
