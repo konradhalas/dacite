@@ -10,13 +10,15 @@ def transform_value(
     if target_type in type_hooks:
         value = type_hooks[target_type](value)
     else:
-        for cast_type in cast:
-            if is_subclass(target_type, cast_type):
-                if is_generic_collection(target_type):
-                    value = extract_origin_collection(target_type)(value)
-                else:
-                    value = target_type(value)
-                break
+        sub_type = getattr(target_type, "__origin__", target_type)
+        if isinstance(sub_type, type):
+            for cast_type in cast:
+                if issubclass(sub_type, cast_type):
+                    if is_generic_collection(target_type):
+                        value = extract_origin_collection(target_type)(value)
+                    else:
+                        value = target_type(value)
+                    break
     if is_optional(target_type):
         if value is None:
             return None
@@ -38,10 +40,7 @@ def transform_value(
 
 
 def extract_origin_collection(collection: Type) -> Type:
-    try:
-        return collection.__extra__
-    except AttributeError:
-        return collection.__origin__
+    return getattr(collection, "__extra__", collection.__origin__)
 
 
 def is_optional(type_: Type) -> bool:
@@ -60,14 +59,14 @@ def is_generic(type_: Type) -> bool:
 
 
 def is_union(type_: Type) -> bool:
-    return is_generic(type_) and type_.__origin__ == Union
+    return getattr(type_, "__origin__", None) is Union
 
 
 def is_literal(type_: Type) -> bool:
     try:
         from typing import Literal  # type: ignore
 
-        return is_generic(type_) and type_.__origin__ == Literal
+        return getattr(type_, "__origin__", None) is Literal
     except ImportError:
         return False
 
@@ -145,23 +144,9 @@ def _has_specified_inner_types(type_: Type) -> bool:
 
 
 def is_generic_collection(type_: Type) -> bool:
-    if not is_generic(type_):
-        return False
-    origin = extract_origin_collection(type_)
-    try:
-        return bool(origin and issubclass(origin, Collection))
-    except (TypeError, AttributeError):
-        return False
+    origin = getattr(type_, "__origin__", None)
+    return origin and isinstance(origin, type) and issubclass(origin, Collection)
 
 
 def extract_generic(type_: Type) -> tuple:
     return type_.__args__  # type: ignore
-
-
-def is_subclass(sub_type: Type, base_type: Type) -> bool:
-    if is_generic_collection(sub_type):
-        sub_type = extract_origin_collection(sub_type)
-    try:
-        return issubclass(sub_type, base_type)
-    except TypeError:
-        return False
