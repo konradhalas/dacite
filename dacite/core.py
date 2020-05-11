@@ -16,12 +16,11 @@ from dacite.exceptions import (
 )
 from dacite.types import (
     is_instance,
-    is_generic_collection,
-    is_union,
-    extract_generic,
-    is_optional,
     transform_value,
+    is_union,
+    is_generic_collection,
     extract_origin_collection,
+    is_optional,
 )
 
 T = TypeVar("T")
@@ -87,11 +86,10 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
 
 
 def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
-    types = extract_generic(union)
-    if is_optional(union) and len(types) == 2:
-        return _build_value(type_=types[0], data=data, config=config)
+    if is_optional(union) and len(union.__args__) == 2:
+        return _build_value(type_=union.__args__[0], data=data, config=config)
     union_matches = {}
-    for inner_type in types:
+    for inner_type in union.__args__:
         try:
             # noinspection PyBroadException
             try:
@@ -119,8 +117,7 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
     if isinstance(data, Mapping):
-        return data.__class__(
-            (key, _build_value(type_=extract_generic(collection)[1], data=value, config=config))
-            for key, value in data.items()
-        )  # type: ignore
-    return data.__class__(_build_value(type_=extract_generic(collection)[0], data=item, config=config) for item in data)
+        return data.__class__(  # type: ignore
+            (key, _build_value(type_=collection.__args__[1], data=value, config=config)) for key, value in data.items()
+        )
+    return data.__class__(_build_value(type_=collection.__args__[0], data=item, config=config) for item in data)

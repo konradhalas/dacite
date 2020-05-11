@@ -6,12 +6,10 @@ import pytest
 from dacite.types import (
     is_optional,
     extract_optional,
-    is_generic,
     is_union,
     is_generic_collection,
     extract_origin_collection,
     is_instance,
-    extract_generic,
     is_new_type,
     extract_new_type,
     transform_value,
@@ -67,14 +65,6 @@ def test_extract_optional():
 def test_extract_optional_with_wrong_type():
     with pytest.raises(ValueError):
         extract_optional(List[None])
-
-
-def test_is_generic_with_generic():
-    assert is_generic(Optional[int])
-
-
-def test_is_generic_with_non_generic():
-    assert not is_generic(int)
 
 
 def test_is_generic_collection_with_generic_collection():
@@ -273,10 +263,6 @@ def test_is_instance_with_empty_tuple_and_matching_type():
 
 def test_is_instance_with_empty_tuple_and_not_matching_type():
     assert not is_instance((1, 2), Tuple[()])
-
-
-def test_extract_generic():
-    assert extract_generic(List[int]) == (int,)
 
 
 def test_transform_value_without_matching_type():
