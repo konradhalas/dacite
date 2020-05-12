@@ -16,7 +16,9 @@ def make_get_value_transformer(
         type_hooks: Mapping[Type, Callable[[Any], Any]], cast: AbstractSet[Type], target_type: Type, value_type: Type
     ) -> Callable[[Any], Any]:
         transformer = lambda x: x
+        is_type_hook = False
         if target_type in type_hooks:
+            is_type_hook = True
             transformer = type_hooks[target_type]
         else:
             sub_type = getattr(target_type, "__origin__", target_type)
@@ -27,34 +29,34 @@ def make_get_value_transformer(
                             transformer = extract_origin_collection(target_type)
                         else:
                             transformer = target_type
-        if is_optional(target_type):
-            original_transformer = transformer
-            target_optional_type: Type = extract_optional(target_type)
-            transformer = (
-                lambda x: original_transformer(
-                    get_value_transformer(type_hooks, cast, target_optional_type, type(x))(x)
-                )
-                if x is not None
-                else original_transformer(None)
-            )
-        if is_generic_collection(target_type):
-            if issubclass(extract_origin_collection(target_type), Mapping):
-                key_cls, item_cls = target_type.__args__
+        if not is_type_hook:
+            if is_optional(target_type):
                 original_transformer = transformer
-                transformer = lambda x: value_type(
-                    {
-                        original_transformer(
-                            get_value_transformer(type_hooks, cast, key_cls, type(key))(key)
-                        ): original_transformer(get_value_transformer(type_hooks, cast, item_cls, type(item))(item))
-                        for key, item in x.items()
-                    }
+                target_optional_type: Type = extract_optional(target_type)
+                transformer = (
+                    lambda x: original_transformer(
+                        get_value_transformer(type_hooks, cast, target_optional_type, type(x))(x)
+                    )
+                    if x is not None
+                    else original_transformer(None)
                 )
-            else:
-                item_cls = target_type.__args__[0]
+            if is_generic_collection(target_type):
                 original_transformer = transformer
-                transformer = lambda x: original_transformer(
-                    value_type(get_value_transformer(type_hooks, cast, item_cls, type(item))(item) for item in x)
-                )
+                if issubclass(extract_origin_collection(target_type), Mapping):
+                    key_cls, item_cls = target_type.__args__
+                    transformer = lambda x: value_type(
+                        {
+                            original_transformer(
+                                get_value_transformer(type_hooks, cast, key_cls, type(key))(key)
+                            ): original_transformer(get_value_transformer(type_hooks, cast, item_cls, type(item))(item))
+                            for key, item in x.items()
+                        }
+                    )
+                else:
+                    item_cls = target_type.__args__[0]
+                    transformer = lambda x: original_transformer(
+                        value_type(get_value_transformer(type_hooks, cast, item_cls, type(item))(item) for item in x)
+                    )
         return transformer
 
     return get_value_transformer

@@ -14,6 +14,7 @@ from typing import (
     Type,
     Callable,
     AbstractSet,
+    Set,
 )
 
 import pytest
@@ -318,8 +319,8 @@ def test_transform_value_with_generic_sequence_and_matching_sequence():
     assert transform_value({List[int]: lambda x: list(reversed(x))}, set(), List[int], [1, 2]) == [2, 1]
 
 
-def test_transform_value_with_generic_sequence_and_matching_both_item_and_sequence():
-    assert transform_value({List[int]: lambda x: list(reversed(x)), int: int}, set(), List[int], ["1", "2"]) == [2, 1]
+def test_transform_value_with_generic_sequence_and_not_matching_sequence():
+    assert transform_value({Set[str]: lambda x: set(int(i) for i in x.split(","))}, set(), Set[str], "1,2") == {2, 1}
 
 
 def test_transform_value_without_matching_generic_sequence():
