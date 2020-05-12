@@ -357,3 +357,7 @@ def test_transform_value_with_cast_matching_base_class():
         pass
 
     assert transform_value({}, {int}, MyInt, "1") == 1
+
+
+def test_transform_value_with_cast_and_generic_collection():
+    assert transform_value({}, {List, int}, List[int], ("1",)) == [1]

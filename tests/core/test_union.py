@@ -135,7 +135,7 @@ def test_from_dict_with_union_of_mixed_types_and_builtin_type_as_a_result():
 
     @dataclass
     class Y:
-        u: Union[X, List[X], str]
+        u: Union[X, str, List[X]]
 
     result = from_dict(Y, {"u": "test"})
 

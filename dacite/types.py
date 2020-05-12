@@ -29,15 +29,16 @@ def make_get_value_transformer(
                             transformer = target_type
         if is_optional(target_type):
             original_transformer = transformer
-            if value_type is NoneType:
-                transformer = lambda _: original_transformer(None)
-            else:
-                target_optional_type: Type = extract_optional(target_type)
-                transformer = lambda x: original_transformer(
+            target_optional_type: Type = extract_optional(target_type)
+            transformer = (
+                lambda x: original_transformer(
                     get_value_transformer(type_hooks, cast, target_optional_type, type(x))(x)
                 )
-        if is_generic_collection(target_type) and issubclass(value_type, extract_origin_collection(target_type)):
-            if issubclass(value_type, dict):
+                if x is not None
+                else original_transformer(None)
+            )
+        if is_generic_collection(target_type):
+            if issubclass(extract_origin_collection(target_type), Mapping):
                 key_cls, item_cls = target_type.__args__
                 original_transformer = transformer
                 transformer = lambda x: value_type(

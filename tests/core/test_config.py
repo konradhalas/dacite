@@ -89,6 +89,16 @@ def test_from_dict_with_cast_and_generic_collection():
     assert result == X(s=[1])
 
 
+def test_from_dict_with_cast_and_generic_collection_and_item():
+    @dataclass
+    class X:
+        s: List[int]
+
+    result = from_dict(X, {"s": ("1",)}, Config(cast={List, int}))
+
+    assert result == X(s=[1])
+
+
 def test_from_dict_with_type_hooks_and_generic_sequence():
     @dataclass
     class X:
