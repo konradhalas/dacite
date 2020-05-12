@@ -1,7 +1,8 @@
 from dataclasses import Field, MISSING, _FIELDS, _FIELD, _FIELD_INITVAR  # type: ignore
-from typing import Type, Any, TypeVar, List
+from typing import Type, Any, TypeVar, List, get_type_hints, Optional, Dict, Tuple
 
 from dacite.data import Data
+from dacite.exceptions import ForwardReferenceError
 from dacite.types import is_optional
 
 T = TypeVar("T", bound=Any)
@@ -28,6 +29,14 @@ def create_instance(data_class: Type[T], init_values: Data, post_init_values: Da
     return instance
 
 
-def get_fields(data_class: Type[T]) -> List[Field]:
+def get_fields(data_class: Type, forward_references: Optional[Dict[str, Any]]) -> List[Tuple[Field, Type]]:
+    try:
+        data_class_hints = get_type_hints(data_class, globalns=dict(forward_references) if forward_references else None)
+    except NameError as error:
+        raise ForwardReferenceError(str(error))
     fields = getattr(data_class, _FIELDS)
-    return [f for f in fields.values() if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR]
+    return [
+        (f, data_class_hints[f.name])
+        for f in fields.values()
+        if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR
+    ]

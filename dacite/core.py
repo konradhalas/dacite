@@ -1,11 +1,10 @@
 from dataclasses import is_dataclass
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Dict
+from typing import TypeVar, Type, Optional, Mapping, Any, Dict
 
 from dacite.config import Config
 from dacite.data import Data
 from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError, get_fields
 from dacite.exceptions import (
-    ForwardReferenceError,
     WrongTypeError,
     DaciteError,
     UnionMatchError,
@@ -16,11 +15,11 @@ from dacite.exceptions import (
 )
 from dacite.types import (
     is_instance,
-    transform_value,
     is_union,
     is_generic_collection,
     extract_origin_collection,
     is_optional,
+    make_get_value_transformer,
 )
 
 T = TypeVar("T")
@@ -37,23 +36,18 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     init_values: Dict[str, Any] = {}
     post_init_values: Dict[str, Any] = {}
     config = config or Config()
-    try:
-        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
-    except NameError as error:
-        raise ForwardReferenceError(str(error))
-    data_class_fields = get_fields(data_class)
+    data_class_fields = config.cache.cache(get_fields)(data_class, config.forward_references)
     if config.strict:
-        extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
+        extra_fields = set(data.keys()) - {f.name for f, _ in data_class_fields}
         if extra_fields:
             raise UnexpectedDataError(keys=extra_fields)
-    for field in data_class_fields:
-        field_type = data_class_hints[field.name]
+    for field, field_type in data_class_fields:
         try:
             try:
                 field_data = data[field.name]
-                transformed_value = transform_value(
-                    type_hooks=config.type_hooks, cast=config.cast, target_type=field_type, value=field_data
-                )
+                transformed_value = config.cache.cache_from_factory(make_get_value_transformer)(
+                    config.type_hooks, config.cast, field_type, type(field_data)
+                )(field_data)
                 value = _build_value(type_=field_type, data=transformed_value, config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)
@@ -80,7 +74,7 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         return _build_value_for_union(union=type_, data=data, config=config)
     elif is_generic_collection(type_) and isinstance(data, extract_origin_collection(type_)):
         return _build_value_for_collection(collection=type_, data=data, config=config)
-    elif is_dataclass(type_) and isinstance(data, Mapping):
+    elif config.cache.cache(is_dataclass)(type_) and isinstance(data, Mapping):
         return from_dict(data_class=type_, data=data, config=config)
     return data
 
@@ -93,9 +87,10 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
         try:
             # noinspection PyBroadException
             try:
-                data = transform_value(
-                    type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=data
+                transformer = config.cache.cache_from_factory(make_get_value_transformer)(
+                    config.type_hooks, config.cast, inner_type, type(data)
                 )
+                data = transformer(data)
             except Exception:  # pylint: disable=broad-except
                 continue
             value = _build_value(type_=inner_type, data=data, config=config)

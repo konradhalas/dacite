@@ -48,7 +48,7 @@ def test_from_dict_with_cast():
     class X:
         s: str
 
-    result = from_dict(X, {"s": 1}, Config(cast=[str]))
+    result = from_dict(X, {"s": 1}, Config(cast={str}))
 
     assert result == X(s="1")
 
@@ -61,7 +61,7 @@ def test_from_dict_with_base_class_cast():
     class X:
         e: E
 
-    result = from_dict(X, {"e": "a"}, Config(cast=[Enum]))
+    result = from_dict(X, {"e": "a"}, Config(cast={Enum}))
 
     assert result == X(e=E.A)
 
@@ -74,7 +74,7 @@ def test_from_dict_with_base_class_cast_and_optional():
     class X:
         e: Optional[E]
 
-    result = from_dict(X, {"e": "a"}, Config(cast=[Enum]))
+    result = from_dict(X, {"e": "a"}, Config(cast={Enum}))
 
     assert result == X(e=E.A)
 
@@ -84,7 +84,7 @@ def test_from_dict_with_cast_and_generic_collection():
     class X:
         s: List[int]
 
-    result = from_dict(X, {"s": (1,)}, Config(cast=[List]))
+    result = from_dict(X, {"s": (1,)}, Config(cast={List}))
 
     assert result == X(s=[1])
 

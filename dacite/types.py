@@ -1,44 +1,62 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Callable, Mapping, AbstractSet
+
+from dacite.cache import Cache
 
 NoneType: Type = type(None)
 
 T = TypeVar("T", bound=Any)
 
 
-def transform_value(
-    type_hooks: Dict[Type, Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
-) -> Any:
-    if target_type in type_hooks:
-        value = type_hooks[target_type](value)
-    else:
-        sub_type = getattr(target_type, "__origin__", target_type)
-        if isinstance(sub_type, type):
-            for cast_type in cast:
-                if issubclass(sub_type, cast_type):
-                    if is_generic_collection(target_type):
-                        value = extract_origin_collection(target_type)(value)
-                    else:
-                        value = target_type(value)
-                    break
-    if is_optional(target_type):
-        if value is None:
-            return None
-        target_type = extract_optional(target_type)
-        return transform_value(type_hooks, cast, target_type, value)
-    if is_generic_collection(target_type) and isinstance(value, extract_origin_collection(target_type)):
-        collection_cls = value.__class__
-        if issubclass(collection_cls, dict):
-            key_cls, item_cls = target_type.__args__
-            return collection_cls(
-                {
-                    transform_value(type_hooks, cast, key_cls, key): transform_value(type_hooks, cast, item_cls, item)
-                    for key, item in value.items()
-                }
-            )
-        item_cls = target_type.__args__[0]
-        return collection_cls(transform_value(type_hooks, cast, item_cls, item) for item in value)
-    return value
+def make_get_value_transformer(
+    cache: Cache,
+) -> Callable[[Mapping[Type, Callable[[Any], Any]], AbstractSet[Type], Type, Type], Callable[[Any], Any]]:
+    @cache.cache
+    def get_value_transformer(
+        type_hooks: Mapping[Type, Callable[[Any], Any]], cast: AbstractSet[Type], target_type: Type, value_type: Type
+    ) -> Callable[[Any], Any]:
+        transformer = lambda x: x
+        if target_type in type_hooks:
+            transformer = type_hooks[target_type]
+        else:
+            sub_type = getattr(target_type, "__origin__", target_type)
+            if isinstance(sub_type, type):
+                for cast_type in cast:
+                    if issubclass(sub_type, cast_type):
+                        if is_generic_collection(target_type):
+                            transformer = extract_origin_collection(target_type)
+                        else:
+                            transformer = target_type
+        if is_optional(target_type):
+            original_transformer = transformer
+            if value_type is NoneType:
+                transformer = lambda _: original_transformer(None)
+            else:
+                target_optional_type: Type = extract_optional(target_type)
+                transformer = lambda x: original_transformer(
+                    get_value_transformer(type_hooks, cast, target_optional_type, type(x))(x)
+                )
+        if is_generic_collection(target_type) and issubclass(value_type, extract_origin_collection(target_type)):
+            if issubclass(value_type, dict):
+                key_cls, item_cls = target_type.__args__
+                original_transformer = transformer
+                transformer = lambda x: value_type(
+                    {
+                        original_transformer(
+                            get_value_transformer(type_hooks, cast, key_cls, type(key))(key)
+                        ): original_transformer(get_value_transformer(type_hooks, cast, item_cls, type(item))(item))
+                        for key, item in x.items()
+                    }
+                )
+            else:
+                item_cls = target_type.__args__[0]
+                original_transformer = transformer
+                transformer = lambda x: original_transformer(
+                    value_type(get_value_transformer(type_hooks, cast, item_cls, type(item))(item) for item in x)
+                )
+        return transformer
+
+    return get_value_transformer
 
 
 def extract_origin_collection(collection: Type) -> Type:

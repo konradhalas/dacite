@@ -1,8 +1,25 @@
 from dataclasses import InitVar
-from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple
+from typing import (
+    Optional,
+    Union,
+    List,
+    Any,
+    Dict,
+    NewType,
+    TypeVar,
+    Generic,
+    Collection,
+    Tuple,
+    Mapping,
+    Type,
+    Callable,
+    AbstractSet,
+)
 
 import pytest
 
+from dacite.cache import Cache
+from dacite.frozen_dict import FrozenDict
 from dacite.types import (
     is_optional,
     extract_optional,
@@ -12,11 +29,19 @@ from dacite.types import (
     is_instance,
     is_new_type,
     extract_new_type,
-    transform_value,
     is_literal,
     is_init_var,
+    make_get_value_transformer,
 )
 from tests.common import literal_support, init_var_type_support
+
+
+def transform_value(
+    type_hooks: Mapping[Type, Callable[[Any], Any]], cast: AbstractSet[Type], target_type: Type, value: Any
+):
+    return make_get_value_transformer(cache=Cache())(FrozenDict(type_hooks), frozenset(cast), target_type, type(value))(
+        value
+    )
 
 
 def test_is_union_with_union():
@@ -266,7 +291,7 @@ def test_is_instance_with_empty_tuple_and_not_matching_type():
 
 
 def test_transform_value_without_matching_type():
-    assert transform_value({}, [], str, 1) == 1
+    assert transform_value({}, set(), str, 1) == 1
 
 
 def test_transform_value_with_matching_type():
@@ -274,61 +299,61 @@ def test_transform_value_with_matching_type():
 
 
 def test_transform_value_with_optional_and_not_none_value():
-    assert transform_value({str: str}, [], Optional[str], 1) == "1"
+    assert transform_value({str: str}, set(), Optional[str], 1) == "1"
 
 
 def test_transform_value_with_optional_and_none_value():
-    assert transform_value({str: str}, [], Optional[str], None) is None
+    assert transform_value({str: str}, set(), Optional[str], None) is None
 
 
 def test_transform_value_with_optional_and_exact_matching_type():
-    assert transform_value({Optional[str]: str}, [], Optional[str], None) == "None"
+    assert transform_value({Optional[str]: str}, set(), Optional[str], None) == "None"
 
 
 def test_transform_value_with_generic_sequence_and_matching_item():
-    assert transform_value({str: str}, [], List[str], [1]) == ["1"]
+    assert transform_value({str: str}, set(), List[str], [1]) == ["1"]
 
 
 def test_transform_value_with_generic_sequence_and_matching_sequence():
-    assert transform_value({List[int]: lambda x: list(reversed(x))}, [], List[int], [1, 2]) == [2, 1]
+    assert transform_value({List[int]: lambda x: list(reversed(x))}, set(), List[int], [1, 2]) == [2, 1]
 
 
 def test_transform_value_with_generic_sequence_and_matching_both_item_and_sequence():
-    assert transform_value({List[int]: lambda x: list(reversed(x)), int: int}, [], List[int], ["1", "2"]) == [2, 1]
+    assert transform_value({List[int]: lambda x: list(reversed(x)), int: int}, set(), List[int], ["1", "2"]) == [2, 1]
 
 
 def test_transform_value_without_matching_generic_sequence():
-    assert transform_value({}, [], List[int], {1}) == {1}
+    assert transform_value({}, set(), List[int], {1}) == {1}
 
 
 def test_transform_value_with_nested_generic_sequence():
-    assert transform_value({str: str}, [], List[List[str]], [[1]]) == [["1"]]
+    assert transform_value({str: str}, set(), List[List[str]], [[1]]) == [["1"]]
 
 
 def test_transform_value_with_generic_abstract_collection():
-    assert transform_value({str: str}, [], Collection[str], [1]) == ["1"]
+    assert transform_value({str: str}, set(), Collection[str], [1]) == ["1"]
 
 
 def test_transform_value_with_generic_mapping():
-    assert transform_value({str: str, int: int}, [], Dict[str, int], {1: "2"}) == {"1": 2}
+    assert transform_value({str: str, int: int}, set(), Dict[str, int], {1: "2"}) == {"1": 2}
 
 
 def test_transform_value_with_nested_generic_mapping():
-    assert transform_value({str: str, int: int}, [], Dict[str, Dict[str, int]], {1: {2: "3"}}) == {"1": {"2": 3}}
+    assert transform_value({str: str, int: int}, set(), Dict[str, Dict[str, int]], {1: {2: "3"}}) == {"1": {"2": 3}}
 
 
 def test_transform_value_with_new_type():
     MyStr = NewType("MyStr", str)
 
-    assert transform_value({MyStr: str.upper, str: str.lower}, [], MyStr, "Test") == "TEST"
+    assert transform_value({MyStr: str.upper, str: str.lower}, set(), MyStr, "Test") == "TEST"
 
 
 def test_transform_value_with_cast_matching_type():
-    assert transform_value({}, [int], int, "1") == 1
+    assert transform_value({}, {int}, int, "1") == 1
 
 
 def test_transform_value_with_cast_matching_base_class():
     class MyInt(int):
         pass
 
-    assert transform_value({}, [int], MyInt, "1") == 1
+    assert transform_value({}, {int}, MyInt, "1") == 1
