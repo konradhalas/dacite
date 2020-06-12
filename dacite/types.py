@@ -71,7 +71,7 @@ def is_literal(type_: Type) -> bool:
     except ImportError:
         try:
             from typing_extensions import Literal # type: ignore
-            
+
             return is_generic(type_) and type_.__origin__ == Literal
         except ImportError:
             return False
