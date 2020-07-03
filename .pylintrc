@@ -148,7 +148,9 @@ disable=print-statement,
         protected-access,
         bad-continuation,
         import-outside-toplevel,
-        isinstance-second-argument-not-valid-type
+        isinstance-second-argument-not-valid-type,
+        unsubscriptable-object,
+        comparison-with-callable
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
