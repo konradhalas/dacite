@@ -127,7 +127,7 @@ def is_instance(value: Any, type_: Type) -> bool:
         if hasattr(type_, "type"):
             return is_instance(value, type_.type)
         return True
-    elif is_generic(type_) and type_.__origin__ is type:
+    elif is_generic(type_) and extract_origin_collection(type_) is type:
         inner_type = extract_generic(type_)[0]
         try:
             return issubclass(value, inner_type)
