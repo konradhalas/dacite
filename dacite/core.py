@@ -42,7 +42,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     try:
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
     except NameError as error:
-        raise ForwardReferenceError(str(error))
+        raise ForwardReferenceError(str(error)) from error
     data_class_fields = get_fields(data_class)
     if config.strict:
         extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
@@ -66,10 +66,10 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         except KeyError:
             try:
                 value = get_default_value_for_field(field)
-            except DefaultValueNotFoundError:
+            except DefaultValueNotFoundError as err:
                 if not field.init:
                     continue
-                raise MissingValueError(field.name)
+                raise MissingValueError(field.name) from err
         if field.init:
             init_values[field.name] = value
         else:
