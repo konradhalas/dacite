@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Set, Union, Dict, Collection
+from typing import List, Set, Union, Dict, Collection, Tuple
 
 import pytest
 
@@ -139,3 +139,35 @@ def test_from_dict_with_wrong_type_of_dict_value():
 
     assert exception_info.value.field_path == "d"
     assert exception_info.value.field_type == Dict[str, int]
+
+
+def test_from_dict_with_tuples_of_dataclasses():
+    @dataclass
+    class Y1:
+        f: int
+
+    @dataclass
+    class Y2:
+        f: int
+
+    @dataclass
+    class X:
+        t: Tuple[Y1, Y2]
+
+    result = from_dict(X, {"t": ({"f": 2}, {"f": 3})})
+
+    assert result == X(t=(Y1(f=2), Y2(f=3)))
+
+
+def test_from_dict_with_tuples_of_repeated_dataclasses():
+    @dataclass
+    class Y:
+        f: int
+
+    @dataclass
+    class X:
+        t: Tuple[Y, ...]
+
+    result = from_dict(X, {"t": ({"f": 2}, {"f": 3})})
+
+    assert result == X(t=(Y(f=2), Y(f=3)))

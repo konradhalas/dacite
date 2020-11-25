@@ -120,9 +120,17 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
+    generic = extract_generic(collection)
+
     if is_instance(data, Mapping):
         return data.__class__(
-            (key, _build_value(type_=extract_generic(collection)[1], data=value, config=config))
-            for key, value in data.items()
+            (key, _build_value(type_=generic[1], data=value, config=config)) for key, value in data.items()
         )
-    return data.__class__(_build_value(type_=extract_generic(collection)[0], data=item, config=config) for item in data)
+
+    collection_type = extract_origin_collection(collection)
+    if collection_type == tuple and not (len(generic) == 2 and generic[1] == Ellipsis):
+        return data.__class__(
+            _build_value(type_=item_type, data=item, config=config) for item, item_type in zip(data, generic)
+        )
+
+    return data.__class__(_build_value(type_=generic[0], data=item, config=config) for item in data)
