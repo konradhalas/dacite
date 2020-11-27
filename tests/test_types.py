@@ -1,5 +1,5 @@
 from dataclasses import InitVar
-from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple
+from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple, Type
 
 import pytest
 
@@ -18,6 +18,7 @@ from dacite.types import (
     is_literal,
     is_init_var,
     extract_init_var,
+    is_type_generic,
 )
 from tests.common import literal_support, init_var_type_support
 
@@ -192,6 +193,14 @@ def test_is_instance_with_init_var_and_not_matching_value_type():
     assert not is_instance(1, InitVar[str])
 
 
+def test_is_instance_with_with_type_and_matching_value_type():
+    assert is_instance(str, Type[str])
+
+
+def test_is_instance_with_with_type_and_not_matching_value_type():
+    assert not is_instance(1, Type[str])
+
+
 def test_is_instance_with_not_supported_generic_types():
     T = TypeVar("T")
 
@@ -364,3 +373,11 @@ def test_transform_value_with_cast_matching_base_class():
 @init_var_type_support
 def test_extract_init_var():
     assert extract_init_var(InitVar[int]) == int
+
+
+def test_is_type_generic_with_matching_value():
+    assert is_type_generic(Type[int])
+
+
+def test_is_type_generic_with_not_matching_value():
+    assert not is_type_generic(int)

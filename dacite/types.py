@@ -125,6 +125,8 @@ def is_instance(value: Any, type_: Type) -> bool:
         return value in extract_generic(type_)
     elif is_init_var(type_):
         return is_instance(value, extract_init_var(type_))
+    elif is_type_generic(type_):
+        return is_subclass(value, extract_generic(type_)[0])
     else:
         try:
             # As described in PEP 484 - section: "The numeric tower"
@@ -160,4 +162,11 @@ def is_subclass(sub_type: Type, base_type: Type) -> bool:
     try:
         return issubclass(sub_type, base_type)
     except TypeError:
+        return False
+
+
+def is_type_generic(type_: Type) -> bool:
+    try:
+        return type_.__origin__ == type
+    except AttributeError:
         return False

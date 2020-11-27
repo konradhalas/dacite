@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support `Type` fields
+
 ### Fixed
 
 - Handle generic collections with implicit `Any` inner types in Python 3.9
