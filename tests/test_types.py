@@ -279,6 +279,10 @@ def test_extract_generic():
     assert extract_generic(List[int]) == (int,)
 
 
+def test_extract_generic_with_defaults():
+    assert extract_generic(List, defaults=(Any,)) == (Any,)
+
+
 def test_transform_value_without_matching_type():
     assert transform_value({}, [], str, 1) == 1
 

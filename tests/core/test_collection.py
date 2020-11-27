@@ -139,3 +139,23 @@ def test_from_dict_with_wrong_type_of_dict_value():
 
     assert exception_info.value.field_path == "d"
     assert exception_info.value.field_type == Dict[str, int]
+
+
+def test_from_dict_with_dict_and_implicit_any_types():
+    @dataclass
+    class X:
+        d: Dict
+
+    result = from_dict(X, {"d": {"a": 1}})
+
+    assert result == X(d={"a": 1})
+
+
+def test_from_dict_with_list_and_implicit_any_types():
+    @dataclass
+    class X:
+        l: List
+
+    result = from_dict(X, {"l": [1]})
+
+    assert result == X(l=[1])

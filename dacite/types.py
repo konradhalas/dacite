@@ -1,5 +1,5 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple
 
 T = TypeVar("T", bound=Any)
 
@@ -25,14 +25,14 @@ def transform_value(
     if is_generic_collection(target_type) and isinstance(value, extract_origin_collection(target_type)):
         collection_cls = value.__class__
         if issubclass(collection_cls, dict):
-            key_cls, item_cls = extract_generic(target_type)
+            key_cls, item_cls = extract_generic(target_type, defaults=(Any, Any))
             return collection_cls(
                 {
                     transform_value(type_hooks, cast, key_cls, key): transform_value(type_hooks, cast, item_cls, item)
                     for key, item in value.items()
                 }
             )
-        item_cls = extract_generic(target_type)[0]
+        item_cls = extract_generic(target_type, defaults=(Any,))[0]
         return collection_cls(transform_value(type_hooks, cast, item_cls, item) for item in value)
     return value
 
@@ -100,7 +100,7 @@ def is_instance(value: Any, type_: Type) -> bool:
         origin = extract_origin_collection(type_)
         if not isinstance(value, origin):
             return False
-        if not _has_specified_inner_types(type_):
+        if not extract_generic(type_):
             return True
         if isinstance(value, tuple):
             tuple_types = extract_generic(type_)
@@ -113,12 +113,12 @@ def is_instance(value: Any, type_: Type) -> bool:
                     return False
                 return all(is_instance(item, item_type) for item, item_type in zip(value, tuple_types))
         if isinstance(value, Mapping):
-            key_type, val_type = extract_generic(type_)
+            key_type, val_type = extract_generic(type_, defaults=(Any, Any))
             for key, val in value.items():
                 if not is_instance(key, key_type) or not is_instance(val, val_type):
                     return False
             return True
-        return all(is_instance(item, extract_generic(type_)[0]) for item in value)
+        return all(is_instance(item, extract_generic(type_, defaults=(Any,))[0]) for item in value)
     elif is_new_type(type_):
         return is_instance(value, extract_new_type(type_))
     elif is_literal(type_):
@@ -137,13 +137,6 @@ def is_instance(value: Any, type_: Type) -> bool:
             return False
 
 
-def _has_specified_inner_types(type_: Type) -> bool:
-    try:
-        return not type_._special
-    except AttributeError:
-        return bool(extract_generic(type_))
-
-
 def is_generic_collection(type_: Type) -> bool:
     if not is_generic(type_):
         return False
@@ -154,11 +147,13 @@ def is_generic_collection(type_: Type) -> bool:
         return False
 
 
-def extract_generic(type_: Type) -> tuple:
+def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
     try:
-        return type_.__args__  # type: ignore
+        if hasattr(type_, "_special") and type_._special:
+            return defaults
+        return type_.__args__ or defaults  # type: ignore
     except AttributeError:
-        return ()
+        return defaults
 
 
 def is_subclass(sub_type: Type, base_type: Type) -> bool:
