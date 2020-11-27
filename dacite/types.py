@@ -5,7 +5,7 @@ T = TypeVar("T", bound=Any)
 
 
 def transform_value(
-    type_hooks: Dict[Union[Type, object], Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
+    type_hooks: Mapping[Union[Type, object], Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
 ) -> Any:
     # Generic hook type match
     if Any in type_hooks:
