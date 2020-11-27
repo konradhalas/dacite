@@ -167,6 +167,6 @@ def is_subclass(sub_type: Type, base_type: Type) -> bool:
 
 def is_type_generic(type_: Type) -> bool:
     try:
-        return type_.__origin__ == type
+        return type_.__origin__ in (type, Type)
     except AttributeError:
         return False
