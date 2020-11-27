@@ -84,6 +84,13 @@ def is_init_var(type_: Type) -> bool:
     return isinstance(type_, InitVar) or type_ is InitVar
 
 
+def extract_init_var(type_: Type) -> Union[Type, Any]:
+    try:
+        return type_.type
+    except AttributeError:
+        return Any
+
+
 def is_instance(value: Any, type_: Type) -> bool:
     if type_ == Any:
         return True
@@ -117,9 +124,7 @@ def is_instance(value: Any, type_: Type) -> bool:
     elif is_literal(type_):
         return value in extract_generic(type_)
     elif is_init_var(type_):
-        if hasattr(type_, "type"):
-            return is_instance(value, type_.type)
-        return True
+        return is_instance(value, extract_init_var(type_))
     else:
         try:
             # As described in PEP 484 - section: "The numeric tower"

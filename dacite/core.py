@@ -23,6 +23,8 @@ from dacite.types import (
     is_optional,
     transform_value,
     extract_origin_collection,
+    is_init_var,
+    extract_init_var,
 )
 
 T = TypeVar("T")
@@ -79,6 +81,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 
 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
+    if is_init_var(type_):
+        type_ = extract_init_var(type_)
     if is_union(type_):
         return _build_value_for_union(union=type_, data=data, config=config)
     elif is_generic_collection(type_) and is_instance(data, extract_origin_collection(type_)):

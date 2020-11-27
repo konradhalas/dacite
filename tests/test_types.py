@@ -17,6 +17,7 @@ from dacite.types import (
     transform_value,
     is_literal,
     is_init_var,
+    extract_init_var,
 )
 from tests.common import literal_support, init_var_type_support
 
@@ -358,3 +359,8 @@ def test_transform_value_with_cast_matching_base_class():
         pass
 
     assert transform_value({}, [int], MyInt, "1") == 1
+
+
+@init_var_type_support
+def test_extract_init_var():
+    assert extract_init_var(InitVar[int]) == int

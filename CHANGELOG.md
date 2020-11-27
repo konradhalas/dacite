@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Handle generic collections with implicit `Any` inner types in Python 3.9
+- Fix `InitVar` with inner data classes
 
 ## [1.5.1] - 2020-07-03
 
