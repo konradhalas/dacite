@@ -88,14 +88,7 @@ def is_instance(value: Any, type_: Type) -> bool:
     if type_ == Any:
         return True
     elif is_union(type_):
-        types = []
-        for inner_type in extract_generic(type_):
-            if is_generic(inner_type) and not is_literal(inner_type):
-                inner_type = extract_origin_collection(inner_type)
-            if is_new_type(inner_type):
-                inner_type = extract_new_type(inner_type)
-            types.append(inner_type)
-        return any(is_instance(value, t) for t in types)
+        return any(is_instance(value, t) for t in extract_generic(type_))
     elif is_generic_collection(type_):
         origin = extract_origin_collection(type_)
         if not isinstance(value, origin):

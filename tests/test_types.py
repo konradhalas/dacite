@@ -121,6 +121,14 @@ def test_is_instance_with_union_and_not_matching_value_type():
     assert not is_instance("test", Union[int, float])
 
 
+def test_is_instance_with_union_and_matching_generic_collection():
+    assert is_instance(["test"], Union[int, List[str]])
+
+
+def test_is_instance_with_union_and_not_matching_generic_collection():
+    assert not is_instance(["test"], Union[int, List[int]])
+
+
 def test_is_instance_with_optional_and_matching_value_type():
     assert is_instance(1, Optional[int])
 
