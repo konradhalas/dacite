@@ -277,6 +277,10 @@ def test_is_instance_with_tuple_and_not_matching_type():
     assert not is_instance((1, 2), Tuple[int, str])
 
 
+def test_is_instance_with_tuple_and_wrong_length():
+    assert not is_instance((1, "test", 2), Tuple[int, str])
+
+
 def test_is_instance_with_variable_length_tuple_and_matching_type():
     assert is_instance((1, 2, 3), Tuple[int, ...])
 

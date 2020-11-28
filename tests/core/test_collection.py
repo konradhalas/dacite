@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Set, Union, Dict, Collection
+from typing import List, Set, Union, Dict, Collection, Tuple
 
 import pytest
 
@@ -159,3 +159,65 @@ def test_from_dict_with_list_and_implicit_any_types():
     result = from_dict(X, {"l": [1]})
 
     assert result == X(l=[1])
+
+
+def test_from_dict_with_tuple_of_defined_length():
+    @dataclass
+    class X:
+        a: int
+
+    @dataclass
+    class Y:
+        b: int
+
+    @dataclass
+    class Z:
+        t: Tuple[X, Y]
+
+    result = from_dict(Z, {"t": ({"a": 1}, {"b": 2})})
+
+    assert result == Z(t=(X(a=1), Y(b=2)))
+
+
+def test_from_dict_with_tuple_of_undefined_length():
+    @dataclass
+    class X:
+        a: int
+
+    @dataclass
+    class Y:
+        t: Tuple[X, ...]
+
+    result = from_dict(Y, {"t": ({"a": 1}, {"a": 2})})
+
+    assert result == Y(t=(X(a=1), X(a=2)))
+
+
+def test_from_dict_with_tuple_and_wrong_length():
+    @dataclass
+    class X:
+        a: int
+
+    @dataclass
+    class Y:
+        b: int
+
+    @dataclass
+    class Z:
+        t: Tuple[X, Y]
+
+    with pytest.raises(WrongTypeError) as exception_info:
+        from_dict(Z, {"t": ({"a": 1}, {"b": 2}, {"c": 3})})
+
+    assert exception_info.value.field_path == "t"
+    assert exception_info.value.field_type == Tuple[X, Y]
+
+
+def test_from_dict_with_tuple_and_implicit_any_types():
+    @dataclass
+    class X:
+        t: Tuple
+
+    result = from_dict(X, {"t": (1, 2, 3)})
+
+    assert result == X(t=(1, 2, 3))

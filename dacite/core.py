@@ -1,5 +1,6 @@
 import copy
 from dataclasses import is_dataclass
+from itertools import zip_longest
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
 
 from dacite.config import Config
@@ -124,11 +125,16 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
+    data_type = data.__class__
     if is_instance(data, Mapping):
-        return data.__class__(
-            (key, _build_value(type_=extract_generic(collection, defaults=(Any, Any))[1], data=value, config=config))
-            for key, value in data.items()
+        item_type = extract_generic(collection, defaults=(Any, Any))[1]
+        return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
+    elif is_instance(data, tuple):
+        types = extract_generic(collection)
+        if len(types) == 2 and types[1] == Ellipsis:
+            return data_type(_build_value(type_=types[0], data=item, config=config) for item in data)
+        return data_type(
+            _build_value(type_=type_, data=item, config=config) for item, type_ in zip_longest(data, types)
         )
-    return data.__class__(
-        _build_value(type_=extract_generic(collection, defaults=(Any,))[0], data=item, config=config) for item in data
-    )
+    item_type = extract_generic(collection, defaults=(Any,))[0]
+    return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)
