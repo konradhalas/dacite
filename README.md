@@ -235,8 +235,7 @@ assert result == B(a_list=[A(x='test1', y=1), A(x='test2', y=2)])
 
 You can use `Config.type_hooks` argument if you want to transform the input 
 data of a data class field with given type into the new value. You have to 
-pass a following mapping: `{Type: callable}`, where `callable` is a 
-`Callable[[Any], Any]`.
+pass a mapping of type `Mapping[Type, Callable[[Any], Any]`.
 
 ```python
 @dataclass
