@@ -98,6 +98,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
                 _build_value(type_=extract_generic(type_)[0], data=single_val, config=config) for single_val in data
             )
     elif is_dataclass(type_) and is_instance(data, Data):
+        if hasattr(type_, "from_dict"):
+            return type_.from_dict(data=data, config=config)
         return from_dict(data_class=type_, data=data, config=config)
     return data
 
