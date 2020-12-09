@@ -89,6 +89,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
     elif is_generic_collection(type_) and is_instance(data, extract_origin_collection(type_)):
         return _build_value_for_collection(collection=type_, data=data, config=config)
     elif is_dataclass(type_) and is_instance(data, Data):
+        if hasattr(type_, "from_dict"):
+            return type_.from_dict(data_class=type_, data=data, config=config)
         return from_dict(data_class=type_, data=data, config=config)
     return data
 

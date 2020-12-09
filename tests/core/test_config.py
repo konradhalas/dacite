@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from enum import Enum
 from typing import Optional, List, Union
 
@@ -203,3 +204,35 @@ def test_from_dict_with_strict_unions_match_and_single_match():
     result = from_dict(Z, data, Config(strict_unions_match=True))
 
     assert result == Z(u=Y(f=1))
+
+
+def test_custom_from_dict_in_nested_data_class():
+    @dataclass
+    class X:
+        d: date
+        t: str
+
+        def from_dict(data_class, data, config):
+            data["t"] = "prefix {}".format(data["t"])
+            return from_dict(
+                data_class=data_class,
+                data=data,
+                config=Config(type_hooks={date: date.fromtimestamp}),
+            )
+
+    @dataclass
+    class Y:
+        d: date
+        x: X
+
+    config = Config(type_hooks={date: date.fromordinal})
+    data = {"d": 737790, "x": {"d": 1607511900.985121, "t": "abc"}}
+    result = from_dict(Y, data, config=config)
+
+    assert result == Y(
+        d=date(2020, 12, 31),
+        x=X(
+            d=date(2020, 12, 9),
+            t="prefix abc",
+        ),
+    )
