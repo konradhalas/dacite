@@ -3,3 +3,5 @@
 dist/
 *.egg-info/
 build/
+/venv/
+/.idea/
