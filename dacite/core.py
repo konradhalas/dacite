@@ -55,8 +55,16 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         field = copy.copy(field)
         field.type = data_class_hints[field.name]
         try:
+            field_data = data[field.name]
+        except KeyError:
             try:
-                field_data = data[field.name]
+                value = get_default_value_for_field(field)
+            except DefaultValueNotFoundError:
+                if not field.init:
+                    continue
+                raise MissingValueError(field.name)
+        else:
+            try:
                 transformed_value = transform_value(
                     type_hooks=config.type_hooks, cast=config.cast, target_type=field.type, value=field_data
                 )
@@ -66,13 +74,6 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                 raise
             if config.check_types and not is_instance(value, field.type):
                 raise WrongTypeError(field_path=field.name, field_type=field.type, value=value)
-        except KeyError:
-            try:
-                value = get_default_value_for_field(field)
-            except DefaultValueNotFoundError:
-                if not field.init:
-                    continue
-                raise MissingValueError(field.name)
         if field.init:
             init_values[field.name] = value
         else:
