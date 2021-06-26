@@ -168,3 +168,17 @@ def test_from_dict_with_new_type():
     result = from_dict(X, {"s": "test"})
 
     assert result == X(s=MyStr("test"))
+
+
+def test_from_dict_with_key_error_in_post_init():
+    @dataclass
+    class X:
+        def __post_init__(self):
+            raise KeyError()
+
+    @dataclass
+    class Y:
+        x: X = field(init=False)
+
+    with pytest.raises(KeyError):
+        from_dict(Y, {"x": {}})
