@@ -127,6 +127,9 @@ def is_instance(value: Any, type_: Type) -> bool:
         return is_instance(value, extract_init_var(type_))
     elif is_type_generic(type_):
         return is_subclass(value, extract_generic(type_)[0])
+    elif is_generic(type_):
+        origin = extract_origin_collection(type_)
+        return isinstance(value, origin)
     else:
         try:
             # As described in PEP 484 - section: "The numeric tower"

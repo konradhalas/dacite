@@ -207,7 +207,7 @@ def test_is_instance_with_not_supported_generic_types():
     class X(Generic[T]):
         pass
 
-    assert not is_instance(X[str](), X[str])
+    assert is_instance(X[str](), X[str])
 
 
 def test_is_instance_with_generic_mapping_and_matching_value_type():
