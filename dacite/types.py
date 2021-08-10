@@ -142,9 +142,13 @@ def is_generic_collection(type_: Type) -> bool:
         return False
     origin = extract_origin_collection(type_)
     try:
-        return bool(origin and issubclass(origin, Collection))
+        return bool(origin and issubclass(origin, Collection) and not skip_generic_conversion(origin))
     except (TypeError, AttributeError):
         return False
+
+
+def skip_generic_conversion(origin: Type) -> bool:
+    return origin.__module__ == "numpy" and origin.__qualname__ == "ndarray"
 
 
 def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
