@@ -99,6 +99,18 @@ def test_from_dict_with_type_hooks_and_generic_sequence():
     assert result == X(c=["test"])
 
 
+def test_from_dict_with_type_hook_exception():
+    @dataclass
+    class X:
+        i: int
+
+    def raise_error(_):
+        raise KeyError()
+
+    with pytest.raises(KeyError):
+        from_dict(X, {"i": 1}, config=Config(type_hooks={int: raise_error}))
+
+
 def test_from_dict_with_forward_reference():
     @dataclass
     class X:

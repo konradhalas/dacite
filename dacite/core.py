@@ -54,7 +54,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     for field in data_class_fields:
         field = copy.copy(field)
         field.type = data_class_hints[field.name]
-        try:
+        if field.name in data:
             try:
                 field_data = data[field.name]
                 transformed_value = transform_value(
@@ -66,7 +66,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                 raise
             if config.check_types and not is_instance(value, field.type):
                 raise WrongTypeError(field_path=field.name, field_type=field.type, value=value)
-        except KeyError:
+        else:
             try:
                 value = get_default_value_for_field(field)
             except DefaultValueNotFoundError:
