@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add explicit `__all__` configuration
+
 ### Fixed
 
 - Do not suppress `KeyError` in a type hook
