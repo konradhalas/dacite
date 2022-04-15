@@ -1,7 +1,7 @@
 import copy
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
+from typing import TypeVar, Type, Optional, Mapping, Any
 
 from dacite.config import Config
 from dacite.data import Data
@@ -26,6 +26,7 @@ from dacite.types import (
     extract_origin_collection,
     is_init_var,
     extract_init_var,
+    get_data_class_hints
 )
 
 T = TypeVar("T")
@@ -43,7 +44,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     post_init_values: Data = {}
     config = config or Config()
     try:
-        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+        data_class_hints = get_data_class_hints(data_class, globalns=config.forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
     data_class_fields = get_fields(data_class)

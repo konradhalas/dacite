@@ -1,5 +1,5 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple, get_type_hints
 
 T = TypeVar("T", bound=Any)
 
@@ -35,6 +35,14 @@ def transform_value(
         item_cls = extract_generic(target_type, defaults=(Any,))[0]
         return collection_cls(transform_value(type_hooks, cast, item_cls, item) for item in value)
     return value
+
+
+def get_data_class_hints(data_class, globalns) -> dict:
+    type_hints = get_type_hints(data_class, globalns=globalns)
+    for attr, type_hint in type_hints.items():
+        if is_init_var(type_hint):
+            type_hints[attr] = extract_init_var(type_hint)
+    return type_hints
 
 
 def extract_origin_collection(collection: Type) -> Type:
