@@ -13,7 +13,10 @@ def transform_value(
         for cast_type in cast:
             if is_subclass(target_type, cast_type):
                 if is_generic_collection(target_type):
-                    value = extract_origin_collection(target_type)(value)
+                    origin_collection = extract_origin_collection(target_type)
+                    if is_set(origin_collection):
+                        return list(value)
+                    value = origin_collection(value)
                 else:
                     value = target_type(value)
                 break
@@ -82,6 +85,10 @@ def extract_new_type(type_: Type) -> Type:
 
 def is_init_var(type_: Type) -> bool:
     return isinstance(type_, InitVar) or type_ is InitVar
+
+
+def is_set(type_: Type) -> bool:
+    return type_ in (set, frozenset) or isinstance(type_, (frozenset, set))
 
 
 def extract_init_var(type_: Type) -> Union[Type, Any]:
