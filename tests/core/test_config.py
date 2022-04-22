@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, InitVar
 from enum import Enum
 from typing import Optional, List, Union
 
@@ -97,6 +97,35 @@ def test_from_dict_with_type_hooks_and_generic_sequence():
     result = from_dict(X, {"c": ["TEST"]}, config=Config(type_hooks={str: str.lower}))
 
     assert result == X(c=["test"])
+
+
+def test_from_dict_with_type_hooks_and_init_vars():
+    @dataclass
+    class X:
+        name: str
+        value: int
+
+    def x_factory(tuple):
+        class_map = {
+            'X': X
+        }
+        return from_dict(data_class=class_map[tuple[0]], data=tuple[1])
+
+    @dataclass
+    class MyDictContainer:
+        name: str
+        var: InitVar[X]
+
+        def __post_init__(self, var: X):
+            self.name += var.name
+
+    data = {
+        'name': 'test',
+        'var': ('X', {'name': '_VARS_NAME', 'value': 1}),
+    }
+
+    d = from_dict(data_class=MyDictContainer, data=data, config=Config(type_hooks={X: x_factory}))
+    assert d.name == 'test_VARS_NAME'
 
 
 def test_from_dict_with_type_hook_exception():
