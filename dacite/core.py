@@ -26,6 +26,7 @@ from dacite.types import (
     extract_origin_collection,
     is_init_var,
     extract_init_var,
+    is_set,
 )
 
 T = TypeVar("T")
@@ -86,8 +87,14 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         type_ = extract_init_var(type_)
     if is_union(type_):
         return _build_value_for_union(union=type_, data=data, config=config)
-    elif is_generic_collection(type_) and is_instance(data, extract_origin_collection(type_)):
-        return _build_value_for_collection(collection=type_, data=data, config=config)
+    elif is_generic_collection(type_):
+        origin = extract_origin_collection(type_)
+        if is_instance(data, origin):
+            return _build_value_for_collection(collection=type_, data=data, config=config)
+        if is_set(origin):
+            return origin(
+                _build_value(type_=extract_generic(type_)[0], data=single_val, config=config) for single_val in data
+            )
     elif is_dataclass(type_) and is_instance(data, Data):
         return from_dict(data_class=type_, data=data, config=config)
     return data

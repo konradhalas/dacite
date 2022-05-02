@@ -3,7 +3,7 @@ from typing import List, Set, Union, Dict, Collection, Tuple
 
 import pytest
 
-from dacite import from_dict, WrongTypeError
+from dacite import from_dict, WrongTypeError, Config
 
 
 def test_from_dict_with_generic_collection():
@@ -66,6 +66,54 @@ def test_from_dict_with_set():
     result = from_dict(X, {"i_set": {1, 2}})
 
     assert result == X(i_set={1, 2})
+
+
+def test_from_dict_with_set_strings():
+    @dataclass
+    class X:
+        i_set: Set[str]
+
+    result = from_dict(X, {"i_set": {"a", "b"}})
+
+    assert result == X(i_set={"a", "b"})
+
+
+def test_from_dict_with_set_classes():
+    @dataclass(frozen=True)
+    class A:
+        x: int
+
+    @dataclass
+    class SetOfA:
+        set_a: Set[A]
+
+    data = {"set_a": [{"x": 1}, {"x": 2}]}
+
+    result = from_dict(data_class=SetOfA, data=data, config=Config(cast=[set]))
+
+    assert result == SetOfA({A(1), A(2)})
+
+
+def test_from_dict_with_nested_set_classes():
+    @dataclass(frozen=True)
+    class A:
+        x: int
+
+    @dataclass
+    class SetOfA:
+        set_a: Set[A]
+
+        def __hash__(self) -> int:
+            return hash(sum(ob.x for ob in self.set_a))
+
+    @dataclass
+    class SetOfSetOfA:
+        set_set_a: Set[SetOfA]
+
+    data = {"set_set_a": [{"set_a": [{"x": 1}, {"x": 2}]}]}
+    result = from_dict(data_class=SetOfSetOfA, data=data, config=Config(cast=[set]))
+
+    assert result == SetOfSetOfA(set_set_a={SetOfA(set_a={A(x=1), A(x=2)})})
 
 
 def test_from_dict_with_dict():
