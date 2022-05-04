@@ -1,11 +1,11 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Callable, Mapping, List, Tuple
 
 T = TypeVar("T", bound=Any)
 
 
 def transform_value(
-    type_hooks: Dict[Type, Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
+    type_hooks: Mapping[Type, Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
 ) -> Any:
     if target_type in type_hooks:
         value = type_hooks[target_type](value)
