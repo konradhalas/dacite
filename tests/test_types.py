@@ -1,4 +1,4 @@
-from dataclasses import InitVar
+from dataclasses import dataclass, InitVar
 from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple, Type
 
 import pytest
@@ -18,6 +18,7 @@ from dacite.types import (
     is_literal,
     is_init_var,
     extract_init_var,
+    get_data_class_hints,
     is_type_generic,
     is_set,
 )
@@ -416,3 +417,14 @@ def test_is_set_int_class():
 
 def test_is_set_union():
     assert not is_set(Union[int, float])
+
+
+def test_get_type_hint_for_init_var():
+    @dataclass
+    class X:
+        name: str
+        value: InitVar[int]
+
+    assert get_data_class_hints(X) == {'name': str,
+                                       'value': int
+                                       }

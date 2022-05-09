@@ -40,7 +40,7 @@ def transform_value(
     return value
 
 
-def get_data_class_hints(data_class, globalns) -> dict:
+def get_data_class_hints(data_class: Type[T], globalns: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     type_hints = get_type_hints(data_class, globalns=globalns)
     for attr, type_hint in type_hints.items():
         if is_init_var(type_hint):
