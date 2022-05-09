@@ -1,5 +1,5 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple, get_type_hints
 
 T = TypeVar("T", bound=Any)
 
@@ -13,7 +13,10 @@ def transform_value(
         for cast_type in cast:
             if is_subclass(target_type, cast_type):
                 if is_generic_collection(target_type):
-                    value = extract_origin_collection(target_type)(value)
+                    origin_collection = extract_origin_collection(target_type)
+                    if is_set(origin_collection):
+                        return list(value)
+                    value = origin_collection(value)
                 else:
                     value = target_type(value)
                 break
@@ -35,6 +38,14 @@ def transform_value(
         item_cls = extract_generic(target_type, defaults=(Any,))[0]
         return collection_cls(transform_value(type_hooks, cast, item_cls, item) for item in value)
     return value
+
+
+def get_data_class_hints(data_class: Type[T], globalns: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    type_hints = get_type_hints(data_class, globalns=globalns)
+    for attr, type_hint in type_hints.items():
+        if is_init_var(type_hint):
+            type_hints[attr] = extract_init_var(type_hint)
+    return type_hints
 
 
 def extract_origin_collection(collection: Type) -> Type:
@@ -82,6 +93,10 @@ def extract_new_type(type_: Type) -> Type:
 
 def is_init_var(type_: Type) -> bool:
     return isinstance(type_, InitVar) or type_ is InitVar
+
+
+def is_set(type_: Type) -> bool:
+    return type_ in (set, frozenset) or isinstance(type_, (frozenset, set))
 
 
 def extract_init_var(type_: Type) -> Union[Type, Any]:

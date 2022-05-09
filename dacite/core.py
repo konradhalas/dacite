@@ -26,6 +26,8 @@ from dacite.types import (
     extract_origin_collection,
     is_init_var,
     extract_init_var,
+    is_set,
+    get_data_class_hints
 )
 
 T = TypeVar("T")
@@ -43,7 +45,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     post_init_values: Data = {}
     config = config or Config()
     try:
-        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+        data_class_hints = get_data_class_hints(data_class, globalns=config.forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
     data_class_fields = get_fields(data_class)
@@ -86,8 +88,14 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         type_ = extract_init_var(type_)
     if is_union(type_):
         return _build_value_for_union(union=type_, data=data, config=config)
-    elif is_generic_collection(type_) and is_instance(data, extract_origin_collection(type_)):
-        return _build_value_for_collection(collection=type_, data=data, config=config)
+    elif is_generic_collection(type_):
+        origin = extract_origin_collection(type_)
+        if is_instance(data, origin):
+            return _build_value_for_collection(collection=type_, data=data, config=config)
+        if is_set(origin):
+            return origin(
+                _build_value(type_=extract_generic(type_)[0], data=single_val, config=config) for single_val in data
+            )
     elif is_dataclass(type_) and is_instance(data, Data):
         return from_dict(data_class=type_, data=data, config=config)
     return data

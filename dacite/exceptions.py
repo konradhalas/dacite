@@ -1,8 +1,9 @@
 from typing import Any, Type, Optional, Set, Dict
+from dacite.types import is_union
 
 
 def _name(type_: Type) -> str:
-    return type_.__name__ if hasattr(type_, "__name__") else str(type_)
+    return type_.__name__ if hasattr(type_, "__name__") and not is_union(type_) else str(type_)
 
 
 class DaciteError(Exception):
