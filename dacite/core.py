@@ -137,6 +137,8 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
         item_type = extract_generic(collection, defaults=(Any, Any))[1]
         return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
     elif is_instance(data, tuple):
+        if not data:
+            return data_type()
         types = extract_generic(collection)
         if len(types) == 2 and types[1] == Ellipsis:
             return data_type(_build_value(type_=types[0], data=item, config=config) for item in data)

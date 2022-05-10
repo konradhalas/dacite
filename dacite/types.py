@@ -66,6 +66,10 @@ def is_union(type_: Type) -> bool:
     return is_generic(type_) and type_.__origin__ == Union
 
 
+def is_tuple(type_: Type) -> bool:
+    return is_subclass(type_, Tuple)
+
+
 def is_literal(type_: Type) -> bool:
     try:
         from typing import Literal  # type: ignore
@@ -109,7 +113,7 @@ def is_instance(value: Any, type_: Type) -> bool:
             return False
         if not extract_generic(type_):
             return True
-        if isinstance(value, tuple):
+        if isinstance(value, tuple) and is_tuple(type_):
             tuple_types = extract_generic(type_)
             if len(tuple_types) == 1 and tuple_types[0] == ():
                 return len(value) == 0

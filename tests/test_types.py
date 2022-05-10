@@ -20,6 +20,7 @@ from dacite.types import (
     extract_init_var,
     is_type_generic,
     is_set,
+    is_tuple,
 )
 from tests.common import literal_support, init_var_type_support
 
@@ -30,6 +31,14 @@ def test_is_union_with_union():
 
 def test_is_union_with_non_union():
     assert not is_union(int)
+
+
+def test_is_tuple_with_tuple():
+    assert is_tuple(Tuple[int, float, str])
+
+
+def test_is_tuple_with_non_tuple():
+    assert not is_tuple(int)
 
 
 @literal_support
