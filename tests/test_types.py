@@ -21,8 +21,9 @@ from dacite.types import (
     get_data_class_hints,
     is_type_generic,
     is_set,
+    is_tuple,
 )
-from tests.common import literal_support, init_var_type_support, pep_604_support
+from tests.common import literal_support, init_var_type_support, type_hints_with_generic_collections_support, pep_604_support
 
 
 def test_is_union_with_union():
@@ -36,6 +37,36 @@ def test_is_union_with_non_union():
 @pep_604_support
 def test_is_union_with_pep_604_union():
     assert is_union(int | float)
+
+
+def test_is_tuple_with_tuple():
+    assert is_tuple(Tuple[int, float, str])
+
+
+def test_is_tuple_with_variable_length_tuple():
+    assert is_tuple(Tuple[int, ...])
+
+
+def test_is_tuple_with_not_parametrized_tuple():
+    assert is_tuple(Tuple)
+
+
+def test_is_tuple_with_tuple_class_object():
+    assert is_tuple(tuple)
+
+
+@type_hints_with_generic_collections_support
+def test_is_tuple_with_tuple_generic():
+    assert is_tuple(tuple[int, float, str])
+
+
+@type_hints_with_generic_collections_support
+def test_is_tuple_with_variable_length_tuple_generic():
+    assert is_tuple(tuple[int, ...])
+
+
+def test_is_tuple_with_non_tuple():
+    assert not is_tuple(int)
 
 
 @literal_support
