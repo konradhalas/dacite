@@ -106,9 +106,7 @@ def test_from_dict_with_type_hooks_and_init_vars():
         value: int
 
     def x_factory(tuple):
-        class_map = {
-            'X': X
-        }
+        class_map = {"X": X}
         return from_dict(data_class=class_map[tuple[0]], data=tuple[1])
 
     @dataclass
@@ -120,12 +118,12 @@ def test_from_dict_with_type_hooks_and_init_vars():
             self.name += var.name
 
     data = {
-        'name': 'test',
-        'var': ('X', {'name': '_VARS_NAME', 'value': 1}),
+        "name": "test",
+        "var": ("X", {"name": "_VARS_NAME", "value": 1}),
     }
 
     d = from_dict(data_class=MyDictContainer, data=data, config=Config(type_hooks={X: x_factory}))
-    assert d.name == 'test_VARS_NAME'
+    assert d.name == "test_VARS_NAME"
 
 
 def test_from_dict_with_type_hook_exception():

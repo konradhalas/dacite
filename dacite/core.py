@@ -27,7 +27,7 @@ from dacite.types import (
     is_init_var,
     extract_init_var,
     is_set,
-    get_data_class_hints
+    get_data_class_hints,
 )
 
 T = TypeVar("T")

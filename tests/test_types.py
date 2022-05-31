@@ -425,5 +425,4 @@ def test_get_type_hint_for_init_var():
         name: str
         value: InitVar[int]
 
-    assert get_data_class_hints(X) == {'name': str,
-                                       'value': int}
+    assert get_data_class_hints(X) == {"name": str, "value": int}
