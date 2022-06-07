@@ -21,7 +21,7 @@ from dacite.types import (
     is_type_generic,
     is_set,
 )
-from tests.common import literal_support, init_var_type_support
+from tests.common import literal_support, init_var_type_support, pep_604_support
 
 
 def test_is_union_with_union():
@@ -30,6 +30,11 @@ def test_is_union_with_union():
 
 def test_is_union_with_non_union():
     assert not is_union(int)
+
+
+@pep_604_support
+def test_is_union_with_pep_604_union():
+    assert is_union(int | float)
 
 
 @literal_support
@@ -61,6 +66,16 @@ def test_is_optional_with_non_optional():
 
 def test_is_optional_with_optional_of_union():
     assert is_optional(Optional[Union[int, float]])
+
+
+@pep_604_support
+def test_is_optional_with_pep_604_union():
+    assert is_optional(int | float | None)
+
+
+@pep_604_support
+def test_is_optional_with_non_optional_pep_604_union():
+    assert not is_optional(int | float)
 
 
 def test_extract_optional():

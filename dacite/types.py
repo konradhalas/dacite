@@ -1,5 +1,6 @@
 from dataclasses import InitVar
 from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple
+import types
 
 T = TypeVar("T", bound=Any)
 
@@ -62,8 +63,14 @@ def is_generic(type_: Type) -> bool:
     return hasattr(type_, "__origin__")
 
 
+try:
+    MaybeUnionType = types.UnionType
+except AttributeError:
+    MaybeUnionType = None
+
+
 def is_union(type_: Type) -> bool:
-    return is_generic(type_) and type_.__origin__ == Union
+    return (is_generic(type_) and type_.__origin__ == Union) or (MaybeUnionType and isinstance(type_, MaybeUnionType))
 
 
 def is_literal(type_: Type) -> bool:
