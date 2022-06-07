@@ -63,7 +63,15 @@ def is_generic(type_: Type) -> bool:
 
 
 def is_union(type_: Type) -> bool:
-    return is_generic(type_) and type_.__origin__ == Union
+    if is_generic(type_) and type_.__origin__ == Union:
+        return True
+
+    try:
+        from types import UnionType  # type: ignore
+
+        return isinstance(type_, UnionType)
+    except ImportError:
+        return False
 
 
 def is_literal(type_: Type) -> bool:
