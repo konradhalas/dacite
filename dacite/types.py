@@ -67,7 +67,7 @@ def is_union(type_: Type) -> bool:
         return True
 
     try:
-        from types import UnionType
+        from types import UnionType  # type: ignore
 
         return isinstance(type_, UnionType)
     except ImportError:
