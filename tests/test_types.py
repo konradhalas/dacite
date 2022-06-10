@@ -37,6 +37,18 @@ def test_is_tuple_with_tuple():
     assert is_tuple(Tuple[int, float, str])
 
 
+def test_is_tuple_with_variable_length_tuple():
+    assert is_tuple(Tuple[int, ...])
+
+
+def test_is_tuple_with_not_parametrized_tuple():
+    assert is_tuple(Tuple)
+
+
+def test_is_tuple_with_tuple_class_object():
+    assert is_tuple(tuple)
+
+
 def test_is_tuple_with_non_tuple():
     assert not is_tuple(int)
 
