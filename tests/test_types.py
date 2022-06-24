@@ -22,7 +22,7 @@ from dacite.types import (
     is_set,
     is_tuple,
 )
-from tests.common import literal_support, init_var_type_support
+from tests.common import literal_support, init_var_type_support, type_hints_with_generic_collections_support
 
 
 def test_is_union_with_union():
@@ -47,6 +47,16 @@ def test_is_tuple_with_not_parametrized_tuple():
 
 def test_is_tuple_with_tuple_class_object():
     assert is_tuple(tuple)
+
+
+@type_hints_with_generic_collections_support
+def test_is_tuple_with_tuple_generic():
+    assert is_tuple(tuple[int, float, str])
+
+
+@type_hints_with_generic_collections_support
+def test_is_tuple_with_variable_length_tuple_generic():
+    assert is_tuple(tuple[int, ...])
 
 
 def test_is_tuple_with_non_tuple():
