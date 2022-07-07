@@ -1,7 +1,7 @@
 import copy
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
+from typing import TypeVar, Type, Optional, Mapping, Any
 
 from dacite.config import Config
 from dacite.data import Data
