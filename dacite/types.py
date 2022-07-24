@@ -1,3 +1,4 @@
+import types
 from dataclasses import InitVar
 from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple
 
@@ -63,7 +64,8 @@ def is_generic(type_: Type) -> bool:
 
 
 def is_union(type_: Type) -> bool:
-    return is_generic(type_) and type_.__origin__ == Union
+    return (is_generic(type_) and type_.__origin__ == Union) or \
+           (('UnionType' in types.__dict__) and isinstance(type_, types.UnionType))  # Python 3.10 (PEP 604)
 
 
 def is_literal(type_: Type) -> bool:
