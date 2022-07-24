@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from typing import Optional, Union, List, NewType
 
@@ -10,6 +11,18 @@ def test_from_dict_with_missing_optional_value():
     @dataclass
     class X:
         s: Optional[str]
+        i: int
+
+    result = from_dict(X, {"i": 1})
+
+    assert result == X(s=None, i=1)
+
+
+@pytest.mark.skipif(sys.version_info < (3,10), reason="requires Python 3.10 (PEP 604)")
+def test_from_dict_with_missing_optional_value_3_10():
+    @dataclass
+    class X:
+        s: str | None
         i: int
 
     result = from_dict(X, {"i": 1})
