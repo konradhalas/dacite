@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from typing import Optional, List, Union, Dict
 
@@ -10,6 +11,17 @@ def test_from_dict_with_union_of_builtin_types():
     @dataclass
     class X:
         i: Union[int, str]
+
+    result = from_dict(X, {"i": "s"})
+
+    assert result == X(i="s")
+
+
+@pytest.mark.skipif(sys.version_info < (3,10), reason="requires Python 3.10 (PEP 604)")
+def test_from_dict_with_union_of_builtin_types_3_10():
+    @dataclass
+    class X:
+        i: int | str
 
     result = from_dict(X, {"i": "s"})
 
