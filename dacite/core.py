@@ -67,12 +67,14 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                 raise
             if config.check_types and not is_instance(value, field.type):
                 raise WrongTypeError(field_path=field.name, field_type=field.type, value=value)
+        elif not field.init:
+            # If the non-init field isn't in the dict, let the dataclass handle default, to ensure
+            # we won't get errors in the case of frozen dataclasses, as issue #195 highlights.
+            continue
         else:
             try:
                 value = get_default_value_for_field(field)
             except DefaultValueNotFoundError:
-                if not field.init:
-                    continue
                 raise MissingValueError(field.name)
         if field.init:
             init_values[field.name] = value
