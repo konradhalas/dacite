@@ -215,3 +215,12 @@ def test_from_dict_with_strict_unions_match_and_single_match():
     result = from_dict(Z, data, Config(strict_unions_match=True))
 
     assert result == Z(u=Y(f=1))
+
+
+def test_from_dict_with_allow_missing_fields_with_none():
+    @dataclass
+    class X:
+        a: int
+        b: str
+
+    assert X(a=1, b=None) == from_dict(X, {"a": 1}, Config(allow_missing_fields_as_none=True))
