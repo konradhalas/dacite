@@ -10,3 +10,4 @@ class Config:
     check_types: bool = True
     strict: bool = False
     strict_unions_match: bool = False
+    allow_missing_fields_as_none: bool = False
