@@ -474,6 +474,7 @@ def test_is_set_union():
     assert not is_set(Union[int, float])
 
 
+@init_var_type_support
 def test_get_type_hint_for_init_var():
     @dataclass
     class X:

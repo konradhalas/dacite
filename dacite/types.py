@@ -148,7 +148,7 @@ def is_instance(value: Any, type_: Type) -> bool:
         origin = extract_origin_collection(type_)
         if not isinstance(value, origin):
             return False
-        if not extract_generic(type_):
+        if extract_generic_no_defaults(type_) is None:
             return True
         if isinstance(value, tuple) and is_tuple(type_):
             tuple_types = extract_generic(type_)
@@ -209,6 +209,15 @@ def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
         return type_.__args__ or defaults
     except AttributeError:
         return defaults
+
+
+def extract_generic_no_defaults(type_: Type) -> Union[tuple, None]:
+    try:
+        if hasattr(type_, "_special") and type_._special:
+            return None
+        return type_.__args__
+    except AttributeError:
+        return None
 
 
 def is_subclass(sub_type: Type, base_type: Type) -> bool:

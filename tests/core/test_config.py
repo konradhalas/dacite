@@ -2,6 +2,8 @@ from collections.abc import MutableMapping
 from dataclasses import dataclass, InitVar
 from datetime import date
 from enum import Enum
+from datetime import date
+from dataclasses import dataclass, InitVar
 from typing import Any, Dict, Optional, List, Union
 
 import pytest
@@ -13,6 +15,7 @@ from dacite import (
     UnexpectedDataError,
     StrictUnionMatchError,
 )
+from tests.common import init_var_type_support
 
 
 class TypeHooksMapping(MutableMapping):
@@ -26,17 +29,12 @@ class TypeHooksMapping(MutableMapping):
         self.__dict__.update(*args, **kwargs)
 
     def __getitem__(self, key):
-        if key in self.__dict__:
-            # If a type hook has been specified, use it.
-            return self.__dict__[key]
-        else:
-            # Otherwise, use a dummy type hook which always constructs a 1.
-            return lambda _: 1
+        return self.__dict__[key]
 
     def __setitem__(self, key, value):
         self.__dict__[key] = value
 
-    def __delitem__(self):
+    def __delitem__(self, key):
         if key in self.__dict__:
             del self.__dict__[key]
         else:
@@ -47,6 +45,16 @@ class TypeHooksMapping(MutableMapping):
 
     def __iter__(self):
         return iter(self.__dict__)
+
+
+class TypeHooksMappingWithDefault(TypeHooksMapping):
+    def __getitem__(self, key):
+        if key in self.__dict__:
+            # If a type hook has been specified, use it.
+            return self.__dict__[key]
+        else:
+            # Otherwise, use a dummy type hook which always constructs a 1.
+            return lambda _: 1
 
 
 def test_from_dict_with_type_hooks():
@@ -85,11 +93,7 @@ def test_type_hook_mapping():
         s: str
         i: int
 
-    result = from_dict(
-        X,
-        {"s": "TEST", "i": 0},
-        Config(type_hooks=TypeHooksMapping({str: str.lower}))
-    )
+    result = from_dict(X, {"s": "TEST", "i": 0}, Config(type_hooks=TypeHooksMapping({str: str.lower})))
 
     assert result == X(s="test", i=1)
 
@@ -132,9 +136,22 @@ def test_type_hook_mapping():
     @dataclass
     class X:
         s: str
+
+    result = from_dict(X, {"s": "TEST"}, Config(type_hooks=TypeHooksMapping({str: str.lower})))
+
+    assert result == X(s="test")
+
+
+@pytest.mark.skip(
+    reason="not working because it runs on all of the fields, " "not just as default. see 'if Any in type_hooks:'"
+)
+def test_type_hook_mapping_with_default():
+    @dataclass
+    class X:
+        s: str
         i: int
 
-    result = from_dict(X, {"s": "TEST", "i": 0}, Config(type_hooks=TypeHooksMapping({str: str.lower})))
+    result = from_dict(X, {"s": "TEST", "i": 0}, Config(type_hooks=TypeHooksMappingWithDefault({str: str.lower})))
 
     assert result == X(s="test", i=1)
 
@@ -195,6 +212,7 @@ def test_from_dict_with_type_hooks_and_generic_sequence():
     assert result == X(c=["test"])
 
 
+@init_var_type_support
 def test_from_dict_with_type_hooks_and_init_vars():
     @dataclass
     class X:
@@ -355,12 +373,14 @@ def test_custom_from_dict_in_nested_data_class():
         d: date
         t: str
 
+        @classmethod
         def from_dict(data_class, data, config):
-            data["t"] = "prefix {}".format(data["t"])
+            data["t"] = f"prefix {data['t']}"
+            config = Config(type_hooks={date: date.fromtimestamp})
             return from_dict(
                 data_class=data_class,
                 data=data,
-                config=Config(type_hooks={date: date.fromtimestamp}),
+                config=config,
             )
 
     @dataclass

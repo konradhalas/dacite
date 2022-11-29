@@ -74,7 +74,9 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             continue
         else:
             try:
-                value = get_default_value_for_field(field)
+                value = get_default_value_for_field(
+                    field, allow_missing_fields_as_none=config.allow_missing_fields_as_none
+                )
             except DefaultValueNotFoundError:
                 raise MissingValueError(field.name)
         if field.init:
