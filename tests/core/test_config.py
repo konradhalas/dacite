@@ -21,6 +21,7 @@ class TypeHooksMapping(MutableMapping):
     be a Mapping, which is more general than the typical use case of being a
     Dict.
     """
+
     def __init__(self, *args, **kwargs):
         self.__dict__.update(*args, **kwargs)
 
@@ -108,16 +109,16 @@ def test_from_dict_with_generic_list_type_hooks():
     class X:
         l: List[int]
 
-    result = from_dict(X, {"l": [3,1,2]}, Config(type_hooks={List: sorted}))
+    result = from_dict(X, {"l": [3, 1, 2]}, Config(type_hooks={List: sorted}))
 
-    assert result == X(l=[1,2,3])
+    assert result == X(l=[1, 2, 3])
 
 
 def test_from_dict_with_generic_dict_type_hooks():
     @dataclass
     class X:
         d: Dict[str, int]
-    
+
     def add_b(value):
         value["b"] = 2
         return value
@@ -125,6 +126,17 @@ def test_from_dict_with_generic_dict_type_hooks():
     result = from_dict(X, {"d": {"a": 1}}, Config(type_hooks={Dict: add_b}))
 
     assert result == X(d={"a": 1, "b": 2})
+
+
+def test_type_hook_mapping():
+    @dataclass
+    class X:
+        s: str
+        i: int
+
+    result = from_dict(X, {"s": "TEST", "i": 0}, Config(type_hooks=TypeHooksMapping({str: str.lower})))
+
+    assert result == X(s="test", i=1)
 
 
 def test_from_dict_with_cast():

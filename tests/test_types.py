@@ -23,7 +23,12 @@ from dacite.types import (
     is_set,
     is_tuple,
 )
-from tests.common import literal_support, init_var_type_support, type_hints_with_generic_collections_support, pep_604_support
+from tests.common import (
+    literal_support,
+    init_var_type_support,
+    pep_604_support,
+    type_hints_with_generic_collections_support,
+)
 
 
 def test_is_union_with_union():

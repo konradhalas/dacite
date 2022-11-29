@@ -66,7 +66,6 @@ def extract_origin_collection(collection: Type) -> Type:
         return collection.__origin__
 
 
-
 def extract_origin_type(collection: Type) -> Optional[Type]:
     collection_type = extract_origin_collection(collection)
     if collection_type is list:
@@ -83,7 +82,7 @@ def is_optional(type_: Type) -> bool:
 def extract_optional(optional: Type[Optional[T]]) -> T:
     other_members = [member for member in extract_generic(optional) if member is not type(None)]
     if other_members:
-        return Union[tuple(other_members)]
+        return Union[tuple(other_members)]  # type: ignore
     else:
         raise ValueError("can not find not-none value")
 
@@ -105,7 +104,7 @@ def is_union(type_: Type) -> bool:
 
 
 def is_tuple(type_: Type) -> bool:
-    return is_subclass(type_, Tuple)
+    return is_subclass(type_, tuple)
 
 
 def is_literal(type_: Type) -> bool:
@@ -200,7 +199,7 @@ def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
     try:
         if hasattr(type_, "_special") and type_._special:
             return defaults
-        return type_.__args__ or defaults  # type: ignore
+        return type_.__args__ or defaults
     except AttributeError:
         return defaults
 

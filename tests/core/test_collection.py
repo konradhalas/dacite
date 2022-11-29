@@ -276,7 +276,7 @@ def test_from_dict_with_sequence_and_tuple():
     class X:
         s: Sequence[int]
 
-    result = from_dict(X, {'s': (1, 2, 3)})
+    result = from_dict(X, {"s": (1, 2, 3)})
 
     assert result == X(s=(1, 2, 3))
 
@@ -286,6 +286,6 @@ def test_from_dict_with_sequence_and_empty_tuple():
     class X:
         s: Sequence[int]
 
-    result = from_dict(X, {'s': ()})
+    result = from_dict(X, {"s": ()})
 
     assert result == X(s=())

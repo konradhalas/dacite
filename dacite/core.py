@@ -4,7 +4,7 @@ from itertools import zip_longest
 from typing import TypeVar, Type, Optional, Mapping, Any
 
 from dacite.config import Config
-from dacite.data import Data
+from dacite.data import Data, DictData
 from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError, get_fields
 from dacite.exceptions import (
     ForwardReferenceError,
@@ -41,8 +41,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
-    init_values: Data = {}
-    post_init_values: Data = {}
+    init_values: DictData = {}
+    post_init_values: DictData = {}
     config = config or Config()
     try:
         data_class_hints = get_data_class_hints(data_class, globalns=config.forward_references)

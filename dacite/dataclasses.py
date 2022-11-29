@@ -14,8 +14,8 @@ class DefaultValueNotFoundError(Exception):
 def get_default_value_for_field(field: Field, allow_missing_fields_as_none: bool = False) -> Any:
     if field.default != MISSING:
         return field.default
-    elif field.default_factory != MISSING:  # type: ignore
-        return field.default_factory()  # type: ignore
+    elif field.default_factory != MISSING:
+        return field.default_factory()
     elif is_optional(field.type) or allow_missing_fields_as_none:
         return None
     raise DefaultValueNotFoundError()
