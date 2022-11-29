@@ -7,16 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0b1] - 2022-11-28
+
 ### Added
 
 - Add explicit `__all__` configuration
-- Support [PEP 604] unions through `types.UnionType`
+- Support [PEP 604] unions through `types.UnionType` #184
+- numpy.typing.NDArray dataclass members #156
+- Add `allow_missing_fields_as_none` option for missing fields #199
+- Ability to customize `from_dict` per dataclass #122
+- more general type hint for `type_hooks` #120
+- Add Generic Hook Types #83
+- Add stricter mypy type check flags #76
 
 [PEP 604]: https://peps.python.org/pep-0604/
 
 ### Fixed
 
 - Do not suppress `KeyError` in a type hook
+- `from_dict` in case of frozen dataclass with non-init default #196
+- empty tuple used for Sequence type #175
+- Type_hooks not applied to InitVar fields #172
+- extract_optional for Optional of Union. #164
+- change Data from Dict to Mapping #159
+- Fix encoding of PKG-INFO file #86
 
 ## [1.6.0] - 2020-11-30
 
