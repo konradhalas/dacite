@@ -1,9 +1,13 @@
 from dataclasses import dataclass
 from typing import Sequence, TypeVar
+import pytest
 
-import numpy
-import numpy.typing
-import numpy.testing
+try:
+    import numpy
+    import numpy.typing
+    import numpy.testing
+except ImportError:
+    pytest.skip("numpy not available", allow_module_level=True)
 
 from dacite import from_dict, Config
 from tests.common import ndarray_support
