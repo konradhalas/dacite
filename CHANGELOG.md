@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add explicit `__all__` configuration
+- Add Python 3.10 and 3.11 support
 
 ### Fixed
 
