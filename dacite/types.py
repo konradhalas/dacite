@@ -166,6 +166,8 @@ def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
     try:
         if hasattr(type_, "_special") and type_._special:
             return defaults
+        if type_.__args__ == ():
+            return (type_.__args__,)
         return type_.__args__ or defaults  # type: ignore
     except AttributeError:
         return defaults
