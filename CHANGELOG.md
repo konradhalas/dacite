@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Do not suppress `KeyError` in a type hook
+- Handle tuple as a `Sequence`
 
 ## [1.6.0] - 2020-11-30
 
