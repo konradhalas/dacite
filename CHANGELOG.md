@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add explicit `__all__` configuration
 - Add Python 3.10 and 3.11 support
+- Support [PEP 604] unions through `types.UnionType`
+
+[PEP 604]: https://peps.python.org/pep-0604/
 
 ### Fixed
 
