@@ -31,3 +31,7 @@ def create_instance(data_class: Type[T], init_values: Data, post_init_values: Da
 def get_fields(data_class: Type[T]) -> List[Field]:
     fields = getattr(data_class, _FIELDS)
     return [f for f in fields.values() if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR]
+
+
+def is_frozen(data_class: Type[T]) -> bool:
+    return data_class.__dataclass_params__.frozen

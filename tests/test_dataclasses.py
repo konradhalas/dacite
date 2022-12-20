@@ -3,7 +3,7 @@ from typing import Optional
 
 import pytest
 
-from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError
+from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError, is_frozen
 
 
 def test_get_default_value_for_field_with_default_value():
@@ -65,3 +65,19 @@ def test_create_instance_with_post_init_values():
 
     assert instance.i == 1
     assert instance.j == 2
+
+
+def test_is_frozen_with_frozen_dataclass():
+    @dataclass(frozen=True)
+    class X:
+        pass
+
+    assert is_frozen(X)
+
+
+def test_is_frozen_with_non_frozen_dataclass():
+    @dataclass(frozen=False)
+    class X:
+        pass
+
+    assert not is_frozen(X)

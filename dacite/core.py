@@ -5,7 +5,13 @@ from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
 
 from dacite.config import Config
 from dacite.data import Data
-from dacite.dataclasses import get_default_value_for_field, create_instance, DefaultValueNotFoundError, get_fields
+from dacite.dataclasses import (
+    get_default_value_for_field,
+    create_instance,
+    DefaultValueNotFoundError,
+    get_fields,
+    is_frozen,
+)
 from dacite.exceptions import (
     ForwardReferenceError,
     WrongTypeError,
@@ -76,7 +82,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
                 raise MissingValueError(field.name)
         if field.init:
             init_values[field.name] = value
-        else:
+        elif not is_frozen(data_class):
             post_init_values[field.name] = value
 
     return create_instance(data_class=data_class, init_values=init_values, post_init_values=post_init_values)
