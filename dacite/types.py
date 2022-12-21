@@ -1,5 +1,18 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Dict, Callable, Mapping, List, Tuple, cast
+from typing import (
+    Type,
+    Any,
+    Optional,
+    Union,
+    Collection,
+    TypeVar,
+    Dict,
+    Callable,
+    Mapping,
+    List,
+    Tuple,
+    cast as typing_cast,
+)
 
 T = TypeVar("T", bound=Any)
 
@@ -56,7 +69,7 @@ def is_optional(type_: Type) -> bool:
 def extract_optional(optional: Type[Optional[T]]) -> T:
     other_members = [member for member in extract_generic(optional) if member is not type(None)]
     if other_members:
-        return cast(T, Union[tuple(other_members)])
+        return typing_cast(T, Union[tuple(other_members)])
     else:
         raise ValueError("can not find not-none value")
 
