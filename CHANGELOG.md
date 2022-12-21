@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle tuple as a `Sequence`
 - Handle a default value for a non-init field within a frozen dataclass
 - Run type hooks / cast for `InitVar` fields
+- Fix optional unions
 
 ## [1.6.0] - 2020-11-30
 
