@@ -123,6 +123,10 @@ def test_extract_optional_with_wrong_type():
         extract_optional(List[None])
 
 
+def test_extract_optional_with_optional_of_union():
+    assert extract_optional(Optional[Union[int, str]]) == Union[int, str]
+
+
 def test_is_generic_with_generic():
     assert is_generic(Optional[int])
 

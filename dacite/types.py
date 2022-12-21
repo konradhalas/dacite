@@ -54,10 +54,11 @@ def is_optional(type_: Type) -> bool:
 
 
 def extract_optional(optional: Type[Optional[T]]) -> T:
-    for type_ in extract_generic(optional):
-        if type_ is not type(None):
-            return type_
-    raise ValueError("can not find not-none value")
+    other_members = [member for member in extract_generic(optional) if member is not type(None)]
+    if other_members:
+        return Union[tuple(other_members)]
+    else:
+        raise ValueError("can not find not-none value")
 
 
 def is_generic(type_: Type) -> bool:
