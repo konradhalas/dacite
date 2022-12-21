@@ -7,6 +7,8 @@ T = TypeVar("T", bound=Any)
 def transform_value(
     type_hooks: Dict[Type, Callable[[Any], Any]], cast: List[Type], target_type: Type, value: Any
 ) -> Any:
+    if is_init_var(target_type):
+        target_type = extract_init_var(target_type)
     if target_type in type_hooks:
         value = type_hooks[target_type](value)
     else:
