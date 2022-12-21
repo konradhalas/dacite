@@ -1,5 +1,7 @@
 name: publish
-on: release
+on:
+  release:
+    types: [published]
 
 jobs:
   publish:
