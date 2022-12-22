@@ -1,11 +1,17 @@
 name: Code Check
 
 on:
-  pull_request:
-    types: [ opened, reopened, synchronize, edited, closed ]
-  push:
-    branches:
-      - master
+  workflow_call:
+    secrets:
+      benchmark_token:
+        required: true
+    inputs:
+      publish_performance:
+        required: true
+        type: boolean
+      store_benchmark:
+        required: true
+        type: boolean
 
 jobs:
   check:
@@ -32,3 +38,16 @@ jobs:
         run: mypy dacite
       - name: Linting Check
         run: pylint dacite
+      - name: Performance Check
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: benchmark.json
+          save-data-file: ${{ inputs.store_benchmark }}
+          github-token: ${{ secrets.benchmark_token }}
+          auto-push: ${{ inputs.publish_performance }}
+          benchmark-data-dir-path: performance/${{ matrix.python-version }}
+          comment-always: false
+          alert-threshold: '130%'
+          comment-on-alert: true
+          fail-on-alert: true

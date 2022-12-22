@@ -1,0 +1,15 @@
+name: CI Master
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  ci:
+    uses: ./.github/workflows/code_check.yaml
+    secrets:
+      benchmark_token: ${{ secrets.BENCHMARK_TOKEN }}
+    with:
+      publish_performance: true
+      store_benchmark: true

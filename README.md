@@ -376,12 +376,12 @@ First of all - if you want to submit your pull request, thank you very much!
 I really appreciate your support.
 
 Please remember that every new feature, bug fix or improvement should be tested. 
-100% code coverage is a must have. 
+100% code coverage is a must-have. 
 
 We are using a few static code analysis tools to increase the code quality 
 (`black`, `mypy`, `pylint`). Please make sure that you are not generating any 
 errors/warnings before you submit your PR. You can find current configuration
-in `.travis.yml` file.
+in `.github/*` directory.
 
 Last but not least, if you want to introduce new feature, please discuss it 
 first within an issue.
@@ -412,7 +412,21 @@ To run tests you just have to fire:
 ```
 $ pytest
 ```
- 
+
+### Performance testing
+
+`dacite` is a small library, but its use is potentially very extensive. Thus, it is crucial
+to ensure good performance of the library.
+
+We achieve that with the help of `pytest-benchmark` library, and a suite of dedicated performance tests
+which can be found in the `tests/performance` directory. The CI process runs these tests automatically,
+but they can also be helpful locally, while developing the library.
+
+Whenever you run `pytest` command, a new benchmark report is saved to `/.benchmarks` directory.
+You can easily compare these reports by running: `pytest-benchmark compare`, which will load all the runs
+and display them in a table, where you can compare the performance of each run.
+
+You can even specify which particular runs you want to compare, e.g. `pytest-benchmark compare 0001 0003 0005`.
  
 ## Use case
 
