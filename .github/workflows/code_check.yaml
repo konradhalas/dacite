@@ -32,3 +32,13 @@ jobs:
         run: mypy dacite
       - name: Linting Check
         run: pylint dacite
+      - name: Performance Check
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: '200%'
+          comment-on-alert: true
+          fail-on-alert: true
