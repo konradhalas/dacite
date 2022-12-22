@@ -1,3 +1,5 @@
+from typing import List
+
 from dacite import from_dict, Config
 
 from .fixtures import data, classes
@@ -39,3 +41,11 @@ def test_forward_references(benchmark):
         data.forward_ref_data,
         config=Config(forward_references={"LongUnion": classes.LongUnion}),
     )
+
+
+def test_parsing_multiple_items(benchmark):
+    def parse_iterable(data_class, elements: List[dict]):
+        for item in elements:
+            from_dict(data_class=data_class, data=item)
+
+    benchmark(parse_iterable, classes.LongUnion, [data.long_union_data] * 25)
