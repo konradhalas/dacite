@@ -38,9 +38,7 @@ jobs:
           tool: 'pytest'
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          gh-pages-branch: master
-          benchmark-data-dir-path: 'docs/benchmark'
-          auto-push: false
+          auto-push: true
           comment-always: true
           alert-threshold: '150%'
           comment-on-alert: true
