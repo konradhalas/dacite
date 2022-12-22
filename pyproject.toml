@@ -1,2 +1,5 @@
 [tool.black]
-line-length = 120
+    line-length = 120
+
+[tool.pytest.ini_options]
+    addopts = "--benchmark-autosave --benchmark-json=benchmark.json"
