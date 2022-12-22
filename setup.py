@@ -29,5 +29,7 @@ setup(
     packages=["dacite"],
     package_data={"dacite": ["py.typed"]},
     install_requires=['dataclasses;python_version<"3.7"'],
-    extras_require={"dev": ["pytest>=5", "pytest-benchmark", "pytest-cov", "coveralls", "black", "mypy", "pylint"]},
+    extras_require={
+        "dev": ["pytest>=5", "pytest-benchmark", "pytest-cov", "coveralls", "black", "mypy", "pylint", "pre-commit"]
+    },
 )
