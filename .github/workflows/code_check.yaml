@@ -39,6 +39,7 @@ jobs:
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
+          benchmark-data-dir-path: performance/${{ matrix.python-version }}
           comment-always: true
           alert-threshold: '150%'
           comment-on-alert: true
