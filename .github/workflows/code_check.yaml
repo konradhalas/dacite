@@ -9,7 +9,9 @@ on:
       publish_performance:
         required: true
         type: boolean
-        default: false
+      store_benchmark:
+        required: true
+        type: boolean
 
 jobs:
   check:
@@ -41,11 +43,11 @@ jobs:
         with:
           tool: 'pytest'
           output-file-path: benchmark.json
+          save-data-file: ${{ inputs.store_benchmark }}
           github-token: ${{ secrets.benchmark_token }}
           auto-push: ${{ inputs.publish_performance }}
           benchmark-data-dir-path: performance/${{ matrix.python-version }}
-          comment-always: true
+          comment-always: false
           alert-threshold: '130%'
           comment-on-alert: true
           fail-on-alert: true
-          fail-threshold: '150%'

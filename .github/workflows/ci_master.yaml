@@ -12,3 +12,4 @@ jobs:
       benchmark_token: ${{ secrets.BENCHMARK_TOKEN }}
     with:
       publish_performance: true
+      store_benchmark: true
