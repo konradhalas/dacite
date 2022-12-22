@@ -41,6 +41,8 @@ jobs:
           gh-pages-branch: master
           benchmark-data-dir-path: 'docs/benchmark'
           auto-push: false
-          alert-threshold: '200%'
+          comment-always: true
+          alert-threshold: '150%'
           comment-on-alert: true
           fail-on-alert: true
+          fail-threshold: '200%'
