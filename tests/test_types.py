@@ -440,4 +440,3 @@ def test_is_type_generic_with_matching_value():
 
 def test_is_type_generic_with_not_matching_value():
     assert not is_type_generic(int)
-
