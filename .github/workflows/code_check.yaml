@@ -37,7 +37,7 @@ jobs:
         with:
           tool: 'pytest'
           output-file-path: benchmark.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.BENCHMARK_TOKEN }}
           auto-push: true
           benchmark-data-dir-path: performance/${{ matrix.python-version }}
           comment-always: true
