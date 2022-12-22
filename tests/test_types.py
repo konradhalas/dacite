@@ -19,7 +19,6 @@ from dacite.types import (
     is_init_var,
     extract_init_var,
     is_type_generic,
-    is_set,
     is_tuple,
 )
 from tests.common import (
@@ -442,32 +441,3 @@ def test_is_type_generic_with_matching_value():
 def test_is_type_generic_with_not_matching_value():
     assert not is_type_generic(int)
 
-
-def test_is_set_set_class():
-    assert is_set(set)
-
-
-def test_is_set_frozentset_class():
-    assert is_set(frozenset)
-
-
-def test_is_set_set_object():
-    obj = {1, 2, 3}
-    assert is_set(obj)
-
-
-def test_is_set_frozentset_object():
-    obj = frozenset({1, 2, 3})
-    assert is_set(obj)
-
-
-def test_is_set_list_class():
-    assert not is_set(list)
-
-
-def test_is_set_int_class():
-    assert not is_set(int)
-
-
-def test_is_set_union():
-    assert not is_set(Union[int, float])
