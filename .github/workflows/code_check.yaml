@@ -1,11 +1,15 @@
 name: Code Check
 
 on:
-  pull_request:
-    types: [ opened, reopened, synchronize, edited, closed ]
-  push:
-    branches:
-      - master
+  workflow_call:
+    secrets:
+      benchmark_token:
+        required: true
+    inputs:
+      publish_performance:
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   check:
@@ -37,11 +41,11 @@ jobs:
         with:
           tool: 'pytest'
           output-file-path: benchmark.json
-          github-token: ${{ secrets.BENCHMARK_TOKEN }}
-          auto-push: true
+          github-token: ${{ secrets.benchmark_token }}
+          auto-push: ${{ inputs.publish_performance }}
           benchmark-data-dir-path: performance/${{ matrix.python-version }}
           comment-always: true
-          alert-threshold: '150%'
+          alert-threshold: '130%'
           comment-on-alert: true
           fail-on-alert: true
-          fail-threshold: '200%'
+          fail-threshold: '150%'
