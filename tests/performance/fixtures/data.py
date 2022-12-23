@@ -10,7 +10,7 @@ nested_data = {
     "nested1": simple_data,
     "nested2": simple_data,
     "nested_list": [simple_data, simple_data, simple_data],
-    "nested_dict": [{"a": simple_data}, {"b": simple_data}, {"c": simple_data}],
+    "nested_dict": {"a": simple_data, "b": simple_data, "c": simple_data},
 }
 
 long_union_data = {

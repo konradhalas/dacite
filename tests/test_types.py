@@ -1,5 +1,6 @@
 from dataclasses import InitVar
 from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple, Type
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -35,6 +36,12 @@ def test_is_union_with_union():
 
 def test_is_union_with_non_union():
     assert not is_union(int)
+
+
+def test_is_union_with_import_error():
+    with patch("builtins.__import__") as mock_import:
+        mock_import.side_effect = ImportError()
+        assert not is_union(str)
 
 
 def test_is_tuple_with_tuple():
@@ -81,6 +88,12 @@ def test_is_literal_with_literal():
 
 def test_is_literal_with_non_literal():
     assert not is_literal(int)
+
+
+def test_is_literal_with_import_error():
+    with patch("builtins.__import__") as mock_import:
+        mock_import.side_effect = ImportError()
+        assert not is_literal(str)
 
 
 def test_is_init_var_with_init_var():
@@ -434,9 +447,25 @@ def test_extract_init_var():
     assert extract_init_var(InitVar[int]) == int
 
 
+def test_extract_init_var_with_attribute_error():
+    class FakeType:
+        pass
+
+    assert extract_init_var(FakeType) == Any
+
+
 def test_is_type_generic_with_matching_value():
     assert is_type_generic(Type[int])
 
 
 def test_is_type_generic_with_not_matching_value():
     assert not is_type_generic(int)
+
+
+def test_extract_generic_special():
+    defaults = 1, 2
+
+    class FakeType:
+        _special = True
+
+    assert extract_generic(FakeType, defaults) == defaults

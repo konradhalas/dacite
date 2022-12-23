@@ -28,8 +28,8 @@ class Nested:
 @dataclass
 class LongUnion:
     simple_type_union: Union[set, dict, tuple, str, bool]
-    unrealistically_complex_union: Union[int, str, bool, set, list, dict, Simple, Nested]
-    unrealistically_complex_union2: Union[int, str, bool, set, list, dict, Simple, Nested, List[Nested]]
+    unrealistically_complex_union: Union[int, str, bool, set, list, Simple, Nested]
+    unrealistically_complex_union2: Union[int, str, bool, set, Simple, Nested, List[Nested]]
 
 
 @dataclass
