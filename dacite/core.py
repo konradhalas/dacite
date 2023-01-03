@@ -89,6 +89,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         type_ = extract_init_var(type_)
     if type_ in config.type_hooks:
         data = config.type_hooks[type_](data)
+    if is_optional(type_) and data is None:
+        return data
     if is_union(type_):
         data = _build_value_for_union(union=type_, data=data, config=config)
     elif is_generic_collection(type_):
