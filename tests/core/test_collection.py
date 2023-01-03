@@ -90,6 +90,22 @@ def test_from_dict_with_cast_of_both_collection_and_inner_type():
     assert result == X(set_int={1, 2})
 
 
+def test_from_dict_with_set_of_dataclasses():
+    @dataclass(frozen=True)
+    class A:
+        i: int
+
+    @dataclass
+    class X:
+        set_a: Set[A]
+
+    data = {"set_a": [{"i": 1}, {"i": 2}]}
+
+    result = from_dict(data_class=X, data=data, config=Config(cast=[set]))
+
+    assert result == X(set_a={A(i=1), A(i=2)})
+
+
 def test_from_dict_with_dict():
     @dataclass
     class X:
