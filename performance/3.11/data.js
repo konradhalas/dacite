@@ -106,56 +106,56 @@ window.BENCHMARK_DATA = {
         "tool": "pytest",
         "benches": [
           {
-            "name": "tests/performance/test_from_dict.py::test_basic_scenario",
+            "name": "tests/performance/test_performance.py::test_basic_scenario",
             "value": 2714.842219821526,
             "unit": "iter/sec",
             "range": "stddev: 0.00012031160992853347",
             "extra": "mean: 368.3455313531038 usec\nrounds: 1212"
           },
           {
-            "name": "tests/performance/test_from_dict.py::test_union_matching",
+            "name": "tests/performance/test_performance.py::test_union_matching",
             "value": 64.11060881955825,
             "unit": "iter/sec",
             "range": "stddev: 0.0014688173203776195",
             "extra": "mean: 15.598042483335917 msec\nrounds: 60"
           },
           {
-            "name": "tests/performance/test_from_dict.py::test_strict_unions_match",
+            "name": "tests/performance/test_performance.py::test_strict_unions_match",
             "value": 65.27193235533889,
             "unit": "iter/sec",
             "range": "stddev: 0.0007728686575066078",
             "extra": "mean: 15.320520841270994 msec\nrounds: 63"
           },
           {
-            "name": "tests/performance/test_from_dict.py::test_collection_of_union",
+            "name": "tests/performance/test_performance.py::test_collection_of_union",
             "value": 1566.7055653151258,
             "unit": "iter/sec",
             "range": "stddev: 0.00043506306787573744",
             "extra": "mean: 638.2820244841989 usec\nrounds: 1307"
           },
           {
-            "name": "tests/performance/test_from_dict.py::test_type_hooks",
+            "name": "tests/performance/test_performance.py::test_type_hooks",
             "value": 64.44202486121853,
             "unit": "iter/sec",
             "range": "stddev: 0.0014276099976825631",
             "extra": "mean: 15.517823999999791 msec\nrounds: 65"
           },
           {
-            "name": "tests/performance/test_from_dict.py::test_casting",
+            "name": "tests/performance/test_performance.py::test_casting",
             "value": 16962.450638291186,
             "unit": "iter/sec",
             "range": "stddev: 0.00005009293642218399",
             "extra": "mean: 58.95374561872511 usec\nrounds: 9757"
           },
           {
-            "name": "tests/performance/test_from_dict.py::test_forward_references",
+            "name": "tests/performance/test_performance.py::test_forward_references",
             "value": 64.69479456259327,
             "unit": "iter/sec",
             "range": "stddev: 0.0016925314551242824",
             "extra": "mean: 15.457194149252357 msec\nrounds: 67"
           },
           {
-            "name": "tests/performance/test_from_dict.py::test_parsing_multiple_items",
+            "name": "tests/performance/test_performance.py::test_parsing_multiple_items",
             "value": 2.471698746568637,
             "unit": "iter/sec",
             "range": "stddev: 0.020068648690281868",
