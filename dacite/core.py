@@ -52,7 +52,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
-    data_class_fields = get_fields(data_class)
+    data_class_fields = config.cache.cache(get_fields)(data_class)
     if config.strict:
         extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
         if extra_fields:
@@ -92,9 +92,9 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         type_ = extract_init_var(type_)
     if is_union(type_):
         return _build_value_for_union(union=type_, data=data, config=config)
-    elif is_generic_collection(type_) and is_instance(data, extract_origin_collection(type_)):
+    elif is_generic_collection(type_) and isinstance(data, extract_origin_collection(type_)):
         return _build_value_for_collection(collection=type_, data=data, config=config)
-    elif is_dataclass(type_) and is_instance(data, Data):
+    elif config.cache.cache(is_dataclass)(type_) and isinstance(data, Data):
         return from_dict(data_class=type_, data=data, config=config)
     return data
 
@@ -132,7 +132,7 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
     data_type = data.__class__
-    if is_instance(data, Mapping):
+    if isinstance(data, Mapping):
         item_type = extract_generic(collection, defaults=(Any, Any))[1]
         return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
     elif is_instance(data, tuple):

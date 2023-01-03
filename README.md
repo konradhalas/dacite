@@ -407,6 +407,12 @@ Install all `dacite` dependencies:
 $ pip install -e .[dev]
 ```
 
+And, optionally but recommended, install pre-commit hook for black:
+
+```
+$ pre-commit install
+```
+
 To run tests you just have to fire:
 
 ```

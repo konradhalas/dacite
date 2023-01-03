@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Dict, Any, Callable, Optional, Type, List
 
+from dacite.cache import Cache
+
 
 @dataclass
 class Config:
@@ -10,3 +12,4 @@ class Config:
     check_types: bool = True
     strict: bool = False
     strict_unions_match: bool = False
+    cache: Cache = Cache()
