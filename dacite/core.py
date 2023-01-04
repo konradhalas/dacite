@@ -1,7 +1,7 @@
 import copy
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any
+from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection
 
 from dacite.config import Config
 from dacite.data import Data
@@ -28,10 +28,10 @@ from dacite.types import (
     is_union,
     extract_generic,
     is_optional,
-    transform_value,
     extract_origin_collection,
     is_init_var,
     extract_init_var,
+    is_subclass,
 )
 
 T = TypeVar("T")
@@ -63,10 +63,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         if field.name in data:
             try:
                 field_data = data[field.name]
-                transformed_value = transform_value(
-                    type_hooks=config.type_hooks, cast=config.cast, target_type=field.type, value=field_data
-                )
-                value = _build_value(type_=field.type, data=transformed_value, config=config)
+                value = _build_value(type_=field.type, data=field_data, config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
@@ -90,12 +87,23 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
+    if type_ in config.type_hooks:
+        data = config.type_hooks[type_](data)
+    if is_optional(type_) and data is None:
+        return data
     if is_union(type_):
-        return _build_value_for_union(union=type_, data=data, config=config)
-    elif is_generic_collection(type_) and is_instance(data, extract_origin_collection(type_)):
-        return _build_value_for_collection(collection=type_, data=data, config=config)
+        data = _build_value_for_union(union=type_, data=data, config=config)
+    elif is_generic_collection(type_):
+        data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif is_dataclass(type_) and is_instance(data, Data):
-        return from_dict(data_class=type_, data=data, config=config)
+        data = from_dict(data_class=type_, data=data, config=config)
+    for cast_type in config.cast:
+        if is_subclass(type_, cast_type):
+            if is_generic_collection(type_):
+                data = extract_origin_collection(type_)(data)
+            else:
+                data = type_(data)
+            break
     return data
 
 
@@ -108,12 +116,9 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
         try:
             # noinspection PyBroadException
             try:
-                data = transform_value(
-                    type_hooks=config.type_hooks, cast=config.cast, target_type=inner_type, value=data
-                )
+                value = _build_value(type_=inner_type, data=data, config=config)
             except Exception:  # pylint: disable=broad-except
                 continue
-            value = _build_value(type_=inner_type, data=data, config=config)
             if is_instance(value, inner_type):
                 if config.strict_unions_match:
                     union_matches[inner_type] = value
@@ -132,10 +137,10 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
     data_type = data.__class__
-    if is_instance(data, Mapping):
+    if is_instance(data, Mapping) and is_subclass(collection, Mapping):
         item_type = extract_generic(collection, defaults=(Any, Any))[1]
         return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
-    elif is_instance(data, tuple):
+    elif is_instance(data, tuple) and is_subclass(collection, tuple):
         if not data:
             return data_type()
         types = extract_generic(collection)
@@ -144,5 +149,7 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
         return data_type(
             _build_value(type_=type_, data=item, config=config) for item, type_ in zip_longest(data, types)
         )
-    item_type = extract_generic(collection, defaults=(Any,))[0]
-    return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)
+    elif is_instance(data, Collection) and is_subclass(collection, Collection):
+        item_type = extract_generic(collection, defaults=(Any,))[0]
+        return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)
+    return data
