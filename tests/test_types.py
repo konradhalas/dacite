@@ -15,7 +15,6 @@ from dacite.types import (
     extract_generic,
     is_new_type,
     extract_new_type,
-    transform_value,
     is_literal,
     is_init_var,
     extract_init_var,
@@ -371,75 +370,6 @@ def test_extract_generic():
 
 def test_extract_generic_with_defaults():
     assert extract_generic(List, defaults=(Any,)) == (Any,)
-
-
-def test_transform_value_without_matching_type():
-    assert transform_value({}, [], str, 1) == 1
-
-
-def test_transform_value_with_matching_type():
-    assert transform_value({int: lambda x: x + 1}, [], int, 1) == 2
-
-
-def test_transform_value_with_optional_and_not_none_value():
-    assert transform_value({str: str}, [], Optional[str], 1) == "1"
-
-
-def test_transform_value_with_optional_and_none_value():
-    assert transform_value({str: str}, [], Optional[str], None) is None
-
-
-def test_transform_value_with_optional_and_exact_matching_type():
-    assert transform_value({Optional[str]: str}, [], Optional[str], None) == "None"
-
-
-def test_transform_value_with_generic_sequence_and_matching_item():
-    assert transform_value({str: str}, [], List[str], [1]) == ["1"]
-
-
-def test_transform_value_with_generic_sequence_and_matching_sequence():
-    assert transform_value({List[int]: lambda x: list(reversed(x))}, [], List[int], [1, 2]) == [2, 1]
-
-
-def test_transform_value_with_generic_sequence_and_matching_both_item_and_sequence():
-    assert transform_value({List[int]: lambda x: list(reversed(x)), int: int}, [], List[int], ["1", "2"]) == [2, 1]
-
-
-def test_transform_value_without_matching_generic_sequence():
-    assert transform_value({}, [], List[int], {1}) == {1}
-
-
-def test_transform_value_with_nested_generic_sequence():
-    assert transform_value({str: str}, [], List[List[str]], [[1]]) == [["1"]]
-
-
-def test_transform_value_with_generic_abstract_collection():
-    assert transform_value({str: str}, [], Collection[str], [1]) == ["1"]
-
-
-def test_transform_value_with_generic_mapping():
-    assert transform_value({str: str, int: int}, [], Dict[str, int], {1: "2"}) == {"1": 2}
-
-
-def test_transform_value_with_nested_generic_mapping():
-    assert transform_value({str: str, int: int}, [], Dict[str, Dict[str, int]], {1: {2: "3"}}) == {"1": {"2": 3}}
-
-
-def test_transform_value_with_new_type():
-    MyStr = NewType("MyStr", str)
-
-    assert transform_value({MyStr: str.upper, str: str.lower}, [], MyStr, "Test") == "TEST"
-
-
-def test_transform_value_with_cast_matching_type():
-    assert transform_value({}, [int], int, "1") == 1
-
-
-def test_transform_value_with_cast_matching_base_class():
-    class MyInt(int):
-        pass
-
-    assert transform_value({}, [int], MyInt, "1") == 1
 
 
 @init_var_type_support

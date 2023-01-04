@@ -33,6 +33,16 @@ def test_from_dict_with_type_hooks_and_optional():
     assert result == X(s="test")
 
 
+def test_from_dict_with_type_hooks_and_optional_null_value():
+    @dataclass
+    class X:
+        s: Optional[str]
+
+    result = from_dict(X, {"s": None}, Config(type_hooks={str: str.lower}))
+
+    assert result == X(s=None)
+
+
 def test_from_dict_with_type_hooks_and_union():
     @dataclass
     class X:
