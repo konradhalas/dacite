@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Introduce basic cache functionality
+
 ### Fixed
 
 - Fix set's casting
+- Use `localns` for `get_type_hints` instead of `globalns`
 
 ## [1.7.0] - 2022-12-22
 
