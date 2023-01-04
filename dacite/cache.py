@@ -7,4 +7,4 @@ T = TypeVar("T", bound=Callable)
 class Cache:
     @lru_cache(maxsize=None)
     def cache(self, function: T) -> T:
-        return lru_cache(maxsize=None)(function)
+        return lru_cache(maxsize=None)(function)  # type: ignore

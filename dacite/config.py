@@ -1,9 +1,15 @@
-from dataclasses import dataclass, field, asdict
-from functools import cached_property
+import sys
+from dataclasses import dataclass, field
 from typing import Dict, Any, Callable, Optional, Type, List
 
 from dacite.cache import Cache
 from dacite.frozen_dict import FrozenDict
+
+if sys.version_info.minor >= 8:
+    from functools import cached_property
+else:
+    # FIXME: Remove when we drop support for Python<3.8
+    cached_property = property  # type: ignore
 
 
 @dataclass
