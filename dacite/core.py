@@ -1,8 +1,9 @@
 import copy
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection
+from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
 
+from dacite.cache import cache
 from dacite.config import Config
 from dacite.data import Data
 from dacite.dataclasses import (
@@ -45,14 +46,14 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
-    init_values: Data = {}
-    post_init_values: Data = {}
+    init_values: MutableMapping[str, Any] = {}
+    post_init_values: MutableMapping[str, Any] = {}
     config = config or Config()
     try:
-        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+        data_class_hints = cache(get_type_hints)(data_class, localns=config.hashable_forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
-    data_class_fields = get_fields(data_class)
+    data_class_fields = cache(get_fields)(data_class)
     if config.strict:
         extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
         if extra_fields:

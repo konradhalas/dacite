@@ -1,3 +1,3 @@
-from typing import Dict, Any
+from typing import Mapping, Any
 
-Data = Dict[str, Any]
+Data = Mapping[str, Any]
