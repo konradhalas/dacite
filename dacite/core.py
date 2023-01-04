@@ -1,7 +1,7 @@
 import copy
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection
+from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, Dict
 
 from dacite.config import Config
 from dacite.data import Data
@@ -22,6 +22,7 @@ from dacite.exceptions import (
     UnexpectedDataError,
     StrictUnionMatchError,
 )
+from dacite.frozen_dict import FrozenDict
 from dacite.types import (
     is_instance,
     is_generic_collection,
@@ -45,11 +46,11 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
-    init_values: Data = {}
-    post_init_values: Data = {}
+    init_values: Dict[str, Any] = {}
+    post_init_values: Dict[str, Any] = {}
     config = config or Config()
     try:
-        data_class_hints = get_type_hints(data_class, globalns=config.forward_references)
+        data_class_hints = config.cache.cache(get_type_hints)(data_class, localns=config.hashable_forward_references)
     except NameError as error:
         raise ForwardReferenceError(str(error))
     data_class_fields = config.cache.cache(get_fields)(data_class)
