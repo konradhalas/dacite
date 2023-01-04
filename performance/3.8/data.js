@@ -26,56 +26,56 @@ window.BENCHMARK_DATA = {
         "tool": "pytest",
         "benches": [
           {
-            "name": "tests/performance/test_performance.py::test_basic_scenario",
+            "name": "tests/performance/test_from_dict.py::test_basic_scenario",
             "value": 2901.780874289612,
             "unit": "iter/sec",
             "range": "stddev: 0.000004930698550913291",
             "extra": "mean: 344.61595941313493 usec\nrounds: 2045"
           },
           {
-            "name": "tests/performance/test_performance.py::test_union_matching",
+            "name": "tests/performance/test_from_dict.py::test_union_matching",
             "value": 2087.281702478073,
             "unit": "iter/sec",
             "range": "stddev: 0.000009009656981522485",
             "extra": "mean: 479.0920165748471 usec\nrounds: 1810"
           },
           {
-            "name": "tests/performance/test_performance.py::test_strict_unions_match",
+            "name": "tests/performance/test_from_dict.py::test_strict_unions_match",
             "value": 190.8516403032434,
             "unit": "iter/sec",
             "range": "stddev: 0.00009219137969108451",
             "extra": "mean: 5.239672021739525 msec\nrounds: 184"
           },
           {
-            "name": "tests/performance/test_performance.py::test_collection_of_union",
+            "name": "tests/performance/test_from_dict.py::test_collection_of_union",
             "value": 1565.3367338772755,
             "unit": "iter/sec",
             "range": "stddev: 0.00006954132032971487",
             "extra": "mean: 638.8401794692702 usec\nrounds: 1432"
           },
           {
-            "name": "tests/performance/test_performance.py::test_type_hooks",
+            "name": "tests/performance/test_from_dict.py::test_type_hooks",
             "value": 2381.180536733192,
             "unit": "iter/sec",
             "range": "stddev: 0.000023085696206779852",
             "extra": "mean: 419.9597571765507 usec\nrounds: 2125"
           },
           {
-            "name": "tests/performance/test_performance.py::test_casting",
+            "name": "tests/performance/test_from_dict.py::test_casting",
             "value": 21902.31486216785,
             "unit": "iter/sec",
             "range": "stddev: 0.00003970380345455919",
             "extra": "mean: 45.657274415651514 usec\nrounds: 11038"
           },
           {
-            "name": "tests/performance/test_performance.py::test_forward_references",
+            "name": "tests/performance/test_from_dict.py::test_forward_references",
             "value": 1794.9418323016282,
             "unit": "iter/sec",
             "range": "stddev: 0.000007027399507772742",
             "extra": "mean: 557.1211178011904 usec\nrounds: 1528"
           },
           {
-            "name": "tests/performance/test_performance.py::test_parsing_multiple_items",
+            "name": "tests/performance/test_from_dict.py::test_parsing_multiple_items",
             "value": 84.606317382691,
             "unit": "iter/sec",
             "range": "stddev: 0.000048033759402340984",
@@ -106,56 +106,56 @@ window.BENCHMARK_DATA = {
         "tool": "pytest",
         "benches": [
           {
-            "name": "tests/performance/test_performance.py::test_basic_scenario",
+            "name": "tests/performance/test_from_dict.py::test_basic_scenario",
             "value": 2875.8911653937457,
             "unit": "iter/sec",
             "range": "stddev: 0.00004364248294320432",
             "extra": "mean: 347.71830451486767 usec\nrounds: 2082"
           },
           {
-            "name": "tests/performance/test_performance.py::test_union_matching",
+            "name": "tests/performance/test_from_dict.py::test_union_matching",
             "value": 67.57033027824292,
             "unit": "iter/sec",
             "range": "stddev: 0.000038492079210394805",
             "extra": "mean: 14.799394880595864 msec\nrounds: 67"
           },
           {
-            "name": "tests/performance/test_performance.py::test_strict_unions_match",
+            "name": "tests/performance/test_from_dict.py::test_strict_unions_match",
             "value": 66.76375218999206,
             "unit": "iter/sec",
             "range": "stddev: 0.0012475878892558765",
             "extra": "mean: 14.978187522388847 msec\nrounds: 67"
           },
           {
-            "name": "tests/performance/test_performance.py::test_collection_of_union",
+            "name": "tests/performance/test_from_dict.py::test_collection_of_union",
             "value": 1545.2083206857308,
             "unit": "iter/sec",
             "range": "stddev: 0.00010388154671122004",
             "extra": "mean: 647.1619306037784 usec\nrounds: 1441"
           },
           {
-            "name": "tests/performance/test_performance.py::test_type_hooks",
+            "name": "tests/performance/test_from_dict.py::test_type_hooks",
             "value": 67.20563277090149,
             "unit": "iter/sec",
             "range": "stddev: 0.00004470555353438372",
             "extra": "mean: 14.879705149253166 msec\nrounds: 67"
           },
           {
-            "name": "tests/performance/test_performance.py::test_casting",
+            "name": "tests/performance/test_from_dict.py::test_casting",
             "value": 22463.475445038643,
             "unit": "iter/sec",
             "range": "stddev: 0.0000014654406404094735",
             "extra": "mean: 44.51670902157144 usec\nrounds: 11262"
           },
           {
-            "name": "tests/performance/test_performance.py::test_forward_references",
+            "name": "tests/performance/test_from_dict.py::test_forward_references",
             "value": 66.72020869061822,
             "unit": "iter/sec",
             "range": "stddev: 0.00003262820717441885",
             "extra": "mean: 14.98796271212224 msec\nrounds: 66"
           },
           {
-            "name": "tests/performance/test_performance.py::test_parsing_multiple_items",
+            "name": "tests/performance/test_from_dict.py::test_parsing_multiple_items",
             "value": 2.6942137652332065,
             "unit": "iter/sec",
             "range": "stddev: 0.0002608591572875441",
