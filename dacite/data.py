@@ -1,3 +1,3 @@
-from typing import MutableMapping, Any
+from typing import Mapping, Any
 
-Data = MutableMapping[str, Any]
+Data = Mapping[str, Any]
