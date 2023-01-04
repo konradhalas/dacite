@@ -2,13 +2,12 @@ import sys
 from dataclasses import dataclass, field
 from typing import Dict, Any, Callable, Optional, Type, List
 
-from dacite.cache import Cache
 from dacite.frozen_dict import FrozenDict
 
 if sys.version_info.minor >= 8:
-    from functools import cached_property
+    from functools import cached_property  # type: ignore
 else:
-    # FIXME: Remove when we drop support for Python<3.8
+    # Remove when we drop support for Python<3.8
     cached_property = property  # type: ignore
 
 
@@ -20,7 +19,6 @@ class Config:
     check_types: bool = True
     strict: bool = False
     strict_unions_match: bool = False
-    cache: Cache = Cache()
 
     @cached_property
     def hashable_forward_references(self) -> Optional[FrozenDict]:
