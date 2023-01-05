@@ -96,7 +96,7 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         data = _build_value_for_union(union=type_, data=data, config=config)
     elif is_generic_collection(type_):
         data = _build_value_for_collection(collection=type_, data=data, config=config)
-    elif is_dataclass(type_) and is_instance(data, Data):
+    elif is_dataclass(type_) and isinstance(data, Mapping):
         data = from_dict(data_class=type_, data=data, config=config)
     for cast_type in config.cast:
         if is_subclass(type_, cast_type):
@@ -138,10 +138,10 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
     data_type = data.__class__
-    if is_instance(data, Mapping) and is_subclass(collection, Mapping):
+    if isinstance(data, Mapping) and is_subclass(collection, Mapping):
         item_type = extract_generic(collection, defaults=(Any, Any))[1]
         return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
-    elif is_instance(data, tuple) and is_subclass(collection, tuple):
+    elif isinstance(data, tuple) and is_subclass(collection, tuple):
         if not data:
             return data_type()
         types = extract_generic(collection)
@@ -150,7 +150,7 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
         return data_type(
             _build_value(type_=type_, data=item, config=config) for item, type_ in zip_longest(data, types)
         )
-    elif is_instance(data, Collection) and is_subclass(collection, Collection):
+    elif isinstance(data, Collection) and is_subclass(collection, Collection):
         item_type = extract_generic(collection, defaults=(Any,))[0]
         return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)
     return data
