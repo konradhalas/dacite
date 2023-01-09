@@ -8,8 +8,13 @@ from typing import (
     TypeVar,
     Mapping,
     Tuple,
+    get_origin,
+    get_type_hints,
+    get_args,
     cast as typing_cast,
+    _GenericAlias,  # Remove import and check for Generic in a different way
 )
+from inspect import isclass
 
 from dacite.cache import cache
 
@@ -41,6 +46,16 @@ def extract_optional(optional: Type[Optional[T]]) -> T:
 @cache
 def is_generic(type_: Type) -> bool:
     return hasattr(type_, "__origin__")
+
+
+@cache
+def is_generic_subclass(type_: Type) -> bool:
+    return is_generic(type_) and hasattr(type_, "__args__")
+
+
+@cache
+def is_generic_alias(type_: Type) -> bool:
+    return type(type_.__args__) == _GenericAlias
 
 
 @cache
@@ -84,6 +99,22 @@ def extract_new_type(type_: Type) -> Type:
 @cache
 def is_init_var(type_: Type) -> bool:
     return isinstance(type_, InitVar) or type_ is InitVar
+
+
+def is_valid_generic_class(value: Any, type_: Type) -> bool:
+    if not isinstance(value, get_origin(type_)):
+        return False
+    type_hints = get_type_hints(value)
+    for field_name, field_type in type_hints.items():
+        if isinstance(field_type, TypeVar):
+            return (
+                any([isinstance(getattr(value, field_name), arg) for arg in get_args(type_)])
+                if get_args(type_)
+                else True
+            )
+        else:
+            return is_instance(value, type_)
+    return True
 
 
 @cache
@@ -134,6 +165,17 @@ def is_instance(value: Any, type_: Type) -> bool:
         return value in extract_generic(type_)
     elif is_init_var(type_):
         return is_instance(value, extract_init_var(type_))
+    elif isclass(type(type_)) and type(type_) == _GenericAlias:
+        return is_valid_generic_class(value, type_)
+    elif isinstance(type_, TypeVar):
+        if hasattr(type_, "__constraints__") and type_.__constraints__:
+            return any(is_instance(value, t) for t in type_.__constraints__)
+        if hasattr(type_, "__bound__") and type_.__bound__:
+            if isinstance(type_.__bound__, tuple):
+                return any(is_instance(value, t) for t in type_.__bound__)
+            if type_.__bound__ is not None and is_generic(type_.__bound__):
+                return isinstance(value, type_.__bound__)
+        return True
     elif is_type_generic(type_):
         return is_subclass(value, extract_generic(type_)[0])
     else:
