@@ -2,7 +2,6 @@ from dataclasses import Field, MISSING, _FIELDS, _FIELD, _FIELD_INITVAR  # type:
 from typing import Type, Any, TypeVar, List
 
 from dacite.cache import cache
-from dacite.data import Data
 from dacite.types import is_optional
 
 T = TypeVar("T", bound=Any)
@@ -21,13 +20,6 @@ def get_default_value_for_field(field: Field, type_: Type) -> Any:
     elif is_optional(type_):
         return None
     raise DefaultValueNotFoundError()
-
-
-def create_instance(data_class: Type[T], init_values: Data, post_init_values: Data) -> T:
-    instance = data_class(**init_values)
-    for key, value in post_init_values.items():
-        setattr(instance, key, value)
-    return instance
 
 
 @cache

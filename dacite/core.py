@@ -7,7 +7,6 @@ from dacite.config import Config
 from dacite.data import Data
 from dacite.dataclasses import (
     get_default_value_for_field,
-    create_instance,
     DefaultValueNotFoundError,
     get_fields,
     is_frozen,
@@ -79,8 +78,10 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             init_values[field.name] = value
         elif not is_frozen(data_class):
             post_init_values[field.name] = value
-
-    return create_instance(data_class=data_class, init_values=init_values, post_init_values=post_init_values)
+    instance = data_class(**init_values)
+    for key, value in post_init_values.items():
+        setattr(instance, key, value)
+    return instance
 
 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
