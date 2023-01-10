@@ -11,7 +11,9 @@ def test_get_default_value_for_field_with_default_value():
     class X:
         i: int = 1
 
-    value = get_default_value_for_field(field=fields(X)[0])
+    dataclass_field = fields(X)[0]
+
+    value = get_default_value_for_field(field=dataclass_field, type_=dataclass_field.type)
 
     assert value == 1
 
@@ -21,7 +23,9 @@ def test_get_default_value_for_field_with_default_factory():
     class X:
         i: int = field(default_factory=lambda: 1)
 
-    value = get_default_value_for_field(field=fields(X)[0])
+    dataclass_field = fields(X)[0]
+
+    value = get_default_value_for_field(field=dataclass_field, type_=dataclass_field.type)
 
     assert value == 1
 
@@ -31,7 +35,9 @@ def test_get_default_value_for_optional_field():
     class X:
         i: Optional[int]
 
-    value = get_default_value_for_field(field=fields(X)[0])
+    dataclass_field = fields(X)[0]
+
+    value = get_default_value_for_field(field=dataclass_field, type_=dataclass_field.type)
 
     assert value is None
 
@@ -41,8 +47,10 @@ def test_get_default_value_for_field_without_default_value():
     class X:
         i: int
 
+    dataclass_field = fields(X)[0]
+
     with pytest.raises(DefaultValueNotFoundError):
-        get_default_value_for_field(field=fields(X)[0])
+        get_default_value_for_field(field=dataclass_field, type_=dataclass_field.type)
 
 
 def test_create_instance_with_simple_data_class():
