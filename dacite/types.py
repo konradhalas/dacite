@@ -95,6 +95,12 @@ def extract_init_var(type_: Type) -> Union[Type, Any]:
 
 
 def is_instance(value: Any, type_: Type) -> bool:
+    try:
+        # As described in PEP 484 - section: "The numeric tower"
+        if (type_ in [float, complex] and isinstance(value, (int, float))) or isinstance(value, type_):
+            return True
+    except TypeError:
+        pass
     if type_ == Any:
         return True
     elif is_union(type_):
@@ -131,13 +137,7 @@ def is_instance(value: Any, type_: Type) -> bool:
     elif is_type_generic(type_):
         return is_subclass(value, extract_generic(type_)[0])
     else:
-        try:
-            # As described in PEP 484 - section: "The numeric tower"
-            if isinstance(value, (int, float)) and type_ in [float, complex]:
-                return True
-            return isinstance(value, type_)
-        except TypeError:
-            return False
+        return False
 
 
 @cache
