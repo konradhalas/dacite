@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1672928549052,
+  "lastUpdate": 1673347538737,
   "repoUrl": "https://github.com/konradhalas/dacite",
   "entries": {
     "Benchmark": [
@@ -480,6 +480,86 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.008884054629097273",
             "extra": "mean: 314.1807617999973 msec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "contact@mciszczon.pl",
+            "name": "Mateusz Ciszczoń",
+            "username": "mciszczon"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9bf8feae363d3708da45e69831eb9897369dc0d8",
+          "message": "Improve caching (#210)\n\n* Rework cache interface\r\n\r\n* Silence pylint warnings for global\r\n\r\n* Allow providing None to set_cache_size(size: int)",
+          "timestamp": "2023-01-10T11:44:52+01:00",
+          "tree_id": "5acc4f964ccc3cffc988a0b91e9e72ae4d3b12ee",
+          "url": "https://github.com/konradhalas/dacite/commit/9bf8feae363d3708da45e69831eb9897369dc0d8"
+        },
+        "date": 1673347535898,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_from_dict.py::test_basic_scenario",
+            "value": 9371.905613990726,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002866841854976349",
+            "extra": "mean: 106.70188552765227 usec\nrounds: 3372"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_union_matching",
+            "value": 256.5846662242864,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011594686416671925",
+            "extra": "mean: 3.897349029913882 msec\nrounds: 234"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_strict_unions_match",
+            "value": 257.1645321768337,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009455393846658406",
+            "extra": "mean: 3.8885611150777644 msec\nrounds: 252"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_collection_of_union",
+            "value": 4611.230835758459,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026042631508632178",
+            "extra": "mean: 216.8618391960244 usec\nrounds: 2985"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_type_hooks",
+            "value": 252.68447664382794,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011844076266915279",
+            "extra": "mean: 3.957504684427261 msec\nrounds: 244"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_casting",
+            "value": 72921.86771876705,
+            "unit": "iter/sec",
+            "range": "stddev: 5.116875187680116e-7",
+            "extra": "mean: 13.713307561685527 usec\nrounds: 10593"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_forward_references",
+            "value": 230.94219386514655,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010717675958543894",
+            "extra": "mean: 4.330087903226239 msec\nrounds: 186"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_parsing_multiple_items",
+            "value": 10.134906514553819,
+            "unit": "iter/sec",
+            "range": "stddev: 0.003464369780881749",
+            "extra": "mean: 98.66889236363363 msec\nrounds: 11"
           }
         ]
       }
