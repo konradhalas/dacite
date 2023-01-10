@@ -1,6 +1,7 @@
 from dataclasses import Field, MISSING, _FIELDS, _FIELD, _FIELD_INITVAR  # type: ignore
 from typing import Type, Any, TypeVar, List
 
+from dacite.cache import cache
 from dacite.data import Data
 from dacite.types import is_optional
 
@@ -11,6 +12,7 @@ class DefaultValueNotFoundError(Exception):
     pass
 
 
+@cache
 def get_default_value_for_field(field: Field) -> Any:
     if field.default != MISSING:
         return field.default
@@ -28,10 +30,12 @@ def create_instance(data_class: Type[T], init_values: Data, post_init_values: Da
     return instance
 
 
+@cache
 def get_fields(data_class: Type[T]) -> List[Field]:
     fields = getattr(data_class, _FIELDS)
     return [f for f in fields.values() if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR]
 
 
+@cache
 def is_frozen(data_class: Type[T]) -> bool:
     return data_class.__dataclass_params__.frozen
