@@ -1,3 +1,4 @@
+from dacite.cache import set_cache_size, get_cache_size, clear_cache
 from dacite.config import Config
 from dacite.core import from_dict
 from dacite.exceptions import (
@@ -12,6 +13,9 @@ from dacite.exceptions import (
 )
 
 __all__ = [
+    "set_cache_size",
+    "get_cache_size",
+    "clear_cache",
     "Config",
     "from_dict",
     "DaciteError",

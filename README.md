@@ -539,6 +539,21 @@ def products():
 
 Still `dacite` helps us to create data class from "raw" dict with validated data.
 
+### Cache
+
+`dacite` uses some LRU caching to improve its performance where possible. To use the caching utility:
+
+```python
+from dacite import set_cache_size, get_cache_size, clear_cache
+
+get_cache_size()  # outputs the current LRU max_size, default is 2048
+set_cache_size(4096)  # set LRU max_size to 4096
+set_cache_size(None)  # set LRU max_size to None
+clear_cache()  # Clear the cache
+```
+
+The caching is completely transparent from the interface perspective.
+
 ## Changelog
 
 Follow `dacite` updates in [CHANGELOG][changelog].
