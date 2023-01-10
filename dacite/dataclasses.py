@@ -13,12 +13,12 @@ class DefaultValueNotFoundError(Exception):
 
 
 @cache
-def get_default_value_for_field(field: Field) -> Any:
+def get_default_value_for_field(field: Field, type_: Type) -> Any:
     if field.default != MISSING:
         return field.default
     elif field.default_factory != MISSING:  # type: ignore
         return field.default_factory()  # type: ignore
-    elif is_optional(field.type):
+    elif is_optional(type_):
         return None
     raise DefaultValueNotFoundError()
 

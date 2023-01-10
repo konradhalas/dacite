@@ -1,4 +1,3 @@
-import copy
 from dataclasses import is_dataclass
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
@@ -59,20 +58,19 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         if extra_fields:
             raise UnexpectedDataError(keys=extra_fields)
     for field in data_class_fields:
-        field = copy.copy(field)
-        field.type = data_class_hints[field.name]
+        field_type = data_class_hints[field.name]
         if field.name in data:
             try:
                 field_data = data[field.name]
-                value = _build_value(type_=field.type, data=field_data, config=config)
+                value = _build_value(type_=field_type, data=field_data, config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
-            if config.check_types and not is_instance(value, field.type):
-                raise WrongTypeError(field_path=field.name, field_type=field.type, value=value)
+            if config.check_types and not is_instance(value, field_type):
+                raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
         else:
             try:
-                value = get_default_value_for_field(field)
+                value = get_default_value_for_field(field, field_type)
             except DefaultValueNotFoundError:
                 if not field.init:
                     continue
