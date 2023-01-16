@@ -50,4 +50,4 @@ jobs:
           comment-always: false
           alert-threshold: '130%'
           comment-on-alert: false
-          fail-on-alert: false
+          fail-on-alert: ${{ !inputs.publish_performance }}
