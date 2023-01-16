@@ -102,14 +102,13 @@ def is_valid_generic_class(value: Any, type_: Type) -> bool:
     origin = get_origin(type_)
     if not (origin and isinstance(value, origin)):
         return False
-    type_hints = get_type_hints(type(value))
+    type_hints = cache(get_type_hints)(type(value))
     for field_name, field_type in type_hints.items():
         if isinstance(field_type, TypeVar):
-            return (
-                any(isinstance(getattr(value, field_name), arg) for arg in get_args(type_)) if get_args(type_) else True
-            )
+            args = get_args(type_)
+            return True if not args else any(isinstance(getattr(value, field_name, None), arg) for arg in args)
         else:
-            return is_instance(value, type_)
+            return isinstance(value, type_)
     return True
 
 
@@ -119,6 +118,31 @@ def extract_init_var(type_: Type) -> Union[Type, Any]:
         return type_.type
     except AttributeError:
         return Any
+
+
+@cache
+def get_constraints(type_: TypeVar) -> Optional[Any]:
+    return type_.__constraints__
+
+
+@cache
+def is_constrained(type_: TypeVar) -> bool:
+    return hasattr(type_, "__constraints__") and get_constraints(type_)
+
+
+@cache
+def get_bound(type_: TypeVar) -> Optional[Any]:
+    return type_.__bound__
+
+
+@cache
+def is_bound(type_: TypeVar) -> bool:
+    return hasattr(type_, "__bound__") and get_bound(type_)
+
+
+@cache
+def is_generic_bound(type_: TypeVar) -> bool:
+    return is_bound(type_) and get_bound(type_) is not None and is_generic(get_bound(type_))
 
 
 def is_instance(value: Any, type_: Type) -> bool:
@@ -164,13 +188,13 @@ def is_instance(value: Any, type_: Type) -> bool:
     elif isclass(type(type_)) and is_generic_alias(type(type_)):
         return is_valid_generic_class(value, type_)
     elif isinstance(type_, TypeVar):
-        if hasattr(type_, "__constraints__") and type_.__constraints__:
+        if is_constrained(type_):
             return any(is_instance(value, t) for t in type_.__constraints__)
-        if hasattr(type_, "__bound__") and type_.__bound__:
-            if isinstance(type_.__bound__, tuple):
-                return any(is_instance(value, t) for t in type_.__bound__)
-            if type_.__bound__ is not None and is_generic(type_.__bound__):
-                return isinstance(value, extract_generic(type_.__bound__))
+        if is_bound(type_):
+            if isinstance(get_bound(type_), tuple):
+                return any(isinstance(value, t) for t in get_bound(type_))
+            if is_generic_bound(type_):
+                return isinstance(value, extract_generic(get_bound(type_)))
         return True
     elif is_type_generic(type_):
         return is_subclass(value, extract_generic(type_)[0])

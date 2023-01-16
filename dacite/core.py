@@ -103,7 +103,7 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif cache(is_dataclass)(type_) and isinstance(data, Mapping):
         data = from_dict(data_class=type_, data=data, config=config)
-    elif is_generic_subclass(type_) and is_dataclass(get_origin(type_)):
+    elif is_generic_subclass(type_) and cache(is_dataclass)(get_origin(type_)):
         origin = get_origin(type_)
         assert origin is not None
         data = from_dict(data_class=origin, data=data, config=config)
