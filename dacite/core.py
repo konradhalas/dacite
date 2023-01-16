@@ -1,6 +1,11 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping, get_origin
+from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
+
+try:
+    from typing import get_origin  # type: ignore
+except ImportError:
+    from typing_extensions import get_origin
 
 from dacite.cache import cache
 from dacite.config import Config
@@ -99,7 +104,9 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
     elif cache(is_dataclass)(type_) and isinstance(data, Mapping):
         data = from_dict(data_class=type_, data=data, config=config)
     elif is_generic_subclass(type_) and is_dataclass(get_origin(type_)):
-        data = from_dict(data_class=get_origin(type_), data=data, config=config)
+        origin = get_origin(type_)
+        assert origin is not None
+        data = from_dict(data_class=origin, data=data, config=config)
     for cast_type in config.cast:
         if is_subclass(type_, cast_type):
             if is_generic_collection(type_):

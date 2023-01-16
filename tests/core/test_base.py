@@ -193,7 +193,7 @@ def test_from_dict_with_new_type():
     assert result == X(s=MyStr("test"))
 
 
-def test_from_dict_generic():
+def test_from_dict_generic_valid():
     T = TypeVar("T", bound=Union[str, int])
 
     @dataclass
