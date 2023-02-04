@@ -11,7 +11,6 @@ class DefaultValueNotFoundError(Exception):
     pass
 
 
-@cache
 def get_default_value_for_field(field: Field, type_: Type) -> Any:
     if field.default != MISSING:
         return field.default
