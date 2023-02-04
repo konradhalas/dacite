@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, NewType, Optional
+from typing import Any, NewType, Optional, List
 
 import pytest
 
@@ -198,7 +198,7 @@ def test_dataclass_default_factory_identity():
     @dataclass
     class A:
         name: str
-        items: list[str] = field(default_factory=list)
+        items: List[str] = field(default_factory=list)
 
     a1 = from_dict(A, {"name": "a1"})
     a2 = from_dict(A, {"name": "a2"})
