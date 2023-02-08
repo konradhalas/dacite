@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1674735772683,
+  "lastUpdate": 1675847235982,
   "repoUrl": "https://github.com/konradhalas/dacite",
   "entries": {
     "Benchmark": [
@@ -1200,6 +1200,86 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0002715931740288923",
             "extra": "mean: 49.93539306250128 msec\nrounds: 16"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "contact@mciszczon.pl",
+            "name": "Mateusz Ciszczoń",
+            "username": "mciszczon"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "02ee99348d4c8354fa309b8d1f3525dafda592e6",
+          "message": "Remove @cache decorator from get_default_value_for_field (#216)\n\n* Remove @cache decorator from get_default_value_for_field\r\n\r\n* Fix default factory identity test for older Python versions",
+          "timestamp": "2023-02-08T10:06:26+01:00",
+          "tree_id": "888cd9340bdb63115949a52742a7410c5a983639",
+          "url": "https://github.com/konradhalas/dacite/commit/02ee99348d4c8354fa309b8d1f3525dafda592e6"
+        },
+        "date": 1675847234803,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_from_dict.py::test_basic_scenario",
+            "value": 15942.301503769753,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026262280780949583",
+            "extra": "mean: 62.72620046506696 usec\nrounds: 3437"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_union_matching",
+            "value": 445.98988686715836,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027083321947078485",
+            "extra": "mean: 2.2422033087442137 msec\nrounds: 366"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_strict_unions_match",
+            "value": 448.6767648660124,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004842342185326214",
+            "extra": "mean: 2.2287759882075204 msec\nrounds: 424"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_collection_of_union",
+            "value": 5941.294240089074,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004933078024829801",
+            "extra": "mean: 168.31349527388625 usec\nrounds: 3174"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_type_hooks",
+            "value": 435.84460160999834,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042393617873178605",
+            "extra": "mean: 2.2943957463417615 msec\nrounds: 410"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_casting",
+            "value": 175830.0399372396,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005502459117756143",
+            "extra": "mean: 5.687310316012769 usec\nrounds: 11904"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_forward_references",
+            "value": 439.3200037117765,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005289168240519422",
+            "extra": "mean: 2.2762450868412247 msec\nrounds: 380"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_parsing_multiple_items",
+            "value": 17.60525732218124,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0006945980439383886",
+            "extra": "mean: 56.80121464286003 msec\nrounds: 14"
           }
         ]
       }
