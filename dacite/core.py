@@ -1,6 +1,6 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
+from typing import Callable, TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
 
 from dacite.cache import cache
 from dacite.config import Config
@@ -83,10 +83,12 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         setattr(instance, key, value)
     return instance
 
-def transform_by_type_hooks(data: Any, type_: Type, type_hooks: Dict[Type, Callable[[Any], Any]]):
+
+def transform_by_type_hooks(data: Any, type_: Type, type_hooks: dict[Type, Callable[[Any], Any]]) -> Any | None:
     for th, func in type_hooks.items():
         if is_subclass(th, type_):
-            return func(data)    
+            return func(data)
+
 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
