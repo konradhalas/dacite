@@ -83,12 +83,16 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         setattr(instance, key, value)
     return instance
 
+def transform_by_type_hooks(data: Any, type_: Type, type_hooks: Dict[Type, Callable[[Any], Any]]):
+    for th, func in type_hooks.items():
+        if is_subclass(th, type_):
+            return func(data)    
 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
-    if type_ in config.type_hooks:
-        data = config.type_hooks[type_](data)
+    if transformed := transform_by_type_hooks(data, type_, config.type_hooks):
+        data = transformed
     if is_optional(type_) and data is None:
         return data
     if is_union(type_):
