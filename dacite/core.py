@@ -1,6 +1,18 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import Callable, TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
+from typing import (
+    Callable,
+    TypeVar,
+    Type,
+    Optional,
+    Union,
+    get_origin,
+    get_type_hints,
+    Mapping,
+    Any,
+    Collection,
+    MutableMapping,
+)
 
 from dacite.cache import cache
 from dacite.config import Config
@@ -85,6 +97,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 
 
 def transform_by_type_hooks(data: Any, type_: Type, type_hooks: dict[Type, Callable[[Any], Any]]) -> Any | None:
+    if get_origin(type_) is Union:
+        return
     for th, func in type_hooks.items():
         if is_subclass(th, type_):
             return func(data)
