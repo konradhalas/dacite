@@ -98,7 +98,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
-    if get_origin(type_) is not Union:
+    if not is_union(type_):
         for th, func in config.type_hooks.items():
             if is_subclass(th, type_):
                 data = func(data)
