@@ -1,7 +1,6 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
 from typing import (
-    Callable,
     TypeVar,
     Type,
     Optional,
@@ -96,19 +95,13 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     return instance
 
 
-def transform_by_type_hooks(data: Any, type_: Type, type_hooks: dict[Type, Callable[[Any], Any]]) -> Any | None:
-    if get_origin(type_) is Union:
-        return
-    for th, func in type_hooks.items():
-        if is_subclass(th, type_):
-            return func(data)
-
-
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
-    if transformed := transform_by_type_hooks(data, type_, config.type_hooks):
-        data = transformed
+    if get_origin(type_) is not Union:
+        for th, func in config.type_hooks.items():
+            if is_subclass(th, type_):
+                data = func(data)
     if is_optional(type_) and data is None:
         return data
     if is_union(type_):
