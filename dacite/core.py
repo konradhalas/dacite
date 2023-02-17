@@ -1,15 +1,6 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import (
-    TypeVar,
-    Type,
-    Optional,
-    get_type_hints,
-    Mapping,
-    Any,
-    Collection,
-    MutableMapping,
-)
+from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
 
 from dacite.cache import cache
 from dacite.config import Config
