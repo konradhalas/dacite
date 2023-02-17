@@ -4,8 +4,6 @@ from typing import (
     TypeVar,
     Type,
     Optional,
-    Union,
-    get_origin,
     get_type_hints,
     Mapping,
     Any,
@@ -99,8 +97,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
     if not is_union(type_):
-        for th, func in config.type_hooks.items():
-            if is_subclass(th, type_):
+        for th_type, func in config.type_hooks.items():
+            if is_subclass(th_type, type_):
                 data = func(data)
     if is_optional(type_) and data is None:
         return data
