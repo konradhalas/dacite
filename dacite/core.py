@@ -62,7 +62,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 
         if config.reserved_names and not field.name in data:
             if field.name[-1] == "_" and keyword.iskeyword(field.name[:-1]) and field.name[:-1] in data:
-                data[field.name] = data.pop(field.name[:-1])
+                if not isinstance(data, Mapping):
+                    data[field.name] = data.pop(field.name[:-1])
 
         if field.name in data:
             try:
