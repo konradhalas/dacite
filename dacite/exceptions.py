@@ -17,7 +17,10 @@ class DaciteFieldError(DaciteError):
 
     def update_path(self, parent_field_path: str) -> None:
         if self.field_path:
-            self.field_path = f"{parent_field_path}.{self.field_path}"
+            if self.field_path.startswith("["):
+                self.field_path = f"{parent_field_path}{self.field_path}"
+            else:
+                self.field_path = f"{parent_field_path}.{self.field_path}"
         else:
             self.field_path = parent_field_path
 
