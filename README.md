@@ -1,3 +1,5 @@
+![](https://user-images.githubusercontent.com/1078369/212840759-174c0f2b-d446-4c3a-b97c-67a0b912e7f6.png)
+
 # dacite
 
 [![Build Status](https://travis-ci.org/konradhalas/dacite.svg?branch=master)](https://travis-ci.org/konradhalas/dacite)

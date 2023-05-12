@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.8.1] - 2023-05-12
+
+### Fixed
+
+- Fix value creation for a field with a default factory
+
+## [1.8.0] - 2023-01-26
+
 ### Added
 
-- Introduce basic cache functionality
+- Performance improvements (multiple small changes) 
+- Introduce cache functionality
 
 ### Fixed
 
@@ -108,7 +119,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Validate type for generic collection fields
 
-[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/konradhalas/dacite/compare/v1.8.0...v1.8.1
+[1.8.0]: https://github.com/konradhalas/dacite/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/konradhalas/dacite/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/konradhalas/dacite/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/konradhalas/dacite/compare/v1.5.0...v1.5.1

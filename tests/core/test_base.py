@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field, asdict
-from typing import Any, NewType, Optional, TypeVar, Generic, List, Union
+from dataclasses import dataclass, field
+from typing import Any, NewType, Optional, List, TypeVar, Generic, Union
 
 import pytest
 
@@ -255,3 +255,16 @@ def test_from_dict_generic_common():
     result = from_dict(A, {"elements": [{"foo": 1, "bar": 2}, {"foo": 3, "bar": 4}]})
 
     assert result == A(elements=[Common[int](1, 2), Common[int](3, 4)])
+
+
+def test_dataclass_default_factory_identity():
+    # https://github.com/konradhalas/dacite/issues/215
+    @dataclass
+    class A:
+        name: str
+        items: List[str] = field(default_factory=list)
+
+    a1 = from_dict(A, {"name": "a1"})
+    a2 = from_dict(A, {"name": "a2"})
+
+    assert a1.items is not a2.items
