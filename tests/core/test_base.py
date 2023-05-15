@@ -267,4 +267,6 @@ def test_dataclass_default_factory_identity():
     a1 = from_dict(A, {"name": "a1"})
     a2 = from_dict(A, {"name": "a2"})
 
+    assert a1 is not a2
+    assert a1.name is not a2.name
     assert a1.items is not a2.items
