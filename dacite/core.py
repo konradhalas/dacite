@@ -64,8 +64,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             raise UnexpectedDataError(keys=extra_fields)
     for field in data_class_fields:
         field_type = data_class_hints[field.name]
-        if hasattr(data, field.name) or (isinstance(data, Mapping) and field.name in data):
-            field_data = getattr(data, field.name, None) or data[field.name]
+        if field.name in data:
+            field_data = data[field.name]
             try:
                 value = _build_value(type_=field_type, data=field_data, config=config)
             except DaciteFieldError as error:
