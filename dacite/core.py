@@ -5,7 +5,7 @@ from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collec
 try:
     from typing import get_origin  # type: ignore
 except ImportError:
-    from typing_extensions import get_origin
+    from typing_extensions import get_origin  # type: ignore
 
 from dacite.cache import cache
 from dacite.config import Config

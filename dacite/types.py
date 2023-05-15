@@ -4,7 +4,7 @@ from typing import Type, Any, Optional, Union, Collection, TypeVar, Mapping, Tup
 try:
     from typing import get_origin, get_args  # type: ignore
 except ImportError:
-    from typing_extensions import get_origin, get_args
+    from typing_extensions import get_origin, get_args  # type: ignore
 from inspect import isclass
 
 from dacite.cache import cache
