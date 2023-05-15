@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Any, NewType, Optional, List
+from typing import Any, NewType, Optional, List, TypeVar, Generic, Union
 
 import pytest
 
-from dacite import from_dict, MissingValueError, WrongTypeError
+from dacite import from_dict, MissingValueError, WrongTypeError, Config
 
 
 def test_from_dict_with_correct_data():
@@ -193,6 +193,70 @@ def test_from_dict_with_new_type():
     assert result == X(s=MyStr("test"))
 
 
+def test_from_dict_generic_valid():
+    T = TypeVar("T", bound=Union[str, int])
+
+    @dataclass
+    class A(Generic[T]):
+        a: T
+
+    @dataclass
+    class B:
+        a_str: A[str]
+        a_int: A[int]
+
+    assert from_dict(B, {"a_str": {"a": "test"}, "a_int": {"a": 1}}) == B(a_str=A[str](a="test"), a_int=A[int](a=1))
+
+
+def test_from_dict_generic_invalid():
+    T = TypeVar("T")
+
+    @dataclass
+    class A(Generic[T]):
+        a: T
+
+    @dataclass
+    class B:
+        a_str: A[str]
+        a_int: A[int]
+
+    with pytest.raises(WrongTypeError):
+        from_dict(B, {"a_str": {"a": "test"}, "a_int": {"a": "not int"}})
+
+
+def test_from_dict_generic_common_invalid():
+    T = TypeVar("T", str, List[str])
+
+    @dataclass
+    class Common(Generic[T]):
+        foo: T
+        bar: T
+
+    @dataclass
+    class A:
+        elements: List[Common[int]]
+
+    with pytest.raises(WrongTypeError):
+        from_dict(A, {"elements": [{"foo": 1, "bar": 2}, {"foo": 3, "bar": 4}]})
+
+
+def test_from_dict_generic_common():
+    T = TypeVar("T", bound=int)
+
+    @dataclass
+    class Common(Generic[T]):
+        foo: T
+        bar: T
+
+    @dataclass
+    class A:
+        elements: List[Common[int]]
+
+    result = from_dict(A, {"elements": [{"foo": 1, "bar": 2}, {"foo": 3, "bar": 4}]})
+
+    assert result == A(elements=[Common[int](1, 2), Common[int](3, 4)])
+
+
 def test_dataclass_default_factory_identity():
     # https://github.com/konradhalas/dacite/issues/215
     @dataclass
@@ -203,4 +267,6 @@ def test_dataclass_default_factory_identity():
     a1 = from_dict(A, {"name": "a1"})
     a2 = from_dict(A, {"name": "a2"})
 
+    assert a1 is not a2
+    assert a1.name is not a2.name
     assert a1.items is not a2.items

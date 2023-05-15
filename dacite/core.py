@@ -2,6 +2,11 @@ from dataclasses import is_dataclass
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
 
+try:
+    from typing import get_origin  # type: ignore
+except ImportError:
+    from typing_extensions import get_origin  # type: ignore
+
 from dacite.cache import cache
 from dacite.config import Config
 from dacite.data import Data
@@ -31,6 +36,7 @@ from dacite.types import (
     is_init_var,
     extract_init_var,
     is_subclass,
+    is_generic_subclass,
 )
 
 T = TypeVar("T")
@@ -59,8 +65,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     for field in data_class_fields:
         field_type = data_class_hints[field.name]
         if field.name in data:
+            field_data = data[field.name]
             try:
-                field_data = data[field.name]
                 value = _build_value(type_=field_type, data=field_data, config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)
@@ -97,6 +103,10 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif cache(is_dataclass)(type_) and isinstance(data, Mapping):
         data = from_dict(data_class=type_, data=data, config=config)
+    elif is_generic_subclass(type_) and cache(is_dataclass)(get_origin(type_)):
+        origin = get_origin(type_)
+        assert origin is not None
+        data = from_dict(data_class=origin, data=data, config=config)
     for cast_type in config.cast:
         if is_subclass(type_, cast_type):
             if is_generic_collection(type_):
