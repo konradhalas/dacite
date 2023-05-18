@@ -1,6 +1,7 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
+import keyword
 
 from dacite.cache import cache
 from dacite.config import Config
@@ -58,6 +59,12 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             raise UnexpectedDataError(keys=extra_fields)
     for field in data_class_fields:
         field_type = data_class_hints[field.name]
+
+        if config.reserved_names and not field.name in data:
+            if field.name[-1] == "_" and keyword.iskeyword(field.name[:-1]) and field.name[:-1] in data:
+                if not isinstance(data, Mapping):
+                    data[field.name] = data.pop(field.name[:-1])
+
         if field.name in data:
             try:
                 field_data = data[field.name]
