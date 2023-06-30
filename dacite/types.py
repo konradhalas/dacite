@@ -16,7 +16,6 @@ from dacite.cache import cache
 T = TypeVar("T", bound=Any)
 
 
-@cache
 def extract_origin_collection(collection: Type) -> Type:
     try:
         return collection.__extra__
@@ -38,7 +37,6 @@ def extract_optional(optional: Type[Optional[T]]) -> T:
         raise ValueError("can not find not-none value")
 
 
-@cache
 def is_generic(type_: Type) -> bool:
     return hasattr(type_, "__origin__")
 
@@ -140,7 +138,6 @@ def is_instance(value: Any, type_: Type) -> bool:
         return False
 
 
-@cache
 def is_generic_collection(type_: Type) -> bool:
     if not is_generic(type_):
         return False
