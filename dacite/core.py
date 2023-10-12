@@ -1,3 +1,4 @@
+import builtins
 from dataclasses import is_dataclass
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
@@ -57,10 +58,11 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         if extra_fields:
             raise UnexpectedDataError(keys=extra_fields)
     for field in data_class_fields:
+        data_name = field.name[:-1] if field.name.endswith("_") and field.name[:-1] in dir(builtins) else field.name
         field_type = data_class_hints[field.name]
-        if field.name in data:
+        if data_name in data:
             try:
-                field_data = data[field.name]
+                field_data = data[data_name]
                 value = _build_value(type_=field_type, data=field_data, config=config)
             except DaciteFieldError as error:
                 error.update_path(field.name)

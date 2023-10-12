@@ -204,3 +204,29 @@ def test_dataclass_default_factory_identity():
     a2 = from_dict(A, {"name": "a2"})
 
     assert a1.items is not a2.items
+
+
+def test_from_dict_with_built_in_field():
+    @dataclass
+    class X:
+        id: int
+        s: str
+        i: int
+        f: float
+
+    result = from_dict(X, {"id": 1, "s": "test", "i": 1, "f": 1.0})
+
+    assert result == X(id=1, s="test", i=1, f=1.0)
+
+
+def test_from_dict_with_built_in_field_pep8():
+    @dataclass
+    class X:
+        id_: int
+        s: str
+        i: int
+        f: float
+
+    result = from_dict(X, {"id": 1, "s": "test", "i": 1, "f": 1.0})
+
+    assert result == X(id_=1, s="test", i=1, f=1.0)

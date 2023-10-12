@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- Named field matches a built-in now works with the pep8 naming convention with _ at the end
 
 ## [1.8.1] - 2023-05-12
 
