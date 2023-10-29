@@ -2,16 +2,16 @@ from dataclasses import is_dataclass
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
 
-from dacite.cache import cache
-from dacite.config import Config
-from dacite.data import Data
-from dacite.dataclasses import (
+from .cache import cache
+from .config import Config
+from .data import Data
+from .dataclasses import (
     get_default_value_for_field,
     DefaultValueNotFoundError,
     get_fields,
     is_frozen,
 )
-from dacite.exceptions import (
+from .exceptions import (
     ForwardReferenceError,
     WrongTypeError,
     DaciteError,
@@ -21,7 +21,7 @@ from dacite.exceptions import (
     UnexpectedDataError,
     StrictUnionMatchError,
 )
-from dacite.types import (
+from .types import (
     is_instance,
     is_generic_collection,
     is_union,

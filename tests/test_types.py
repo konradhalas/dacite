@@ -4,7 +4,7 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from dacite.types import (
+from .types import (
     is_optional,
     extract_optional,
     is_generic,

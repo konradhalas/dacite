@@ -11,7 +11,7 @@ from typing import (
     cast as typing_cast,
 )
 
-from dacite.cache import cache
+from .cache import cache
 
 T = TypeVar("T", bound=Any)
 

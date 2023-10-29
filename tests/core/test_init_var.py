@@ -1,6 +1,6 @@
 from dataclasses import dataclass, InitVar, field
 
-from dacite import from_dict, Config
+from  import from_dict, Config
 from tests.common import init_var_type_support
 
 

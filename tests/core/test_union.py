@@ -3,7 +3,7 @@ from typing import Optional, List, Union, Dict
 
 import pytest
 
-from dacite import from_dict, UnionMatchError
+from  import from_dict, UnionMatchError
 
 
 def test_from_dict_with_union_of_builtin_types():

@@ -3,7 +3,7 @@ from typing import Any, NewType, Optional, List
 
 import pytest
 
-from dacite import from_dict, MissingValueError, WrongTypeError
+from  import from_dict, MissingValueError, WrongTypeError
 
 
 def test_from_dict_with_correct_data():

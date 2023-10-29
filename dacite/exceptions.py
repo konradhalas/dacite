@@ -1,5 +1,5 @@
 from typing import Any, Type, Optional, Set, Dict
-from dacite.types import is_union
+from .types import is_union
 
 
 def _name(type_: Type) -> str:
