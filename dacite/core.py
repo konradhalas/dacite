@@ -1,5 +1,5 @@
 from dataclasses import is_dataclass
-from itertools import zip_longest
+from itertools import zip_longest, cycle
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
 
 from .cache import cache
@@ -147,7 +147,7 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
         if len(types) == 2 and types[1] == Ellipsis:
             return data_type(_build_value(type_=types[0], data=item, config=config) for item in data)
         return data_type(
-            _build_value(type_=type_, data=item, config=config) for item, type_ in zip_longest(data, types)
+            _build_value(type_=type_, data=item, config=config) for item, type_ in zip(data, cycle(types))
         )
     elif isinstance(data, Collection) and is_subclass(collection, Collection):
         item_type = extract_generic(collection, defaults=(Any,))[0]
