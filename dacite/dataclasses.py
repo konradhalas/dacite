@@ -24,7 +24,11 @@ def get_default_value_for_field(field: Field, type_: Type) -> Any:
 @cache
 def get_fields(data_class: Type[T]) -> List[Field]:
     fields = getattr(data_class, _FIELDS)
-    return [f for f in fields.values() if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR]
+    return [
+        f
+        for f in fields.values()
+        if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR
+    ]
 
 
 @cache

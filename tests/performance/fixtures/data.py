@@ -19,7 +19,9 @@ long_union_data = {
     "unrealistically_complex_union2": [nested_data, nested_data, nested_data],
 }
 
-union_collection_data = {"collection": [1, nested_data, [nested_data, nested_data], "string", {"k": "v"}]}
+union_collection_data = {
+    "collection": [1, nested_data, [nested_data, nested_data], "string", {"k": "v"}]
+}
 
 
 forward_ref_data = {"inner": long_union_data}

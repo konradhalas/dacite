@@ -31,7 +31,9 @@ def is_optional(type_: Type) -> bool:
 
 @cache
 def extract_optional(optional: Type[Optional[T]]) -> T:
-    other_members = [member for member in extract_generic(optional) if member is not type(None)]
+    other_members = [
+        member for member in extract_generic(optional) if member is not type(None)
+    ]
     if other_members:
         return typing_cast(T, Union[tuple(other_members)])
     else:
@@ -97,7 +99,9 @@ def extract_init_var(type_: Type) -> Union[Type, Any]:
 def is_instance(value: Any, type_: Type) -> bool:
     try:
         # As described in PEP 484 - section: "The numeric tower"
-        if (type_ in [float, complex] and isinstance(value, (int, float))) or isinstance(value, type_):
+        if (
+            type_ in [float, complex] and isinstance(value, (int, float))
+        ) or isinstance(value, type_):
             return True
     except TypeError:
         pass
@@ -120,14 +124,20 @@ def is_instance(value: Any, type_: Type) -> bool:
             else:
                 if len(tuple_types) != len(value):
                     return False
-                return all(is_instance(item, item_type) for item, item_type in zip(value, tuple_types))
+                return all(
+                    is_instance(item, item_type)
+                    for item, item_type in zip(value, tuple_types)
+                )
         if isinstance(value, Mapping):
             key_type, val_type = extract_generic(type_, defaults=(Any, Any))
             for key, val in value.items():
                 if not is_instance(key, key_type) or not is_instance(val, val_type):
                     return False
             return True
-        return all(is_instance(item, extract_generic(type_, defaults=(Any,))[0]) for item in value)
+        return all(
+            is_instance(item, extract_generic(type_, defaults=(Any,))[0])
+            for item in value
+        )
     elif is_new_type(type_):
         return is_instance(value, extract_new_type(type_))
     elif is_literal(type_):

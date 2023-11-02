@@ -1,5 +1,17 @@
 from dataclasses import InitVar
-from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple, Type
+from typing import (
+    Optional,
+    Union,
+    List,
+    Any,
+    Dict,
+    NewType,
+    TypeVar,
+    Generic,
+    Collection,
+    Tuple,
+    Type,
+)
 from unittest.mock import patch, Mock
 
 import pytest
