@@ -1,8 +1,8 @@
 from dataclasses import Field, MISSING, _FIELDS, _FIELD, _FIELD_INITVAR  # type: ignore
 from typing import Type, Any, TypeVar, List
 
-from dacite.cache import cache
-from dacite.types import is_optional
+from .cache import cache
+from .types import is_optional
 
 T = TypeVar("T", bound=Any)
 
@@ -24,7 +24,11 @@ def get_default_value_for_field(field: Field, type_: Type) -> Any:
 @cache
 def get_fields(data_class: Type[T]) -> List[Field]:
     fields = getattr(data_class, _FIELDS)
-    return [f for f in fields.values() if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR]
+    return [
+        f
+        for f in fields.values()
+        if f._field_type is _FIELD or f._field_type is _FIELD_INITVAR
+    ]
 
 
 @cache

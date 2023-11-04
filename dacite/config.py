@@ -2,7 +2,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Dict, Any, Callable, Optional, Type, List
 
-from dacite.frozen_dict import FrozenDict
+from .frozen_dict import FrozenDict
 
 if sys.version_info.minor >= 8:
     from functools import cached_property  # type: ignore  # pylint: disable=no-name-in-module

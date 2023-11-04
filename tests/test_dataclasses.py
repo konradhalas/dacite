@@ -3,7 +3,11 @@ from typing import Optional
 
 import pytest
 
-from dacite.dataclasses import get_default_value_for_field, DefaultValueNotFoundError, is_frozen
+from dacite.dataclasses import (
+    get_default_value_for_field,
+    DefaultValueNotFoundError,
+    is_frozen,
+)
 
 
 def test_get_default_value_for_field_with_default_value():
@@ -13,7 +17,9 @@ def test_get_default_value_for_field_with_default_value():
 
     dataclass_field = fields(X)[0]
 
-    value = get_default_value_for_field(field=dataclass_field, type_=dataclass_field.type)
+    value = get_default_value_for_field(
+        field=dataclass_field, type_=dataclass_field.type
+    )
 
     assert value == 1
 
@@ -25,7 +31,9 @@ def test_get_default_value_for_field_with_default_factory():
 
     dataclass_field = fields(X)[0]
 
-    value = get_default_value_for_field(field=dataclass_field, type_=dataclass_field.type)
+    value = get_default_value_for_field(
+        field=dataclass_field, type_=dataclass_field.type
+    )
 
     assert value == 1
 
@@ -37,7 +45,9 @@ def test_get_default_value_for_optional_field():
 
     dataclass_field = fields(X)[0]
 
-    value = get_default_value_for_field(field=dataclass_field, type_=dataclass_field.type)
+    value = get_default_value_for_field(
+        field=dataclass_field, type_=dataclass_field.type
+    )
 
     assert value is None
 

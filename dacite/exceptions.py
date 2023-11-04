@@ -1,9 +1,13 @@
 from typing import Any, Type, Optional, Set, Dict
-from dacite.types import is_union
+from .types import is_union
 
 
 def _name(type_: Type) -> str:
-    return type_.__name__ if hasattr(type_, "__name__") and not is_union(type_) else str(type_)
+    return (
+        type_.__name__
+        if hasattr(type_, "__name__") and not is_union(type_)
+        else str(type_)
+    )
 
 
 class DaciteError(Exception):
@@ -23,7 +27,9 @@ class DaciteFieldError(DaciteError):
 
 
 class WrongTypeError(DaciteFieldError):
-    def __init__(self, field_type: Type, value: Any, field_path: Optional[str] = None) -> None:
+    def __init__(
+        self, field_type: Type, value: Any, field_path: Optional[str] = None
+    ) -> None:
         super().__init__(field_path=field_path)
         self.field_type = field_type
         self.value = value
@@ -52,7 +58,9 @@ class UnionMatchError(WrongTypeError):
 
 
 class StrictUnionMatchError(DaciteFieldError):
-    def __init__(self, union_matches: Dict[Type, Any], field_path: Optional[str] = None) -> None:
+    def __init__(
+        self, union_matches: Dict[Type, Any], field_path: Optional[str] = None
+    ) -> None:
         super().__init__(field_path=field_path)
         self.union_matches = union_matches
 

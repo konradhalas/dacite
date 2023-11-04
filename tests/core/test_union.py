@@ -69,7 +69,7 @@ def test_from_dict_with_union_of_data_classes_and_wrong_data():
     assert exception_info.value.value == {"f": 2.0}
 
 
-def test_from_dict_with_union_of_generic_collecionts_of_data_classes():
+def test_from_dict_with_union_of_generic_collections_of_data_classes():
     @dataclass
     class X:
         i: int

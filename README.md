@@ -266,7 +266,7 @@ It's a very common case that you want to create an instance of a field type
 from the input data with just calling your type with the input value. Of 
 course you can use `type_hooks={T: T}` to achieve this goal but `cast=[T]` is 
 an easier and more expressive way. It also works with base classes - if `T` 
-is a base class of type `S`, all fields of type `S` will be also "casted".
+is a base class of type `S`, all fields of type `S` will be also "cast".
 
 ```python
 from enum import Enum
@@ -359,8 +359,8 @@ only a single match is allowed, otherwise `dacite` raises `StrictUnionMatchError
 Whenever something goes wrong, `from_dict` will raise adequate
 exception. There are a few of them:
 
-- `WrongTypeError` - raised when a type of a input value does not match
-with a type of a data class field
+- `WrongTypeError` - raised when a type of input value does not match
+with a type of data class field
 - `MissingValueError` - raised when you don't provide a value for a
 required field
 - `UnionMatchError` - raised when provided data does not match any type
@@ -438,7 +438,7 @@ You can even specify which particular runs you want to compare, e.g. `pytest-ben
  
 ## Use case
 
-There are many cases when we receive "raw" data (Python dicts) as a input to 
+There are many cases when we receive "raw" data (Python dicts) as an input to 
 our system. HTTP request payload is a very common use case. In most web 
 frameworks we receive request data as a simple dictionary. Instead of 
 passing this dict down to your "business" code, it's a good idea to create 
