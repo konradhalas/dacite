@@ -1,6 +1,6 @@
 from typing import List
 
-from  import from_dict, Config
+from dacite import from_dict, Config
 
 from .fixtures import data, classes
 

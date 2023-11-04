@@ -4,7 +4,7 @@ from typing import Optional, List, Union
 
 import pytest
 
-from  import (
+from dacite import (
     from_dict,
     Config,
     ForwardReferenceError,

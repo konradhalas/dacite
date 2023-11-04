@@ -12,11 +12,17 @@ from typing import (
     Tuple,
     Type,
 )
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
 
-from .types import (
+from .common import (
+    literal_support,
+    init_var_type_support,
+    pep_604_support,
+    type_hints_with_generic_collections_support,
+)
+from dacite.types import (
     is_optional,
     extract_optional,
     is_generic,
@@ -32,12 +38,6 @@ from .types import (
     extract_init_var,
     is_type_generic,
     is_tuple,
-)
-from tests.common import (
-    literal_support,
-    init_var_type_support,
-    pep_604_support,
-    type_hints_with_generic_collections_support,
 )
 
 

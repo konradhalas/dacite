@@ -3,7 +3,7 @@ from typing import Optional
 
 import pytest
 
-from .dataclasses import (
+from dacite.dataclasses import (
     get_default_value_for_field,
     DefaultValueNotFoundError,
     is_frozen,

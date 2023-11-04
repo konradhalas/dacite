@@ -1,6 +1,6 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
+from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping, Sequence
 
 from .cache import cache
 from .config import Config
@@ -40,18 +40,12 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     """Create a data class instance from a dictionary.
 
     :param data_class: a data class type
-    :param data: a dictionary of a input data
+    :param data: a dictionary of input data
     :param config: a configuration of the creation process
     :return: an instance of a data class
     """
     init_values: MutableMapping[str, Any] = {}
-    post_init_values: MutableMapping[str, Any] = {}
-    config = config or Config()
-    try:
-        data_class_hints = cache(get_type_hints)(data_class, localns=config.hashable_forward_references)
-    except NameError as error:
-        raise ForwardReferenceError(str(error))
-    data_class_fields = cache(get_fields)(data_class)
+    data_class_fields, data_class_hints, post_init_values, config = _set_up_dataclass_info(config, data_class)
     if config.strict:
         extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
         if extra_fields:
@@ -84,6 +78,49 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     return instance
 
 
+def from_tuple(data_class: Type[T], data: Sequence, config: Optional[Config] = None) -> T:
+    """Create a data class instance from a dictionary.
+
+    :param data_class: a data class type
+    :param data: a sequence of input data
+    :param config: a configuration of the creation process
+    :return: an instance of a data class
+    """
+    init_values: list[Any] = []
+    data_class_fields, data_class_hints, post_init_values, config = _set_up_dataclass_info(config, data_class)
+    if len(data) < len(data_class_fields):
+        raise UnexpectedDataError(keys=set(data_class_fields[len(data):]))
+    for field, field_data in zip(data_class_fields, data):
+        field_type = data_class_hints[field.name]
+        try:
+            value = _build_value(type_=field_type, data=field_data, config=config)
+        except DaciteFieldError as error:
+            error.update_path(field.name)
+            raise
+        if config.check_types and not is_instance(value, field_type):
+            raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
+        if field.init:
+            init_values.append(value)
+        elif not is_frozen(data_class):
+            post_init_values[field.name] = value
+    instance = data_class(*init_values)
+    for key, value in post_init_values.items():
+        setattr(instance, key, value)
+    return instance
+
+
+def _set_up_dataclass_info(config: Config, data_class: T) -> tuple[
+    Any, dict[str, Any], MutableMapping[str, Any], Config]:
+    post_init_values: MutableMapping[str, Any] = {}
+    config = config or Config()
+    try:
+        data_class_hints = cache(get_type_hints)(data_class, localns=config.hashable_forward_references)
+    except NameError as error:
+        raise ForwardReferenceError(str(error))
+    data_class_fields = cache(get_fields)(data_class)
+    return data_class_fields, data_class_hints, post_init_values, config
+
+
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
@@ -97,6 +134,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif cache(is_dataclass)(type_) and isinstance(data, Mapping):
         data = from_dict(data_class=type_, data=data, config=config)
+    elif cache(is_dataclass)(type_) and isinstance(data, Sequence):
+        data = from_tuple(data_class=type_, data=data, config=config)
     for cast_type in config.cast:
         if is_subclass(type_, cast_type):
             if is_generic_collection(type_):

@@ -3,7 +3,7 @@ from typing import Optional, Union, List, NewType
 
 import pytest
 
-from  import from_dict, MissingValueError, WrongTypeError
+from dacite import from_dict, MissingValueError, WrongTypeError
 
 
 def test_from_dict_with_missing_optional_value():

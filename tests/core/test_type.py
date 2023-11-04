@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Type
 
-from  import from_dict
+from dacite import from_dict
 
 
 def test_from_dict_with_type_field():

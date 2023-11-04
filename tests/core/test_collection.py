@@ -3,7 +3,7 @@ from typing import List, Set, Union, Dict, Collection, Tuple, Sequence
 
 import pytest
 
-from  import from_dict, WrongTypeError, Config
+from dacite import from_dict, WrongTypeError, Config
 
 
 def test_from_dict_with_generic_collection():
