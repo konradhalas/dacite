@@ -99,6 +99,8 @@ def is_instance(value: Any, type_: Type) -> bool:
         # As described in PEP 484 - section: "The numeric tower"
         if (type_ in [float, complex] and isinstance(value, (int, float))) or isinstance(value, type_):
             return True
+        if type_ == float and isinstance(value, str) and value.lower() in ["nan", "inf"]:
+            return True
     except TypeError:
         pass
     if type_ == Any:
