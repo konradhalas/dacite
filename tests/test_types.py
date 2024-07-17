@@ -399,3 +399,8 @@ def test_extract_generic_special():
         _special = True
 
     assert extract_generic(FakeType, defaults) == defaults
+
+
+def test_optional_and_union_none_does_not_pollute_scope_via_caching():
+    is_generic(Optional[str])
+    is_generic_collection(str | None)
