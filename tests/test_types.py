@@ -1,4 +1,4 @@
-from dataclasses import InitVar
+from dataclasses import InitVar, dataclass
 from typing import Optional, Union, List, Any, Dict, NewType, TypeVar, Generic, Collection, Tuple, Type
 from unittest.mock import patch, Mock
 
@@ -268,13 +268,13 @@ def test_is_instance_with_with_type_and_not_matching_value_type():
     assert not is_instance(1, Type[str])
 
 
-def test_is_instance_with_not_supported_generic_types():
+def test_is_instance_with_generic_types():
     T = TypeVar("T")
 
     class X(Generic[T]):
         pass
 
-    assert not is_instance(X[str](), X[str])
+    assert is_instance(X[str](), X[str])
 
 
 def test_is_instance_with_generic_mapping_and_matching_value_type():
@@ -362,6 +362,10 @@ def test_is_instance_with_empty_tuple_and_matching_type():
 
 def test_is_instance_with_empty_tuple_and_not_matching_type():
     assert not is_instance((1, 2), Tuple[()])
+
+
+def test_is_instance_list_type():
+    assert is_instance([{}], List)
 
 
 def test_extract_generic():
