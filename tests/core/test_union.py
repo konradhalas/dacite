@@ -184,7 +184,7 @@ def test_from_dict_with_union_of_mixed_types_and_dict_of_data_classes_as_a_resul
     assert result == Y(d={"x": X(i=42), "z": X(i=37)})
 
 
-def test():
+def test_from_dict_with_union_of_data_classes_selects_type_by_number_of_matching_fields():
     @dataclass
     class X:
         i: Optional[int]
