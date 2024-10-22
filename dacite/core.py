@@ -1,4 +1,5 @@
 from dataclasses import is_dataclass
+from functools import partial
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, get_type_hints, Mapping, Any, Collection, MutableMapping
 
@@ -126,11 +127,17 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     if len(union_matches) > 1 and config.strict_unions_match:
         raise StrictUnionMatchError(union_matches)
     if union_matches:
-        k = next(iter(union_matches))
-        return union_matches.pop(k)
+        return union_matches[sorted(union_matches.keys(), key=partial(_field_key_matches, data))[0]]
     if not config.check_types:
         return data
     raise UnionMatchError(field_type=union, value=data)
+
+
+def _field_key_matches(data: Any, inner_type: Type) -> int:
+    if not is_dataclass(inner_type):
+        return 0
+    data_class_fields = cache(get_fields)(inner_type)
+    return len(set(data.keys()) | {f.name for f in data_class_fields})
 
 
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
