@@ -182,3 +182,21 @@ def test_from_dict_with_union_of_mixed_types_and_dict_of_data_classes_as_a_resul
     result = from_dict(Y, {"d": {"x": {"i": 42}, "z": {"i": 37}}})
 
     assert result == Y(d={"x": X(i=42), "z": X(i=37)})
+
+
+def test():
+    @dataclass
+    class X:
+        i: Optional[int]
+
+    @dataclass
+    class Y:
+        j: int
+
+    @dataclass
+    class Z:
+        d: Union[X, Y]
+
+    result = from_dict(Z, {"d": {"j": 42}})
+
+    assert result == Z(d=Y(j=42))
