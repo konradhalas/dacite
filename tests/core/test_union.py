@@ -191,12 +191,17 @@ def test_from_dict_with_union_of_data_classes_selects_type_by_number_of_matching
 
     @dataclass
     class Y:
-        j: int
+        j: Optional[int]
 
     @dataclass
     class Z:
-        d: Union[X, Y]
+        j: int
+        k: int
 
-    result = from_dict(Z, {"d": {"j": 42}})
+    @dataclass
+    class A:
+        d: Union[X, Y, Z]
 
-    assert result == Z(d=Y(j=42))
+    result = from_dict(A, {"d": {"j": 42, "k": 42}})
+
+    assert result == A(d=Z(j=42, k=42))
