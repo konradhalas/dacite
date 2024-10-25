@@ -402,7 +402,7 @@ def test_extract_generic_special():
     assert extract_generic(FakeType, defaults) == defaults
 
 
-@pytest.mark.skipif(version_info < (3, 10), reason="requires python3.10")
+@pytest.mark.skipif(version_info < (3, 10), reason="writing union types as X | Y requires Python 3.10")
 def test_optional_and_union_none_does_not_pollute_scope_via_caching():
     is_generic(Optional[str])
     is_generic_collection(str | None)
