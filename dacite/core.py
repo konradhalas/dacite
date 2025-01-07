@@ -140,7 +140,7 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
     if isinstance(data, Mapping) and is_subclass(collection, Mapping):
         item_type = extract_generic(collection, defaults=(Any, Any))[1]
         return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
-    elif isinstance(data, tuple) and is_subclass(collection, tuple):
+    elif is_subclass(collection, tuple):
         if not data:
             return data_type()
         types = extract_generic(collection)
