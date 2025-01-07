@@ -69,6 +69,7 @@ def test_from_dict_with_missing_value():
 
     assert str(exception_info.value) == 'missing value for field "i"'
     assert exception_info.value.field_path == "i"
+    assert exception_info._excinfo[1].__suppress_context__
 
 
 def test_from_dict_with_nested_data_class():
