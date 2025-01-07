@@ -19,6 +19,7 @@ class Config:
     check_types: bool = True
     strict: bool = False
     strict_unions_match: bool = False
+    reserved_names: bool = False
 
     @cached_property
     def hashable_forward_references(self) -> Optional[FrozenDict]:
