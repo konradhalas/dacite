@@ -7,8 +7,7 @@ on:
 jobs:
   ci:
     uses: ./.github/workflows/code_check.yaml
-    secrets:
-      benchmark_token: ${{ secrets.BENCHMARK_TOKEN }}
+    secrets: inherit
     with:
       publish_performance: false
       store_benchmark: false
