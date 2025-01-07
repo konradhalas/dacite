@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass, field
 from typing import Any, NewType, Optional, List
 
@@ -204,3 +205,18 @@ def test_dataclass_default_factory_identity():
     a2 = from_dict(A, {"name": "a2"})
 
     assert a1.items is not a2.items
+
+
+def test_translate_nan_to_float():
+    @dataclass
+    class X:
+        i: float
+        n: float
+
+    result_1 = from_dict(X, {"i": "inf", "n": "nan"})
+    result_2 = from_dict(X, {"i": "INF", "n": "NaN"})
+
+    assert math.isnan(result_1.n)
+    assert math.isnan(result_2.n)
+    assert math.isinf(result_1.i)
+    assert math.isinf(result_2.i)
