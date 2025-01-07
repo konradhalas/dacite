@@ -44,7 +44,7 @@ jobs:
           tool: 'pytest'
           output-file-path: benchmark.json
           save-data-file: ${{ inputs.store_benchmark }}
-          github-token: ${{ secrets.benchmark_token }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ inputs.publish_performance }}
           benchmark-data-dir-path: performance/${{ matrix.python-version }}
           comment-always: false
