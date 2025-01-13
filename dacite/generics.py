@@ -1,17 +1,22 @@
 import sys
 from dataclasses import Field, is_dataclass
-from typing import Any, Generic, Literal, TypeVar, get_args, get_origin, get_type_hints
+from typing import Any, Generic, List, Literal, TypeVar, get_type_hints
+
+try:
+    from typing import get_args, get_origin
+except ImportError:
+    from typing_extensions import get_args, get_origin
 
 from .dataclasses import get_fields as dataclasses_get_fields
 
 
 def _add_generics(type_origin: Any, type_args: tuple, generics: dict) -> None:
     """Adds (type var, concrete type) entries derived from a type's origin and args to the provided generics dict."""
-    if type_origin and type_args and hasattr(type_origin, '__parameters__'):
+    if type_origin and type_args and hasattr(type_origin, "__parameters__"):
         for param, arg in zip(type_origin.__parameters__, type_args):
             if param.__class__ is TypeVar:
                 if param in generics and generics[param] != arg:
-                    raise Exception('Generics error.')
+                    raise Exception("Generics error.")
                 generics[param] = arg
 
 
@@ -24,14 +29,14 @@ def _dereference(type_name: str, data_class: type) -> type:
         return data_class
 
     module_name = data_class.__module__
-    parts = module_name.split('.')
+    parts = module_name.split(".")
     for i in range(len(parts)):
         try:
-            module = sys.modules['.'.join(parts[:-i]) if i else module_name]
+            module = sys.modules[".".join(parts[:-i]) if i else module_name]
             return getattr(module, type_name)
         except AttributeError:
             pass
-    raise AttributeError('Could not find reference.')
+    raise AttributeError("Could not find reference.")
 
 
 def _concretize(hint: type, generics: dict[type, type], data_class: type) -> type:
@@ -46,8 +51,7 @@ def _concretize(hint: type, generics: dict[type, type], data_class: type) -> typ
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
     if hint_origin and hint_args and hint_origin is not Literal:
-        concrete_hint_args = tuple(_concretize(
-            a, generics, data_class) for a in hint_args)
+        concrete_hint_args = tuple(_concretize(a, generics, data_class) for a in hint_args)
         return hint_origin[concrete_hint_args]
 
     return hint
@@ -70,7 +74,7 @@ def get_concrete_type_hints(data_class: type, *args, **kwargs) -> dict[str, Any]
     dc_args = get_args(data_class)
     _add_generics(dc_origin, dc_args, generics)
 
-    if hasattr(data_class, '__orig_bases__'):
+    if hasattr(data_class, "__orig_bases__"):
         for base in data_class.__orig_bases__:
             base_origin = get_origin(base)
             base_args = get_args(base)
@@ -86,6 +90,6 @@ def get_concrete_type_hints(data_class: type, *args, **kwargs) -> dict[str, Any]
     return hints
 
 
-def get_fields(data_class: type) -> list[Field]:
+def get_fields(data_class: type) -> List[Field]:
     """An overwrite of dacite's get_fields function, supporting generics."""
     return dataclasses_get_fields(orig(data_class))

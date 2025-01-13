@@ -1,16 +1,10 @@
 from dataclasses import InitVar, is_dataclass
-from typing import (
-    Type,
-    Any,
-    Optional,
-    Union,
-    Collection,
-    TypeVar,
-    Mapping,
-    Tuple,
-    cast as typing_cast,
-    get_origin,
-)
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Mapping, Tuple, cast as typing_cast
+
+try:
+    from typing import get_origin
+except ImportError:
+    from typing_extensions import get_origin
 
 from dacite.cache import cache
 
