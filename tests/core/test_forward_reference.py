@@ -12,7 +12,7 @@ class Person:
 @dataclass
 class Club:
     name: str
-    members: list["Person"]
+    members: List["Person"]
 
 
 def test_self_reference():
