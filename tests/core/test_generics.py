@@ -30,7 +30,7 @@ def test_multi_generic():
     assert result == A(x=X(a="foo"), y=[1, 2, 3])
 
 
-def test_inherited_generic():
+def test_generic_parent():
     @dataclass
     class B(A[X, int]):
         z: str
