@@ -10,7 +10,7 @@ except ImportError:
 from .dataclasses import get_fields as dataclasses_get_fields
 
 
-def _add_generics(type_origin: Any, type_args: Tuple, generics: Dict[TypeVar, Type]) -> None:
+def __add_generics(type_origin: Any, type_args: Tuple, generics: Dict[TypeVar, Type]) -> None:
     """Adds (type var, concrete type) entries derived from a type's origin and args to the provided generics dict."""
     if type_origin and type_args and hasattr(type_origin, "__parameters__"):
         for param, arg in zip(type_origin.__parameters__, type_args):
@@ -20,7 +20,7 @@ def _add_generics(type_origin: Any, type_args: Tuple, generics: Dict[TypeVar, Ty
                 generics[param] = arg
 
 
-def _dereference(type_name: str, data_class: Type) -> Type:
+def __dereference(type_name: str, data_class: Type) -> Type:
     """
     Try to find the class belonging to the reference in the provided module and,
     if not found, iteratively look in parent modules.
@@ -39,11 +39,11 @@ def _dereference(type_name: str, data_class: Type) -> Type:
     raise AttributeError("Could not find reference.")
 
 
-def _concretize(hint: Type, generics: Dict[TypeVar, Type], data_class: Type) -> Type:
+def __concretize(hint: Type, generics: Dict[TypeVar, Type], data_class: Type) -> Type:
     """Recursively replace type vars and forward references by concrete types."""
 
     if hint.__class__ is str:
-        return _dereference(hint, data_class)
+        return __dereference(hint, data_class)
 
     if hint.__class__ is TypeVar:
         return generics.get(hint, hint)
@@ -51,8 +51,7 @@ def _concretize(hint: Type, generics: Dict[TypeVar, Type], data_class: Type) -> 
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
     if hint_origin and hint_args and hint_origin is not Literal:
-        concrete_hint_args = tuple(_concretize(a, generics, data_class) for a in hint_args)
-        return hint_origin[concrete_hint_args]
+        hint.__args__ = tuple(__concretize(a, generics, data_class) for a in hint_args)
 
     return hint
 
@@ -72,20 +71,20 @@ def get_concrete_type_hints(data_class: Type, *args, **kwargs) -> Dict[str, Any]
 
     dc_origin = get_origin(data_class)
     dc_args = get_args(data_class)
-    _add_generics(dc_origin, dc_args, generics)
+    __add_generics(dc_origin, dc_args, generics)
 
     if hasattr(data_class, "__orig_bases__"):
         for base in data_class.__orig_bases__:
             base_origin = get_origin(base)
             base_args = get_args(base)
             if base_origin is not Generic:
-                _add_generics(base_origin, base_args, generics)
+                __add_generics(base_origin, base_args, generics)
 
     data_class = orig(data_class)
     hints = get_type_hints(data_class, *args, **kwargs)
 
     for key, hint in hints.copy().items():
-        hints[key] = _concretize(hint, generics, data_class)
+        hints[key] = __concretize(hint, generics, data_class)
 
     return hints
 
