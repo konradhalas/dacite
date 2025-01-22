@@ -403,4 +403,8 @@ def test_extract_generic_special():
 
 def test_optional_and_union_none_does_not_pollute_scope_via_caching():
     is_generic(Optional[str])
+
+
+@pep_604_support
+def test_optional_and_union_none_does_not_pollute_scope_via_caching_pep_604():
     is_generic_collection(str | None)
