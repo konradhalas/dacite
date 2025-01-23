@@ -3,14 +3,17 @@ from dataclasses import Field, is_dataclass
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, get_type_hints
 
 try:
-    from typing import get_args, get_origin, Literal
+    from typing import get_args, get_origin, Literal  # type: ignore
 except ImportError:
     from typing_extensions import get_args, get_origin, Literal
 
 from .dataclasses import get_fields as dataclasses_get_fields
 
 
-def __add_generics(type_origin: Any, type_args: Tuple, generics: Dict[TypeVar, Type]) -> None:
+GenericsDict = Dict[TypeVar, Type]  # Check types at line 52
+
+
+def __add_generics(type_origin: Any, type_args: Tuple, generics: GenericsDict) -> None:
     """Adds (type var, concrete type) entries derived from a type's origin and args to the provided generics dict."""
     if type_origin and type_args and hasattr(type_origin, "__parameters__"):
         for param, arg in zip(type_origin.__parameters__, type_args):
@@ -39,14 +42,14 @@ def __dereference(type_name: str, data_class: Type) -> Type:
     raise AttributeError("Could not find reference.")
 
 
-def __concretize(hint: Type, generics: Dict[TypeVar, Type], data_class: Type) -> Type:
+def __concretize(hint: Type, generics: GenericsDict, data_class: Type) -> Type:
     """Recursively replace type vars and forward references by concrete types."""
 
     if hint.__class__ is str:
-        return __dereference(hint, data_class)
+        return __dereference(str(hint), data_class)
 
     if hint.__class__ is TypeVar:
-        return generics.get(hint, hint)
+        return generics.get(hint, hint)  # Wrong type of hint
 
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
@@ -67,7 +70,7 @@ def get_concrete_type_hints(data_class: Type, *args, **kwargs) -> Dict[str, Any]
     An overwrite of typing.get_type_hints supporting generics and forward references,
     i.e. substituting concrete types in type vars and references.
     """
-    generics = {}
+    generics: GenericsDict = {}
 
     dc_origin = get_origin(data_class)
     dc_args = get_args(data_class)
