@@ -1,11 +1,11 @@
 import sys
 from dataclasses import Field, is_dataclass
-from typing import Any, Dict, Generic, List, Literal, Tuple, Type, TypeVar, get_type_hints
+from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union, get_type_hints
 
 try:
-    from typing import get_args, get_origin
+    from typing import get_args, get_origin, Literal  # type: ignore
 except ImportError:
-    from typing_extensions import get_args, get_origin
+    from typing_extensions import get_args, get_origin, Literal
 
 from .dataclasses import get_fields as dataclasses_get_fields
 
@@ -14,7 +14,7 @@ def __add_generics(type_origin: Any, type_args: Tuple, generics: Dict[TypeVar, T
     """Adds (type var, concrete type) entries derived from a type's origin and args to the provided generics dict."""
     if type_origin and type_args and hasattr(type_origin, "__parameters__"):
         for param, arg in zip(type_origin.__parameters__, type_args):
-            if param.__class__ is TypeVar:
+            if isinstance(param, TypeVar):
                 if param in generics and generics[param] != arg:
                     raise Exception("Generics error.")
                 generics[param] = arg
@@ -39,14 +39,14 @@ def __dereference(type_name: str, data_class: Type) -> Type:
     raise AttributeError("Could not find reference.")
 
 
-def __concretize(hint: Type, generics: Dict[TypeVar, Type], data_class: Type) -> Type:
+def __concretize(hint: Union[Type, TypeVar, str], generics: Dict[TypeVar, Type], data_class: Type) -> Type:
     """Recursively replace type vars and forward references by concrete types."""
 
-    if hint.__class__ is str:
+    if isinstance(hint, str):
         return __dereference(hint, data_class)
 
-    if hint.__class__ is TypeVar:
-        return generics.get(hint, hint)
+    if isinstance(hint, TypeVar):
+        return generics[hint]
 
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
@@ -67,7 +67,7 @@ def get_concrete_type_hints(data_class: Type, *args, **kwargs) -> Dict[str, Any]
     An overwrite of typing.get_type_hints supporting generics and forward references,
     i.e. substituting concrete types in type vars and references.
     """
-    generics = {}
+    generics: Dict[TypeVar, Type] = {}
 
     dc_origin = get_origin(data_class)
     dc_args = get_args(data_class)
@@ -90,5 +90,5 @@ def get_concrete_type_hints(data_class: Type, *args, **kwargs) -> Dict[str, Any]
 
 
 def get_fields(data_class: Type) -> List[Field]:
-    """An overwrite of dacite's get_fields function, supporting generics."""
+    """An overwrite of dacite.dataclasses.get_fields supporting generics."""
     return dataclasses_get_fields(orig(data_class))

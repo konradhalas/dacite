@@ -2,7 +2,7 @@ from dataclasses import InitVar, is_dataclass
 from typing import Type, Any, Optional, Union, Collection, TypeVar, Mapping, Tuple, cast as typing_cast
 
 try:
-    from typing import get_origin
+    from typing import get_origin  # type: ignore
 except ImportError:
     from typing_extensions import get_origin
 

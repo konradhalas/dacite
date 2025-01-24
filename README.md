@@ -471,33 +471,33 @@ first within an issue.
 
 Clone `dacite` repository:
 
-```
-$ git clone git@github.com:konradhalas/dacite.git
+```bash
+git clone git@github.com:konradhalas/dacite.git
 ```
 
 Create and activate virtualenv in the way you like:
 
-```
-$ python3 -m venv dacite-env
-$ source dacite-env/bin/activate
+```bash
+python3 -m venv dacite-env
+source dacite-env/bin/activate
 ```
 
 Install all `dacite` dependencies:
 
-```
-$ pip install -e .[dev]
+```bash
+pip install -e .[dev]
 ```
 
 And, optionally but recommended, install pre-commit hook for black:
 
-```
-$ pre-commit install
+```bash
+pre-commit install
 ```
 
 To run tests you just have to fire:
 
-```
-$ pytest
+```bash
+pytest
 ```
 
 ### Performance testing

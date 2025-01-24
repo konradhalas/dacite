@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, List, TypeVar
+from typing import Generic, List, TypeVar, get_type_hints
 from dacite import from_dict
 
 T = TypeVar("T")
@@ -28,6 +28,10 @@ def test_multi_generic():
     result = from_dict(data_class=A[X, int], data=data)
 
     assert result == A(x=X(a="foo"), y=[1, 2, 3])
+
+    # assert that the typing object hasn't been modified in-place
+    hints = get_type_hints(A)
+    assert hints["x"].__class__ is TypeVar
 
 
 def test_generic_parent():
