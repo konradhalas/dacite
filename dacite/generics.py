@@ -39,14 +39,18 @@ def __dereference(type_name: str, data_class: Type) -> Type:
     raise AttributeError("Could not find reference.")
 
 
-def __concretize(hint: Union[Type, TypeVar, str], generics: Dict[TypeVar, Type], data_class: Type) -> Type:
+def __concretize(
+    hint: Union[Type, TypeVar, str], generics: Dict[TypeVar, Type], data_class: Type
+) -> Union[Type, TypeVar]:
     """Recursively replace type vars and forward references by concrete types."""
 
     if isinstance(hint, str):
         return __dereference(hint, data_class)
 
     if isinstance(hint, TypeVar):
-        return generics[hint]
+        # Fall back on the original TypeVar if the generics dict does not contain it.
+        # Setting config.check_types=False will in some cases still make from_dict work, albeit not type checked ofc.
+        return generics.get(hint, hint)
 
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
