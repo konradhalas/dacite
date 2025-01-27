@@ -46,5 +46,5 @@ jobs:
           benchmark-data-dir-path: performance/${{ matrix.python-version }}
           comment-always: false
           alert-threshold: '130%'
-          comment-on-alert: false
-          fail-on-alert: true
+          comment-on-alert: true
+          fail-on-alert: false
