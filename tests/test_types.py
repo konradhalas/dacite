@@ -405,4 +405,8 @@ def test_extract_generic_special():
 @pytest.mark.skipif(version_info < (3, 10), reason="writing union types as X | Y requires Python 3.10")
 def test_optional_and_union_none_does_not_pollute_scope_via_caching():
     is_generic(Optional[str])
+
+
+@pep_604_support
+def test_optional_and_union_none_does_not_pollute_scope_via_caching_pep_604():
     is_generic_collection(str | None)
