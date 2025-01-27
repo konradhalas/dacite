@@ -1,4 +1,7 @@
-from typing import Protocol, Iterable, Any
+try:
+    from typing import Protocol  # type: ignore
+except ImportError:
+    from typing_extensions import Protocol  # type: ignore
 
 
 class Data(Protocol):
