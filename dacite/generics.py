@@ -1,6 +1,7 @@
 import sys
 from dataclasses import Field, is_dataclass
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union, get_type_hints
+from exceptions import DaciteError
 
 try:
     from typing import get_args, get_origin, Literal  # type: ignore
@@ -16,7 +17,7 @@ def __add_generics(type_origin: Any, type_args: Tuple, generics: Dict[TypeVar, T
         for param, arg in zip(type_origin.__parameters__, type_args):
             if isinstance(param, TypeVar):
                 if param in generics and generics[param] != arg:
-                    raise Exception("Generics error.")
+                    raise DaciteError("Generics error")
                 generics[param] = arg
 
 
