@@ -17,7 +17,7 @@ def __add_generics(type_origin: Any, type_args: Tuple, generics: Dict[TypeVar, T
         for param, arg in zip(type_origin.__parameters__, type_args):
             if isinstance(param, TypeVar):
                 if param in generics and generics[param] != arg:
-                    raise DaciteError("Generics error")
+                    raise DaciteError(f"Ambiguous TypeVar: {generics[param]} != {arg}")
                 generics[param] = arg
 
 
