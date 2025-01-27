@@ -1,7 +1,7 @@
 import sys
 from dataclasses import Field, is_dataclass
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union, get_type_hints
-from exceptions import DaciteError
+from dacite.exceptions import DaciteError
 
 try:
     from typing import get_args, get_origin, Literal  # type: ignore
