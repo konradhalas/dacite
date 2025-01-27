@@ -5,7 +5,7 @@ from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union, get_ty
 try:
     from typing import get_args, get_origin, Literal  # type: ignore
 except ImportError:
-    from typing_extensions import get_args, get_origin, Literal
+    from typing_extensions import get_args, get_origin, Literal  # type: ignore
 
 from .dataclasses import get_fields as dataclasses_get_fields
 
