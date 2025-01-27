@@ -177,5 +177,5 @@ def is_instance(value: Any, type_: Type) -> bool:
     if is_type_generic(type_):
         return is_subclass(value, extract_generic(type_)[0])
     if is_generic_dataclass(type_):
-        return isinstance(value, get_origin(type_))
+        return isinstance(value, get_origin(type_))  # type: ignore[arg-type]
     return False
