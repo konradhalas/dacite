@@ -7,13 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+- [Support generics](https://github.com/konradhalas/dacite/pull/272)
+- Change type definition for `Data` in order to be more permissive
+- Fix issues with caching internal function calls
 
 ## [1.8.1] - 2023-05-12
 
 ### Fixed
 
 - Fix value creation for a field with a default factory
+- Suppress context in dacite ForwardReferenceError and MissingValueError
 
 ## [1.8.0] - 2023-01-26
 
