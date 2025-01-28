@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Support generics](https://github.com/konradhalas/dacite/pull/272)
 - Change type definition for `Data` in order to be more permissive
 - Fix issues with caching internal function calls
+- Improve non-strict dataclasses union match
 
 ## [1.8.1] - 2023-05-12
 
