@@ -52,8 +52,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     try:
         data_class_hints = cache(get_concrete_type_hints)(data_class, localns=config.hashable_forward_references)
     except NameError as error:
-        raise ForwardReferenceError(str(error))
-
+        raise ForwardReferenceError(str(error)) from None
     data_class_fields = cache(get_fields)(data_class)
 
     if config.strict:
@@ -79,8 +78,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             except DefaultValueNotFoundError:
                 if not field.init:
                     continue
-                raise MissingValueError(field.name)
-
+                raise MissingValueError(field.name) from None
         if field.init:
             init_values[field.name] = value
         elif not is_frozen(data_class):

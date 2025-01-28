@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix value creation for a field with a default factory
+- Suppress context in dacite ForwardReferenceError and MissingValueError
 
 ## [1.8.0] - 2023-01-26
 
