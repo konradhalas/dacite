@@ -6,6 +6,7 @@ build/
 .idea
 
 venv*
+dacite-env*
 
 .benchmarks
 benchmark.json
