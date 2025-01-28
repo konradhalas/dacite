@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1738051137945,
+  "lastUpdate": 1738051825904,
   "repoUrl": "https://github.com/konradhalas/dacite",
   "entries": {
     "Benchmark": [
@@ -160,6 +160,86 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.003121606097569854",
             "extra": "mean: 56.950400944442784 msec\nrounds: 18"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "contact@mciszczon.pl",
+            "name": "Mateusz Ciszczoń",
+            "username": "mciszczon"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "414d0abc81d97212f4fc064adc15cfc0eedc54b0",
+          "message": "Merge pull request #265 from m-aciek/shorten-tracebacks",
+          "timestamp": "2025-01-28T09:09:42+01:00",
+          "tree_id": "b2aaf84f81fed0eb3786cfd322810211fabb3a01",
+          "url": "https://github.com/konradhalas/dacite/commit/414d0abc81d97212f4fc064adc15cfc0eedc54b0"
+        },
+        "date": 1738051824942,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_from_dict.py::test_basic_scenario",
+            "value": 14015.776830033115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032742696484179626",
+            "extra": "mean: 71.34816800572854 usec\nrounds: 2738"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_union_matching",
+            "value": 446.04354879954184,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021875294621233758",
+            "extra": "mean: 2.241933557141108 msec\nrounds: 350"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_strict_unions_match",
+            "value": 445.54562662382506,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005644063015442013",
+            "extra": "mean: 2.244439043376138 msec\nrounds: 415"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_collection_of_union",
+            "value": 6454.046631577416,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000045529328944664654",
+            "extra": "mean: 154.94155172467242 usec\nrounds: 2813"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_type_hooks",
+            "value": 439.1398928564265,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021061094320269382",
+            "extra": "mean: 2.277178676470057 msec\nrounds: 408"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_casting",
+            "value": 101601.65956156202,
+            "unit": "iter/sec",
+            "range": "stddev: 8.048324479178872e-7",
+            "extra": "mean: 9.842358917317531 usec\nrounds: 10345"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_forward_references",
+            "value": 449.0162886566335,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004072418455298525",
+            "extra": "mean: 2.2270906986287713 msec\nrounds: 365"
+          },
+          {
+            "name": "tests/performance/test_from_dict.py::test_parsing_multiple_items",
+            "value": 17.679643290098554,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0023831837353498154",
+            "extra": "mean: 56.56222716665601 msec\nrounds: 18"
           }
         ]
       }
