@@ -134,7 +134,7 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
                     return value
         except DaciteError:
             pass
-    if config.strict_unions_match:
+    if config.strict_unions_match and union_matches:
         if len(union_matches) > 1:
             raise StrictUnionMatchError(union_matches)
         return union_matches.popitem()[1]
