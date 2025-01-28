@@ -7,8 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+...
+
+### [1.9.0] - 2025-01-29
+
+### Added
+
 - [Support generics](https://github.com/konradhalas/dacite/pull/272)
 - Change type definition for `Data` in order to be more permissive
+
+### Fixed
+
+- [Fix union matches using .popitem() when no matches are found](https://github.com/konradhalas/dacite/pull/233)
+- [Supress unnecessary context in some stack trackes](https://github.com/konradhalas/dacite/pull/265)
 - Fix issues with caching internal function calls
 
 ## [1.8.1] - 2023-05-12
