@@ -22,7 +22,7 @@ $ pip install dacite
 
 ## Requirements
 
-Minimum Python version supported by `dacite` is 3.6.
+Minimum Python version supported by `dacite` is 3.7.
 
 ## Quick start
 
