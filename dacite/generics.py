@@ -60,8 +60,8 @@ def __concretize(
         if concretized != hint_args:
             try:
                 hint.__args__ = concretized
-            except AttributeError as e:
-                raise DaciteError(f"Could not set __args__ on {hint} [original error: {e}]") from None
+            except AttributeError as err:
+                raise DaciteError(f"Could not set __args__ on {hint} [original error: {err}]") from None
 
     return hint
 
