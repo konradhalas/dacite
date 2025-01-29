@@ -6,6 +6,22 @@ import pytest
 from dacite import from_dict, MissingValueError, WrongTypeError
 
 
+def test_from_dict_iterables():
+    @dataclass
+    class Foo:
+        bar: list[str]
+
+    @dataclass
+    class Foo2:
+        bar: List[str]
+
+    result = from_dict(Foo, {"bar": ["foo", "bar"]})
+    assert result == Foo(bar=["foo", "bar"])
+
+    result_2 = from_dict(Foo2, {"bar": ["foo", "bar"]})
+    assert result_2 == Foo2(bar=["foo", "bar"])
+
+
 def test_from_dict_with_correct_data():
     @dataclass
     class X:

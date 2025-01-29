@@ -56,7 +56,11 @@ def __concretize(
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
     if hint_origin and hint_args and hint_origin is not Literal:
-        hint.__args__ = tuple(__concretize(a, generics, data_class) for a in hint_args)
+        concretized = tuple(__concretize(a, generics, data_class) for a in hint_args)
+        if concretized != hint_args:
+            # FIXME: Are there scenarios where concretized != hint_args, but hint.__args__ is readonly?
+            #        Then it will still fail!
+            hint.__args__ = concretized
 
     return hint
 
