@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="dacite",
-    version="1.8.1",
+    version="1.9.0",
     description="Simple creation of data classes from dictionaries.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -25,7 +25,7 @@ setup(
         "Programming Language :: Python :: 3.13",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     keywords="dataclasses",
     packages=["dacite"],
     package_data={"dacite": ["py.typed"]},
