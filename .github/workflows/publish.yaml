@@ -1,5 +1,6 @@
 name: Publish
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
@@ -21,24 +22,23 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-
-    publish-to-pypi:
-      name: Publish to PyPI
-      needs:
-        - build
-      runs-on: ubuntu-latest
-      environment:
-        name: pypi
-        url: https://pypi.org/p/dacite
-      permissions:
-        id-token: write  # IMPORTANT: mandatory for trusted publishing
-      steps:
-        - name: Download dist
-          uses: actions/download-artifact@v4
-          with:
-            name: python-package-distributions
-            path: dist/
-        - name: Publish package to PyPI
-          uses: pypa/gh-action-pypi-publish@release/v1
-          with:
-            password: ${{ secrets.PYPI_API_TOKEN }}
+  publish:
+    name: Publish to PyPI
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dacite
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
