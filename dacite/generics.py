@@ -56,7 +56,12 @@ def __concretize(
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
     if hint_origin and hint_args and hint_origin is not Literal:
-        hint.__args__ = tuple(__concretize(a, generics, data_class) for a in hint_args)
+        concretized = tuple(__concretize(a, generics, data_class) for a in hint_args)
+        if concretized != hint_args:
+            try:
+                hint.__args__ = concretized
+            except AttributeError as err:
+                raise DaciteError(f"Could not set __args__ on {hint} [original error: {err}]") from None
 
     return hint
 
