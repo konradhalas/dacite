@@ -58,9 +58,10 @@ def __concretize(
     if hint_origin and hint_args and hint_origin is not Literal:
         concretized = tuple(__concretize(a, generics, data_class) for a in hint_args)
         if concretized != hint_args:
-            # FIXME: Are there scenarios where concretized != hint_args, but hint.__args__ is readonly?
-            #        Then it will still fail!
-            hint.__args__ = concretized
+            try:
+                hint.__args__ = concretized
+            except AttributeError as e:
+                raise DaciteError(f"Could not set __args__ on {hint} [original error: {e}]") from None
 
     return hint
 
