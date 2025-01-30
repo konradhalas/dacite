@@ -56,12 +56,15 @@ def __concretize(
     hint_origin = get_origin(hint)
     hint_args = get_args(hint)
     if hint_origin and hint_args and hint_origin is not Literal:
-        concretized = tuple(__concretize(a, generics, data_class) for a in hint_args)
-        if concretized != hint_args:
-            try:
-                hint.__args__ = concretized
-            except AttributeError as err:
-                raise DaciteError(f"Could not set __args__ on {hint} [original error: {err}]") from None
+        concrete_hint_args = tuple(__concretize(a, generics, data_class) for a in hint_args)
+        if concrete_hint_args != hint_args:
+            if sys.version_info >= (3, 9):
+                return hint_origin[concrete_hint_args]
+            # It's generally not a good practice to overwrite __args__,
+            # and it even has become impossible starting from python 3.13 (read-only),
+            # but changing the output of get_type_hints is harmless (see unit test)
+            # and at least this way, we get it working for python 3.8.
+            hint.__args__ = concrete_hint_args
 
     return hint
 
