@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ...
 
+## [1.9.2] - 2025-02-05
+
+- Clean up the fix for readonly attribute `__args__` (introduced in v1.9.1)
+- Improve class `Data(Protocol)` typing to avoid pyright errors
+
 ## [1.9.1] - 2025-01-29
 
 ### Fixed
@@ -139,7 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Validate type for generic collection fields
 
-[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.9.1...HEAD
+[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/konradhalas/dacite/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/konradhalas/dacite/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/konradhalas/dacite/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/konradhalas/dacite/compare/v1.8.0...v1.8.1
