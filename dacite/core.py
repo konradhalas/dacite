@@ -146,8 +146,14 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
     data_type = data.__class__
     if isinstance(data, Mapping) and is_subclass(collection, Mapping):
-        item_type = extract_generic(collection, defaults=(Any, Any))[1]
-        return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
+        key_type, item_type = extract_generic(collection, defaults=(Any, Any))
+        return data_type(
+            (
+                _build_value(type_=key_type, data=key, config=config),
+                _build_value(type_=item_type, data=value, config=config),
+            )
+            for key, value in data.items()
+        )
     elif isinstance(data, tuple) and is_subclass(collection, tuple):
         if not data:
             return data_type()
