@@ -148,6 +148,7 @@ def test_from_dict_with_missing_forward_reference():
         from_dict(X, {"y": {"s": "text"}})
 
     assert str(exception_info.value) == "can not resolve forward reference: name 'Y' is not defined"
+    assert exception_info._excinfo[1].__suppress_context__
 
 
 def test_form_dict_with_disabled_type_checking():

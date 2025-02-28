@@ -4,6 +4,26 @@ from typing import Any, NewType, Optional, List
 import pytest
 
 from dacite import from_dict, MissingValueError, WrongTypeError
+from tests.common import type_hinting_using_standard_collections
+
+
+def test_from_dict_iterables_with_typing_list():
+    @dataclass
+    class Foo:
+        bar: List[str]
+
+    result = from_dict(Foo, {"bar": ["foo", "bar"]})
+    assert result == Foo(bar=["foo", "bar"])
+
+
+@type_hinting_using_standard_collections
+def test_from_dict_iterables():
+    @dataclass
+    class Foo:
+        bar: list[str]
+
+    result = from_dict(Foo, {"bar": ["foo", "bar"]})
+    assert result == Foo(bar=["foo", "bar"])
 
 
 def test_from_dict_with_correct_data():
@@ -69,6 +89,7 @@ def test_from_dict_with_missing_value():
 
     assert str(exception_info.value) == 'missing value for field "i"'
     assert exception_info.value.field_path == "i"
+    assert exception_info._excinfo[1].__suppress_context__
 
 
 def test_from_dict_with_nested_data_class():
