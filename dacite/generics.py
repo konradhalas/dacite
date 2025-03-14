@@ -1,12 +1,16 @@
+# pylint: disable=unsupported-binary-operation
 import sys
 from dataclasses import Field, is_dataclass
-from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union, get_type_hints
+from functools import reduce
+from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, get_type_hints
+
 from dacite.exceptions import DaciteError
 
 try:
     from typing import get_args, get_origin, Literal  # type: ignore
 except ImportError:
     from typing_extensions import get_args, get_origin, Literal  # type: ignore
+
 
 from .dataclasses import get_fields as dataclasses_get_fields
 
@@ -40,9 +44,7 @@ def __dereference(type_name: str, data_class: Type) -> Type:
     raise AttributeError("Could not find reference.")
 
 
-def __concretize(
-    hint: Union[Type, TypeVar, str], generics: Dict[TypeVar, Type], data_class: Type
-) -> Union[Type, TypeVar]:
+def __concretize(hint: Any, generics: Dict[TypeVar, Type], data_class: Type) -> Any:
     """Recursively replace type vars and forward references by concrete types."""
 
     if isinstance(hint, str):
@@ -59,6 +61,10 @@ def __concretize(
         concrete_hint_args = tuple(__concretize(a, generics, data_class) for a in hint_args)
         if concrete_hint_args != hint_args:
             if sys.version_info >= (3, 9):
+                if sys.version_info >= (3, 10) and hint_origin is type(int | str):
+                    # avoid "UnionType is not subscriptable"
+                    return reduce(lambda a, b: a | b, concrete_hint_args)
+                # construct a copy with concretized args
                 return hint_origin[concrete_hint_args]
             # It's generally not a good practice to overwrite __args__,
             # and it even has become impossible starting from python 3.13 (read-only),
