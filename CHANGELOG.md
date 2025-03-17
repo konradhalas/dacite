@@ -5,9 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-[Unreleased]
+## [Unreleased]
 
-Nothing yet.
+...
+
+## [1.9.2] - 2025-02-05
+
+- Clean up the fix for readonly attribute `__args__` (introduced in v1.9.1)
+- Improve class `Data(Protocol)` typing to avoid pyright errors
+
+## [1.9.1] - 2025-01-29
+
+### Fixed
+
+- Fix `AttributeError` when trying to concretize `list` or `tuple`. Introduced in 1.9.0.
+
+## [1.9.0] - 2025-01-29
+
+### Added
+
+- [Support generics](https://github.com/konradhalas/dacite/pull/272)
+- Change type definition for `Data` in order to be more permissive
+
+### Fixed
+
+- [Fix union matches using .popitem() when no matches are found](https://github.com/konradhalas/dacite/pull/233)
+- [Supress unnecessary context in some stack trackes](https://github.com/konradhalas/dacite/pull/265)
+- Fix issues with caching internal function calls
+
+## [1.8.1] - 2023-05-12
+
+### Fixed
+
+- Fix value creation for a field with a default factory
+- Suppress context in dacite ForwardReferenceError and MissingValueError
 
 ## [1.8.0] - 2023-01-26
 
@@ -113,7 +144,11 @@ Nothing yet.
 
 - Validate type for generic collection fields
 
-[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/konradhalas/dacite/compare/v1.9.1...v1.9.2
+[1.9.1]: https://github.com/konradhalas/dacite/compare/v1.9.0...v1.9.1
+[1.9.0]: https://github.com/konradhalas/dacite/compare/v1.8.1...v1.9.0
+[1.8.1]: https://github.com/konradhalas/dacite/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/konradhalas/dacite/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/konradhalas/dacite/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/konradhalas/dacite/compare/v1.5.1...v1.6.0

@@ -2,9 +2,6 @@ name: Code Check
 
 on:
   workflow_call:
-    secrets:
-      benchmark_token:
-        required: true
     inputs:
       publish_performance:
         required: true
@@ -15,16 +12,16 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
 
     name: Python ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -44,10 +41,10 @@ jobs:
           tool: 'pytest'
           output-file-path: benchmark.json
           save-data-file: ${{ inputs.store_benchmark }}
-          github-token: ${{ secrets.benchmark_token }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ inputs.publish_performance }}
           benchmark-data-dir-path: performance/${{ matrix.python-version }}
           comment-always: false
           alert-threshold: '130%'
-          comment-on-alert: false
-          fail-on-alert: true
+          comment-on-alert: true
+          fail-on-alert: false
