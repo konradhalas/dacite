@@ -17,7 +17,10 @@ class DaciteFieldError(DaciteError):
 
     def update_path(self, parent_field_path: str) -> None:
         if self.field_path:
-            self.field_path = f"{parent_field_path}.{self.field_path}"
+            if self.field_path.startswith("["):
+                self.field_path = f"{parent_field_path}{self.field_path}"
+            else:
+                self.field_path = f"{parent_field_path}.{self.field_path}"
         else:
             self.field_path = parent_field_path
 
@@ -70,11 +73,11 @@ class ForwardReferenceError(DaciteError):
         return f"can not resolve forward reference: {self.message}"
 
 
-class UnexpectedDataError(DaciteError):
+class UnexpectedDataError(DaciteFieldError):
     def __init__(self, keys: Set[str]) -> None:
         super().__init__()
         self.keys = keys
 
     def __str__(self) -> str:
         formatted_keys = ", ".join(f'"{key}"' for key in self.keys)
-        return f"can not match {formatted_keys} to any data class field"
+        return f"can not match {formatted_keys} to any data class field at '{self.field_path}'"

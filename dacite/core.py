@@ -110,7 +110,10 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
             if is_generic_collection(type_):
                 data = extract_origin_collection(type_)(data)
             else:
-                data = type_(data)
+                try:
+                    data = type_(data)
+                except Exception as error:
+                    raise WrongTypeError(type_, data) from error
             break
     return data
 
@@ -147,17 +150,42 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
     data_type = data.__class__
     if isinstance(data, Mapping) and is_subclass(collection, Mapping):
         item_type = extract_generic(collection, defaults=(Any, Any))[1]
-        return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
+        items = []
+        for key, value in data.items():
+            try:
+                items.append((key, _build_value(type_=item_type, data=value, config=config)))
+            except DaciteFieldError as error:
+                error.update_path(f"[{key}]")
+                raise
+        return data_type(items)
     elif isinstance(data, tuple) and is_subclass(collection, tuple):
         if not data:
             return data_type()
         types = extract_generic(collection)
+        items = []
         if len(types) == 2 and types[1] == Ellipsis:
-            return data_type(_build_value(type_=types[0], data=item, config=config) for item in data)
-        return data_type(
-            _build_value(type_=type_, data=item, config=config) for item, type_ in zip_longest(data, types)
-        )
+            for i, item in enumerate(data):
+                try:
+                    items.append(_build_value(type_=types[0], data=item, config=config))
+                except DaciteFieldError as error:
+                    error.update_path(f"[{i}]")
+                    raise
+            return data_type(items)
+        for i, (item, type_) in enumerate(zip_longest(data, types)):
+            try:
+                items.append(_build_value(type_=type_, data=item, config=config))
+            except DaciteFieldError as error:
+                error.update_path(f"[{i}]")
+                raise
+        return data_type(items)
     elif isinstance(data, Collection) and is_subclass(collection, Collection):
         item_type = extract_generic(collection, defaults=(Any,))[0]
-        return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)
+        items = []
+        for i, item in enumerate(data):
+            try:
+                items.append(_build_value(type_=item_type, data=item, config=config))
+            except DaciteFieldError as error:
+                error.update_path(f"[{i}]")
+                raise
+        return data_type(items)
     return data
