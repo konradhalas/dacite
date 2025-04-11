@@ -110,7 +110,10 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
             if is_generic_collection(type_):
                 data = extract_origin_collection(type_)(data)
             else:
-                data = type_(data)
+                try:
+                    data = type_(data)
+                except ValueError as ex:
+                    raise WrongTypeError(field_type=type_, value=data) from ex
             break
     return data
 
