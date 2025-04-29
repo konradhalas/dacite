@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import Generic, List, TypeVar, get_type_hints
 from dacite import from_dict
 
+from tests.common import pep_604_support
+
 T = TypeVar("T")
 U = TypeVar("U")
 
@@ -69,3 +71,16 @@ def test_generic_field():
     result = from_dict(data_class=C, data=data)
 
     assert result == C(z=A(x=X(a="foo"), y=[1, 2, 3]))
+
+
+@pep_604_support
+def test_pep604():
+    @dataclass
+    class D(Generic[T]):
+        x: list[T] | int | None  # pylint: disable=unsupported-binary-operation
+
+    data = {"x": [{"a": "foo"}, {"a": "bar"}]}
+
+    result = from_dict(data_class=D[X], data=data)
+
+    assert result == D[X](x=[X(a="foo"), X(a="bar")])

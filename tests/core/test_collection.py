@@ -261,6 +261,36 @@ def test_from_dict_with_tuple_and_implicit_any_types():
     assert result == X(t=(1, 2, 3))
 
 
+def test_from_dict_with_tuple_and_mixed_types():
+    @dataclass
+    class X:
+        t: Tuple[str, int]
+
+    result = from_dict(X, {"t": ("a", 1)})
+
+    assert result == X(t=("a", 1))
+
+
+def test_from_dict_casting_tuple_with_mixed_types():
+    @dataclass
+    class X:
+        t: Tuple[str, int]
+
+    result = from_dict(X, {"t": ("a", "1")}, Config(cast=[int]))
+
+    assert result == X(t=("a", 1))
+
+
+def test_from_dict_casting_list_of_strings_to_tuple_with_mixed_types():
+    @dataclass
+    class X:
+        t: Tuple[str, int]
+
+    result = from_dict(X, {"t": ["a", "1"]}, Config(cast=[int, tuple]))
+
+    assert result == X(t=("a", 1))
+
+
 def test_from_dict_with_sequence_and_tuple():
     @dataclass
     class X:

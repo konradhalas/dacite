@@ -154,7 +154,7 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
             )
             for key, value in data.items()
         )
-    elif isinstance(data, tuple) and is_subclass(collection, tuple):
+    elif is_subclass(collection, tuple):
         if not data:
             return data_type()
         types = extract_generic(collection)
