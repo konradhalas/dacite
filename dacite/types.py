@@ -1,3 +1,4 @@
+from sys import version_info
 from dataclasses import InitVar, is_dataclass
 from typing import Type, Any, Optional, Union, Collection, TypeVar, Mapping, Tuple, cast as typing_cast
 
@@ -135,6 +136,27 @@ def is_generic_dataclass(type_: Type) -> bool:
     return is_dataclass(get_origin(type_))
 
 
+if version_info >= (3, 12):  # TypeAliasType was introduced in version 3.12
+    from typing import TypeAliasType
+
+    @cache
+    def is_type_alias(type_) -> bool:
+        return isinstance(type_, TypeAliasType)
+
+    # "TypeAliasType.evaluate_value" was introduced in version 3.14
+    if version_info >= (3, 14):
+        @cache
+        def extract_type_alias(type_: TypeAliasType) -> Type:
+            return type_.evaluate_value()
+    else:
+        @cache
+        def extract_type_alias(type_: TypeAliasType) -> Type:
+            return type_.__value__
+else:
+    def is_type_alias(type_) -> bool:
+        return False
+
+
 def is_instance(value: Any, type_: Type) -> bool:
     try:
         # As described in PEP 484 - section: "The numeric tower"
@@ -178,4 +200,6 @@ def is_instance(value: Any, type_: Type) -> bool:
         return is_subclass(value, extract_generic(type_)[0])
     if is_generic_dataclass(type_):
         return isinstance(value, get_origin(type_))  # type: ignore[arg-type]
+    if is_type_alias(type_):
+        return is_instance(value, extract_type_alias(type_))
     return False

@@ -21,6 +21,7 @@ from dacite.types import (
     extract_init_var,
     is_type_generic,
     is_tuple,
+    is_type_alias
 )
 from tests.common import (
     literal_support,
@@ -410,3 +411,7 @@ def test_optional_and_union_none_does_not_pollute_scope_via_caching():
 @pep_604_support
 def test_optional_and_union_none_does_not_pollute_scope_via_caching_pep_604():
     is_generic_collection(str | None)
+
+
+def test_is_type_alias_with_non_type_alias():
+    assert not is_type_alias(str)
