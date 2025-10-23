@@ -404,7 +404,7 @@ exception.
 ### Strict unions match
 
 `Union` allows to define multiple possible types for a given field. By default 
-`dacite` is trying to find the first matching type for a provided data and it 
+`dacite` is trying to find the best matching type for a provided data by number of matching fields and it 
 returns instance of this type. It means that it's possible that there are other 
 matching types further on the `Union` types list. With `strict_unions_match` 
 only a single match is allowed, otherwise `dacite` raises `StrictUnionMatchError`.

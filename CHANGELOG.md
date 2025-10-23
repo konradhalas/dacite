@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Fix union matches using .popitem() when no matches are found](https://github.com/konradhalas/dacite/pull/233)
 - [Supress unnecessary context in some stack trackes](https://github.com/konradhalas/dacite/pull/265)
 - Fix issues with caching internal function calls
+- Improve non-strict dataclasses union match
 
 ## [1.8.1] - 2023-05-12
 
