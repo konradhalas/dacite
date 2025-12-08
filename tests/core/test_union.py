@@ -77,7 +77,7 @@ def test_from_dict_with_dict_of_union_and_wrong_data():
     with pytest.raises(UnionMatchError) as exception_info:
         from_dict(X, {"d": {"i": 1.0}})
 
-    assert str(exception_info.value) == 'can not match type "float" to any type of "i" union: typing.Union[int, str]'
+    assert str(exception_info.value) == 'can not match type "float" to any type of "d[i]" union: typing.Union[int, str]'
     assert exception_info.value.field_path == "d[i]"
     assert exception_info.value.field_type == Union[int, str]
     assert exception_info.value.value == 1.0

@@ -175,7 +175,7 @@ def test_from_dict_with_wrong_type_of_dict_value():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {"d": {"a": "test"}})
 
-    assert exception_info.value.field_path == "d[0]"
+    assert exception_info.value.field_path == "d[a]"
     assert exception_info.value.field_type == int
 
 
@@ -281,10 +281,10 @@ def test_from_dict_with_tuple_and_missing_element():
         t: Tuple[X, Y]
 
     with pytest.raises(WrongTypeError) as exception_info:
-        from_dict(Z, {"t": ({"a": 1}, {"b": 2}, {"c": 3})})
+        from_dict(Z, {"t": ({"a": 1},)})
 
     assert exception_info.value.field_path == "t[1]"
-    assert exception_info.value.field_type == B
+    assert exception_info.value.field_type == Y
 
 
 def test_from_dict_with_tuple_and_implicit_any_types():
