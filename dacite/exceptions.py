@@ -25,6 +25,9 @@ class DaciteFieldError(DaciteError):
         else:
             self.field_path = parent_field_path
 
+    def __str__(self):
+        return f"error for field {self.field_path}"
+
 
 class WrongTypeError(DaciteFieldError):
     def __init__(self, field_type: Type, value: Any, field_path: Optional[str] = None,_member_name: Optional[str]=None) -> None:
