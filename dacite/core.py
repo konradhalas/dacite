@@ -161,12 +161,12 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
 
 def _build_member_value(type_: Type, key: Union[SupportsIndex, Hashable], value: Any, config: Config) -> Any:
     try:
-        built_value = _build_value(type_=type, data=value, config=config)
+        built_value = _build_value(type_=type_, data=value, config=config)
     except DaciteFieldError as e:
         e._member_name = str(key)
         raise
     if config.check_types and not is_instance(built_value, type_):
-        raise WrongTypeError(_member_name=str(key), field_type=type_, value=value)
+        raise WrongTypeError(_member_name=str(key), field_type=type_, value=built_value)
 
     return built_value
 
@@ -193,7 +193,7 @@ def _build_value_for_tuple(tuple: Type, data: Any, config: Config) -> Any:
     data_type = data.__class__
     if not data:
         return data_type()
-    types = extract_generic(tuple, default=(Any, ...))
+    types = extract_generic(tuple, defaults=(Any, ...))
     if len(types) == 2 and types[1] == Ellipsis:
         return _build_value_for_sequence(tuple, data, config)
     else:
