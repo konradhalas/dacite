@@ -11,7 +11,7 @@ class DaciteError(Exception):
 
 
 class DaciteFieldError(DaciteError):
-    def __init__(self, field_path: Optional[str] = None ,_member_name: Optional[str]=None):
+    def __init__(self, field_path: Optional[str] = None, _member_name: Optional[str] = None):
         super().__init__()
         self.field_path = field_path
         self._member_name = _member_name
@@ -30,7 +30,9 @@ class DaciteFieldError(DaciteError):
 
 
 class WrongTypeError(DaciteFieldError):
-    def __init__(self, field_type: Type, value: Any, field_path: Optional[str] = None,_member_name: Optional[str]=None) -> None:
+    def __init__(
+        self, field_type: Type, value: Any, field_path: Optional[str] = None, _member_name: Optional[str] = None
+    ) -> None:
         super().__init__(field_path=field_path, _member_name=_member_name)
         self.field_type = field_type
         self.value = value
@@ -43,7 +45,7 @@ class WrongTypeError(DaciteFieldError):
 
 
 class MissingValueError(DaciteFieldError):
-    def __init__(self, field_path: Optional[str] = None,_member_name: Optional[str]=None):
+    def __init__(self, field_path: Optional[str] = None, _member_name: Optional[str] = None):
         super().__init__(field_path=field_path, _member_name=_member_name)
 
     def __str__(self) -> str:
@@ -59,7 +61,9 @@ class UnionMatchError(WrongTypeError):
 
 
 class StrictUnionMatchError(DaciteFieldError):
-    def __init__(self, union_matches: Dict[Type, Any], field_path: Optional[str] = None,_member_name: Optional[str]=None) -> None:
+    def __init__(
+        self, union_matches: Dict[Type, Any], field_path: Optional[str] = None, _member_name: Optional[str] = None
+    ) -> None:
         super().__init__(field_path=field_path, _member_name=_member_name)
         self.union_matches = union_matches
 
@@ -78,7 +82,9 @@ class ForwardReferenceError(DaciteError):
 
 
 class UnexpectedDataError(DaciteFieldError):
-    def __init__(self, data_class: Type, keys: Set[str], field_path: Optional[str]=None, _member_name: Optional[str]=None) -> None:
+    def __init__(
+        self, data_class: Type, keys: Set[str], field_path: Optional[str] = None, _member_name: Optional[str] = None
+    ) -> None:
         super().__init__(field_path=field_path, _member_name=_member_name)
         self.keys = keys
         self.base_class = data_class
