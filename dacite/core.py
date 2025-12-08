@@ -13,6 +13,11 @@ from typing import (
     Union,
 )
 
+try:
+    from typing import SupportsIndex
+except ImportError:
+    from typing_extensions import SupportsIndex
+
 from dacite.cache import cache
 from dacite.config import Config
 from dacite.data import Data
