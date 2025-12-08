@@ -1,6 +1,18 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, Mapping, Any, Collection, MutableMapping
+from typing import (
+    Hashable,
+    Sequence,
+    SupportsIndex,
+    TypeVar,
+    Type,
+    Optional,
+    Mapping,
+    Any,
+    Collection,
+    MutableMapping,
+    Union,
+)
 
 from dacite.cache import cache
 from dacite.config import Config
@@ -58,7 +70,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     if config.strict:
         extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
         if extra_fields:
-            raise UnexpectedDataError(keys=extra_fields)
+            raise UnexpectedDataError(data_class=data_class, keys=extra_fields)
 
     for field in data_class_fields:
         field_type = data_class_hints[field.name]
@@ -143,21 +155,63 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     raise UnionMatchError(field_type=union, value=data)
 
 
-def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
+def _build_member_value(type_: Type, key: Union[SupportsIndex, Hashable], value: Any, config: Config) -> Any:
+    try:
+        built_value = _build_value(type_=type, data=value, config=config)
+    except DaciteFieldError as e:
+        e._member_name = str(key)
+        raise
+    if config.check_types and not is_instance(built_value, type_):
+        raise WrongTypeError(_member_name=str(key), field_type=type_, value=value)
+
+    return built_value
+
+
+def _build_value_for_mapping(mapping: Type, data: Any, config: Config) -> Any:
     data_type = data.__class__
-    if isinstance(data, Mapping) and is_subclass(collection, Mapping):
-        item_type = extract_generic(collection, defaults=(Any, Any))[1]
-        return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
-    elif is_subclass(collection, tuple):
-        if not data:
-            return data_type()
-        types = extract_generic(collection)
-        if len(types) == 2 and types[1] == Ellipsis:
-            return data_type(_build_value(type_=types[0], data=item, config=config) for item in data)
+
+    item_type = extract_generic(mapping, defaults=(Any, Any))[1]
+    return data_type(
+        (key, _build_member_value(type_=item_type, key=key, value=value, config=config)) for key, value in data.items()
+    )
+
+
+def _build_value_for_sequence(sequence: Type, data: Any, config: Config) -> Any:
+    data_type = data.__class__
+
+    item_type = extract_generic(sequence, defaults=(Any,))[0]
+    return data_type(
+        _build_member_value(type_=item_type, key=index, value=value, config=config) for index, value in enumerate(data)
+    )
+
+
+def _build_value_for_tuple(tuple: Type, data: Any, config: Config) -> Any:
+    data_type = data.__class__
+    if not data:
+        return data_type()
+    types = extract_generic(tuple, default=(Any, ...))
+    if len(types) == 2 and types[1] == Ellipsis:
+        return _build_value_for_sequence(tuple, data, config)
+    else:
         return data_type(
-            _build_value(type_=type_, data=item, config=config) for item, type_ in zip_longest(data, types)
+            _build_member_value(type_=type_, key=index, value=item, config=config)
+            for index, (item, type_) in enumerate(zip_longest(data, types))
         )
+
+
+def _build_value_for_collection(collection: Type, data: Any, config: Config) -> Any:
+    if isinstance(data, Mapping) and is_subclass(collection, Mapping):
+        return _build_value_for_mapping(collection, data, config)
+    elif is_subclass(collection, tuple):
+        return _build_value_for_tuple(collection, data, config)
     elif isinstance(data, Collection) and is_subclass(collection, Collection):
-        item_type = extract_generic(collection, defaults=(Any,))[0]
-        return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)
+        if isinstance(data, Sequence) and is_subclass(collection, Sequence):
+            return _build_value_for_sequence(collection, data, config)
+        else:
+            data_type = data.__class__
+            item_type = extract_generic(collection, defaults=(Any,))[0]
+            try:
+                return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)  # type: ignore
+            except Exception as e:
+                raise DaciteFieldError() from e
     return data
