@@ -69,6 +69,41 @@ def test_from_dict_with_union_of_data_classes_and_wrong_data():
     assert exception_info.value.value == {"f": 2.0}
 
 
+def test_from_dict_with_dict_of_union_and_wrong_data():
+    @dataclass
+    class X:
+        d: Dict[str, Union[int, str]]
+
+    with pytest.raises(UnionMatchError) as exception_info:
+        from_dict(X, {"d": {"i": 1.0}})
+
+    assert str(exception_info.value) == 'can not match type "float" to any type of "d[i]" union: typing.Union[int, str]'
+    assert exception_info.value.field_path == "d[i]"
+    assert exception_info.value.field_type == Union[int, str]
+    assert exception_info.value.value == 1.0
+
+
+def test_from_dict_with_dict_of_union_of_data_classes_and_wrong_data():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        s: str
+
+    @dataclass
+    class Z:
+        d: Dict[str, Union[X, Y]]
+
+    with pytest.raises(UnionMatchError) as exception_info:
+        from_dict(Z, {"d": {"x_or_y": {"f": 2.0}}})
+
+    assert exception_info.value.field_path == "d[x_or_y]"
+    assert exception_info.value.field_type == Union[X, Y]
+    assert exception_info.value.value == {"f": 2.0}
+
+
 def test_from_dict_with_union_of_generic_collecionts_of_data_classes():
     @dataclass
     class X:
