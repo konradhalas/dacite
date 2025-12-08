@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, List, Union
+from typing import Dict, Optional, List, Union
 
 import pytest
 
@@ -161,6 +161,16 @@ def test_form_dict_with_disabled_type_checking():
     assert result == X(i="test")
 
 
+def test_from_dict_with_dict_and_disabled_type_checking():
+    @dataclass
+    class X:
+        d: Dict[str, int]
+
+    result = from_dict(X, {"d": {"i": "test"}}, config=Config(check_types=False))
+
+    assert result == X(d={"i": "test"})
+
+
 def test_form_dict_with_disabled_type_checking_and_union():
     @dataclass
     class X:
@@ -172,6 +182,16 @@ def test_form_dict_with_disabled_type_checking_and_union():
     assert result == X(i="test")
 
 
+def test_from_dict_with_dict_of_union_and_disabled_type_checking():
+    @dataclass
+    class X:
+        d: Dict[str, Union[int, float]]
+
+    result = from_dict(X, {"d": {"i": "test"}}, config=Config(check_types=False))
+
+    assert result == X(d={"i": "test"})
+
+
 def test_from_dict_with_strict():
     @dataclass
     class X:
@@ -181,6 +201,21 @@ def test_from_dict_with_strict():
         from_dict(X, {"s": "test", "i": 1}, Config(strict=True))
 
     assert str(exception_info.value) == 'can not match "i" to any data class field'
+
+
+def test_from_dict_nested_with_strict():
+    @dataclass
+    class X:
+        s: str
+
+    @dataclass
+    class Y:
+        d: Dict[str, X]
+
+    with pytest.raises(UnexpectedDataError) as exception_info:
+        from_dict(Y, {"d": {"a": {"s": "test", "i": 1}}}, Config(strict=True))
+
+    assert str(exception_info.value) == 'can not match "i" to any data class field of type X in d[a]'
 
 
 def test_from_dict_with_strict_unions_match_and_ambiguous_match():
