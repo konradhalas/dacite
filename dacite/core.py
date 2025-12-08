@@ -3,7 +3,6 @@ from itertools import zip_longest
 from typing import (
     Hashable,
     Sequence,
-    SupportsIndex,
     TypeVar,
     Type,
     Optional,
