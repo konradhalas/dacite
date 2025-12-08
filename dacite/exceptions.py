@@ -11,11 +11,15 @@ class DaciteError(Exception):
 
 
 class DaciteFieldError(DaciteError):
-    def __init__(self, field_path: Optional[str] = None):
+    def __init__(self, field_path: Optional[str] = None ,_member_name: Optional[str]=None):
         super().__init__()
         self.field_path = field_path
+        self._member_name = _member_name
 
     def update_path(self, parent_field_path: str) -> None:
+        if self._member_name is not None:
+            parent_field_path = f"{parent_field_path}[{self._member_name}]"
+            self._member_name = None
         if self.field_path:
             self.field_path = f"{parent_field_path}.{self.field_path}"
         else:
@@ -23,8 +27,8 @@ class DaciteFieldError(DaciteError):
 
 
 class WrongTypeError(DaciteFieldError):
-    def __init__(self, field_type: Type, value: Any, field_path: Optional[str] = None) -> None:
-        super().__init__(field_path=field_path)
+    def __init__(self, field_type: Type, value: Any, field_path: Optional[str] = None,_member_name: Optional[str]=None) -> None:
+        super().__init__(field_path=field_path, _member_name=_member_name)
         self.field_type = field_type
         self.value = value
 
@@ -36,8 +40,8 @@ class WrongTypeError(DaciteFieldError):
 
 
 class MissingValueError(DaciteFieldError):
-    def __init__(self, field_path: Optional[str] = None):
-        super().__init__(field_path=field_path)
+    def __init__(self, field_path: Optional[str] = None,_member_name: Optional[str]=None):
+        super().__init__(field_path=field_path, _member_name=_member_name)
 
     def __str__(self) -> str:
         return f'missing value for field "{self.field_path}"'
@@ -52,8 +56,8 @@ class UnionMatchError(WrongTypeError):
 
 
 class StrictUnionMatchError(DaciteFieldError):
-    def __init__(self, union_matches: Dict[Type, Any], field_path: Optional[str] = None) -> None:
-        super().__init__(field_path=field_path)
+    def __init__(self, union_matches: Dict[Type, Any], field_path: Optional[str] = None,_member_name: Optional[str]=None) -> None:
+        super().__init__(field_path=field_path, _member_name=_member_name)
         self.union_matches = union_matches
 
     def __str__(self) -> str:
@@ -70,11 +74,15 @@ class ForwardReferenceError(DaciteError):
         return f"can not resolve forward reference: {self.message}"
 
 
-class UnexpectedDataError(DaciteError):
-    def __init__(self, keys: Set[str]) -> None:
-        super().__init__()
+class UnexpectedDataError(DaciteFieldError):
+    def __init__(self, data_class: Type, keys: Set[str], field_path: Optional[str]=None, _member_name: Optional[str]=None) -> None:
+        super().__init__(field_path=field_path, _member_name=_member_name)
         self.keys = keys
+        self.base_class = data_class
 
     def __str__(self) -> str:
         formatted_keys = ", ".join(f'"{key}"' for key in self.keys)
-        return f"can not match {formatted_keys} to any data class field"
+        msg = f"can not match {formatted_keys} to any data class field"
+        if self.field_path:
+            msg += f" of type {_name(self.base_class)} in {self.field_path}"
+        return msg
