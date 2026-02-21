@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Set, Union, Dict, Collection, Tuple, Sequence
+from typing import List, Set, Union, Dict, Collection, Tuple, Sequence, Mapping
 
 import pytest
 
@@ -319,3 +319,23 @@ def test_from_dict_with_collection_and_string():
     result = from_dict(X, {"s": "abc"})
 
     assert result == X(s="abc")
+
+
+def test_from_dict_with_custom_mapping():
+    class MyMap(Mapping):
+        def __len__(self):
+            return 3
+
+        def __getitem__(self, i):
+            return i**2
+
+        def __iter__(self):
+            return iter([1, 2, 3])
+
+    @dataclass
+    class X:
+        s: MyMap[int, int]
+
+    result = from_dict(X, {"s": MyMap()})
+
+    assert result == X(s=MyMap())
