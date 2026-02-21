@@ -309,3 +309,13 @@ def test_from_dict_with_sequence_and_empty_tuple():
     result = from_dict(X, {"s": ()})
 
     assert result == X(s=())
+
+
+def test_from_dict_with_collection_and_string():
+    @dataclass
+    class X:
+        s: Collection[str]
+
+    result = from_dict(X, {"s": "abc"})
+
+    assert result == X(s="abc")
