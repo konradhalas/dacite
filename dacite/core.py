@@ -56,7 +56,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     data_class_fields = cache(get_fields)(data_class)
 
     if config.strict:
-        extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
+        extra_fields = set(data.keys()) - {config.convert_key(f.name) for f in data_class_fields}
         if extra_fields:
             raise UnexpectedDataError(keys=extra_fields)
 
