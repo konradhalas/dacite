@@ -182,3 +182,30 @@ def test_from_dict_with_union_of_mixed_types_and_dict_of_data_classes_as_a_resul
     result = from_dict(Y, {"d": {"x": {"i": 42}, "z": {"i": 37}}})
 
     assert result == Y(d={"x": X(i=42), "z": X(i=37)})
+
+
+def test_extract_generic_preserves_pep604_union_arg_order():
+    from dacite.types import extract_generic
+
+    assert extract_generic(int | float) == (int, float)
+    assert extract_generic(float | int) == (float, int)
+
+
+def test_from_dict_with_pep604_union_type_hooks_order_independence():
+    from dacite import Config
+
+    @dataclass
+    class FloatFirst:
+        value: float | int
+
+    @dataclass
+    class IntFirst:
+        value: int | float
+
+    config = Config(type_hooks={int: lambda x: int(x) + 100, float: float})
+
+    result_before = from_dict(IntFirst, {"value": 0.7}, config=config)
+    from_dict(FloatFirst, {"value": 0.7}, config=config)
+    result_after = from_dict(IntFirst, {"value": 0.7}, config=config)
+
+    assert result_before.value == result_after.value

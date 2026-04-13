@@ -100,7 +100,8 @@ def is_generic_collection(type_: Type) -> bool:
         return False
 
 
-@cache
+# Not cached: PEP 604 unions hash equal regardless of arg order
+# (int | float == float | int) so lru_cache conflates them.
 def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
     try:
         if getattr(type_, "_special", False):
