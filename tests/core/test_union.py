@@ -3,7 +3,7 @@ from typing import Optional, List, Union, Dict
 
 import pytest
 
-from dacite import from_dict, UnionMatchError
+from dacite import from_dict, Config, UnionMatchError
 
 
 def test_from_dict_with_union_of_builtin_types():
@@ -182,3 +182,26 @@ def test_from_dict_with_union_of_mixed_types_and_dict_of_data_classes_as_a_resul
     result = from_dict(Y, {"d": {"x": {"i": 42}, "z": {"i": 37}}})
 
     assert result == Y(d={"x": X(i=42), "z": X(i=37)})
+
+
+def test_from_dict_union_type_hooks_respect_member_order():
+    # Union types with the same members but different order are equal and
+    # share the same hash, which previously caused lru_cache to conflate them
+    # and always return the __args__ of whichever union was seen first.
+    @dataclass
+    class IntFirst:
+        value: Union[int, float]
+
+    @dataclass
+    class FloatFirst:
+        value: Union[float, int]
+
+    config = Config(type_hooks={int: int, float: float})
+
+    # Trigger FloatFirst first to prime any internal cache.
+    result_float = from_dict(FloatFirst, {"value": 3}, config=config)
+    # Despite FloatFirst being seen first, IntFirst must try int hook first.
+    result_int = from_dict(IntFirst, {"value": 3}, config=config)
+
+    assert isinstance(result_float.value, float)
+    assert isinstance(result_int.value, int)
