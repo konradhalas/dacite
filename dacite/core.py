@@ -1,4 +1,4 @@
-from dataclasses import is_dataclass
+from dataclasses import is_dataclass, MISSING
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, Mapping, Any, Collection, MutableMapping
 
@@ -73,6 +73,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             if config.check_types and not is_instance(value, field_type):
                 raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
         else:
+            if not field.init and (field.default is not MISSING or field.default_factory is not MISSING):  # type: ignore[misc]
+                continue
             try:
                 value = get_default_value_for_field(field, field_type)
             except DefaultValueNotFoundError:
