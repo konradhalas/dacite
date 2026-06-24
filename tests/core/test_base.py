@@ -202,6 +202,36 @@ def test_from_dict_with_non_init_field_with_default_value_and_frozen_dataclass()
     assert result == X()
 
 
+def test_from_dict_preserves_post_init_with_default():
+    @dataclass
+    class X:
+        name: str
+        computed: str = field(init=False, default="")
+
+        def __post_init__(self):
+            self.computed = f"computed_{self.name}"
+
+    result = from_dict(X, {"name": "foo"})
+
+    assert result == X("foo")
+    assert result.computed == "computed_foo"
+
+
+def test_from_dict_preserves_post_init_with_default_factory():
+    @dataclass
+    class X:
+        name: str
+        items: list = field(init=False, default_factory=list)
+
+        def __post_init__(self):
+            self.items = [1, 2, 3]
+
+    result = from_dict(X, {"name": "foo"})
+
+    assert result == X("foo")
+    assert result.items == [1, 2, 3]
+
+
 def test_from_dict_with_new_type():
     MyStr = NewType("MyStr", str)
 
