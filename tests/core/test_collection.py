@@ -116,6 +116,16 @@ def test_from_dict_with_dict():
     assert result == X(d={"a": 1, "b": 2})
 
 
+def test_from_dict_with_dict_and_cast_key():
+    @dataclass
+    class X:
+        d: Dict[int, str]
+
+    result = from_dict(X, {"d": {"1": "a"}}, Config(cast=[int]))
+
+    assert result == X(d={1: "a"})
+
+
 def test_from_dict_with_dict_of_data_classes():
     @dataclass
     class X:
