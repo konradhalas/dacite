@@ -3,7 +3,7 @@ from typing import Optional, List, Union, Dict
 
 import pytest
 
-from dacite import from_dict, UnionMatchError
+from dacite import from_dict, Config, UnionMatchError
 
 
 def test_from_dict_with_union_of_builtin_types():
@@ -168,6 +168,25 @@ def test_from_dict_with_union_of_mixed_types_and_collection_of_data_classes_as_a
     result = from_dict(Y, {"u": [{"i": 1}]})
 
     assert result == Y(u=[X(i=1)])
+
+
+def test_from_dict_with_union_and_post_init_error_propagates():
+    class ValidationError(Exception):
+        pass
+
+    @dataclass
+    class A:
+        a: str
+
+        def __post_init__(self):
+            raise ValidationError("test error")
+
+    @dataclass
+    class B:
+        union: Union[A, str]
+
+    with pytest.raises(ValidationError):
+        from_dict(B, {"union": {"a": "a"}}, Config(check_types=False))
 
 
 def test_from_dict_with_union_of_mixed_types_and_dict_of_data_classes_as_a_result():

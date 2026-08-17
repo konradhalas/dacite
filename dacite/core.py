@@ -36,6 +36,12 @@ from dacite.generics import get_concrete_type_hints, get_fields, orig
 
 T = TypeVar("T")
 
+# Marker attribute used to tag exceptions raised by a data class's own construction
+# (e.g. `__post_init__` or a property setter), so that `_build_value_for_union` can
+# tell them apart from dacite's internal "this union member doesn't match" signals
+# and let them propagate instead of silently trying the next union member.
+_CONSTRUCTION_ERROR_ATTR = "__dacite_construction_error__"
+
 
 def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) -> T:
     """Create a data class instance from a dictionary.
@@ -84,10 +90,16 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
         elif not is_frozen(data_class):
             post_init_values[field.name] = value
 
-    instance = data_class(**init_values)
-
-    for key, value in post_init_values.items():
-        setattr(instance, key, value)
+    try:
+        instance = data_class(**init_values)
+        for key, value in post_init_values.items():
+            setattr(instance, key, value)
+    except Exception as error:  # pylint: disable=broad-except
+        # This is raised by the data class's own construction code (e.g.
+        # `__post_init__` or a property setter), not by dacite itself, so it must
+        # not be mistaken for a "this union member doesn't match" signal.
+        setattr(error, _CONSTRUCTION_ERROR_ATTR, True)
+        raise
 
     return instance
 
@@ -125,7 +137,9 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
             # noinspection PyBroadException
             try:
                 value = _build_value(type_=inner_type, data=data, config=config)
-            except Exception:  # pylint: disable=broad-except
+            except Exception as error:  # pylint: disable=broad-except
+                if getattr(error, _CONSTRUCTION_ERROR_ATTR, False):
+                    raise
                 continue
             if is_instance(value, inner_type):
                 if config.strict_unions_match:
