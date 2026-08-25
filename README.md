@@ -362,6 +362,31 @@ result = from_dict(data_class=A, data=data, config=Config(cast=[Enum]))
 assert result == A(e=E.X)
 ```
 
+Casting also reaches inside `Literal` types whose members are instances of a
+casted type. This is handy when you narrow an enum field down to a single value
+in a subclass:
+
+```python
+from typing import Literal
+
+class ContactType(Enum):
+    member = 'Member'
+    contact = 'Contact'
+
+@dataclass
+class Member:
+    contact_type: Literal[ContactType.member]
+
+
+data = {
+    'contact_type': 'Member',
+}
+
+result = from_dict(data_class=Member, data=data, config=Config(cast=[ContactType]))
+
+assert result == Member(contact_type=ContactType.member)
+```
+
 ### Forward References
 
 Definition of forward references can be passed as a `{'name': Type}` mapping to 

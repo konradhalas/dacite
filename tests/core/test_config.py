@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Literal
 
 import pytest
 
@@ -10,6 +10,7 @@ from dacite import (
     ForwardReferenceError,
     UnexpectedDataError,
     StrictUnionMatchError,
+    WrongTypeError,
 )
 
 
@@ -97,6 +98,84 @@ def test_from_dict_with_cast_and_generic_collection():
     result = from_dict(X, {"s": (1,)}, Config(cast=[List]))
 
     assert result == X(s=[1])
+
+
+def test_from_dict_with_cast_and_literal_enum():
+    class E(Enum):
+        A = "a"
+        B = "b"
+
+    @dataclass
+    class X:
+        e: Literal[E.A]
+
+    result = from_dict(X, {"e": "a"}, Config(cast=[E]))
+
+    assert result == X(e=E.A)
+
+
+def test_from_dict_with_base_class_cast_and_literal_enum():
+    class E(Enum):
+        A = "a"
+
+    @dataclass
+    class X:
+        e: Literal[E.A]
+
+    result = from_dict(X, {"e": "a"}, Config(cast=[Enum]))
+
+    assert result == X(e=E.A)
+
+
+def test_from_dict_with_cast_and_literal_enum_and_optional():
+    class E(Enum):
+        A = "a"
+
+    @dataclass
+    class X:
+        e: Optional[Literal[E.A]]
+
+    result = from_dict(X, {"e": "a"}, Config(cast=[E]))
+
+    assert result == X(e=E.A)
+
+
+def test_from_dict_with_cast_and_literal_enum_and_matching_value():
+    class E(Enum):
+        A = "a"
+
+    @dataclass
+    class X:
+        e: Literal[E.A]
+
+    result = from_dict(X, {"e": E.A}, Config(cast=[E]))
+
+    assert result == X(e=E.A)
+
+
+def test_from_dict_with_cast_and_literal_enum_and_wrong_value():
+    class E(Enum):
+        A = "a"
+        B = "b"
+
+    @dataclass
+    class X:
+        e: Literal[E.A]
+
+    with pytest.raises(WrongTypeError):
+        from_dict(X, {"e": "b"}, Config(cast=[E]))
+
+
+def test_from_dict_without_cast_and_literal_enum():
+    class E(Enum):
+        A = "a"
+
+    @dataclass
+    class X:
+        e: Literal[E.A]
+
+    with pytest.raises(WrongTypeError):
+        from_dict(X, {"e": "a"})
 
 
 def test_from_dict_with_type_hooks_and_generic_sequence():
