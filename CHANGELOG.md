@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-...
+### Added
+
+- [Apply `cast` to values inside `Literal` types](https://github.com/konradhalas/dacite/issues/109)
 
 ## [1.9.2] - 2025-02-05
 

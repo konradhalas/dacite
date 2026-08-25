@@ -30,6 +30,7 @@ from dacite.types import (
     is_init_var,
     extract_init_var,
     is_subclass,
+    is_literal,
 )
 
 from dacite.generics import get_concrete_type_hints, get_fields, orig
@@ -105,6 +106,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif cache(is_dataclass)(orig(type_)) and isinstance(data, Mapping):
         data = from_dict(data_class=type_, data=data, config=config)
+    elif config.cast and is_literal(type_):
+        data = _build_value_for_literal(literal=type_, data=data, config=config)
     for cast_type in config.cast:
         if is_subclass(type_, cast_type):
             if is_generic_collection(type_):
@@ -112,6 +115,22 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
             else:
                 data = type_(data)
             break
+    return data
+
+
+def _build_value_for_literal(literal: Type, data: Any, config: Config) -> Any:
+    literal_values = extract_generic(literal)
+    if data in literal_values:
+        return data
+    for literal_value in literal_values:
+        member_type = type(literal_value)
+        if any(is_subclass(member_type, cast_type) for cast_type in config.cast):
+            try:
+                casted = member_type(data)
+            except (ValueError, TypeError):
+                continue
+            if casted in literal_values:
+                return casted
     return data
 
 
