@@ -147,7 +147,13 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
     data_type = data.__class__
     if isinstance(data, Mapping) and is_subclass(collection, Mapping):
         item_type = extract_generic(collection, defaults=(Any, Any))[1]
-        return data_type((key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items())
+        items = [(key, _build_value(type_=item_type, data=value, config=config)) for key, value in data.items()]
+        try:
+            return data_type(items)
+        except TypeError:
+            # data's own class isn't necessarily constructible from an iterable of pairs
+            # (e.g. a read-only custom Mapping), so fall back to a plain dict.
+            return dict(items)
     elif is_subclass(collection, tuple):
         if not data:
             return data_type()
@@ -159,5 +165,13 @@ def _build_value_for_collection(collection: Type, data: Any, config: Config) -> 
         )
     elif isinstance(data, Collection) and is_subclass(collection, Collection):
         item_type = extract_generic(collection, defaults=(Any,))[0]
-        return data_type(_build_value(type_=item_type, data=item, config=config) for item in data)
+        items = [_build_value(type_=item_type, data=item, config=config) for item in data]
+        try:
+            # a str is a Collection of its own characters, but joining the built items
+            # back into a str would silently mangle them - always build a list instead.
+            if isinstance(data, str):
+                raise TypeError
+            return data_type(items)
+        except TypeError:
+            return list(items)
     return data

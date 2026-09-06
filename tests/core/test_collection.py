@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Set, Union, Dict, Collection, Tuple, Sequence
+from typing import List, Set, Union, Dict, Collection, Tuple, Sequence, Mapping
 
 import pytest
 
@@ -309,3 +309,38 @@ def test_from_dict_with_sequence_and_empty_tuple():
     result = from_dict(X, {"s": ()})
 
     assert result == X(s=())
+
+
+def test_from_dict_with_string_data_for_a_list_field():
+    @dataclass
+    class X:
+        l: List[str]
+
+    result = from_dict(X, {"l": "ab"})
+
+    assert result == X(l=["a", "b"])
+
+
+def test_from_dict_with_custom_mapping_that_cannot_be_reconstructed():
+    class SquaresMapping(Mapping):
+        """A Mapping whose constructor takes a length, not an iterable of pairs."""
+
+        def __init__(self, length):
+            self.length = int(length)
+
+        def __getitem__(self, key):
+            return key**2
+
+        def __iter__(self):
+            return iter(range(self.length))
+
+        def __len__(self):
+            return self.length
+
+    @dataclass
+    class X:
+        d: Dict[int, int]
+
+    result = from_dict(X, {"d": SquaresMapping(3)})
+
+    assert result == X(d={0: 0, 1: 1, 2: 4})
