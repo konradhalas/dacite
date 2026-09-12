@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-...
+### Fixed
+
+- Require matching value types when checking `Literal` fields, distinguishing equal boolean, integer, and enum values.
 
 ## [1.9.2] - 2025-02-05
 
