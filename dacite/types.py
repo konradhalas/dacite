@@ -171,7 +171,7 @@ def is_instance(value: Any, type_: Type) -> bool:
     if is_new_type(type_):
         return is_instance(value, extract_new_type(type_))
     if is_literal(type_):
-        return value in extract_generic(type_)
+        return any(type(value) is type(literal) and value == literal for literal in extract_generic(type_))
     if is_init_var(type_):
         return is_instance(value, extract_init_var(type_))
     if is_type_generic(type_):
