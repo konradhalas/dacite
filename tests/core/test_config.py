@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, List, Union
+from typing import NamedTuple, Optional, List, Union
 
 import pytest
 
@@ -107,6 +107,64 @@ def test_from_dict_with_type_hooks_and_generic_sequence():
     result = from_dict(X, {"c": ["TEST"]}, config=Config(type_hooks={str: str.lower}))
 
     assert result == X(c=["test"])
+
+
+def test_from_dict_with_type_hook_and_cast_for_named_tuple():
+    class Point(NamedTuple):
+        x: float
+        y: float
+
+    @dataclass
+    class Model:
+        point: Point
+
+    result = from_dict(
+        Model,
+        {"point": {"x": 2.2, "y": 1.1}},
+        config=Config(type_hooks={Point: lambda data: Point(**data)}, cast=[tuple]),
+    )
+
+    assert result == Model(point=Point(x=2.2, y=1.1))
+
+
+def test_from_dict_with_type_hook_result_still_uses_cast():
+    @dataclass
+    class X:
+        s: str
+
+    result = from_dict(X, {"s": "ignored"}, Config(type_hooks={str: lambda _: 1}, cast=[str]))
+
+    assert result == X(s="1")
+
+
+def test_from_dict_without_type_hook_keeps_custom_class_casting():
+    class Value:
+        def __init__(self, value):
+            self.value = value
+
+    @dataclass
+    class X:
+        value: Value
+
+    value = Value(1)
+    result = from_dict(X, {"value": value}, Config(cast=[Value]))
+
+    assert result.value.value is value
+
+
+def test_from_dict_with_custom_class_hook_keeps_explicit_casting():
+    class Value:
+        def __init__(self, value):
+            self.value = value
+
+    @dataclass
+    class X:
+        value: Value
+
+    value = Value(1)
+    result = from_dict(X, {"value": 2}, Config(type_hooks={Value: lambda _: value}, cast=[Value]))
+
+    assert result.value.value is value
 
 
 def test_from_dict_with_type_hook_exception():

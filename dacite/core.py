@@ -95,7 +95,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 def _build_value(type_: Type, data: Any, config: Config) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
-    if type_ in config.type_hooks:
+    has_type_hook = type_ in config.type_hooks
+    if has_type_hook:
         data = config.type_hooks[type_](data)
     if is_optional(type_) and data is None:
         return data
@@ -105,8 +106,9 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif cache(is_dataclass)(orig(type_)) and isinstance(data, Mapping):
         data = from_dict(data_class=type_, data=data, config=config)
+    is_named_tuple = has_type_hook and is_subclass(type_, tuple) and hasattr(type_, "_fields")
     for cast_type in config.cast:
-        if is_subclass(type_, cast_type):
+        if is_subclass(type_, cast_type) and not (has_type_hook and is_named_tuple and isinstance(data, type_)):
             if is_generic_collection(type_):
                 data = extract_origin_collection(type_)(data)
             else:
