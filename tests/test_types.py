@@ -269,6 +269,31 @@ def test_is_instance_with_with_type_and_not_matching_value_type():
     assert not is_instance(1, Type[str])
 
 
+@pytest.mark.parametrize(
+    "type_constructor", [Type, pytest.param(type, marks=type_hints_with_generic_collections_support)]
+)
+@pytest.mark.parametrize(
+    "value, expected",
+    [(int, True), (str, True), (type, True), (1, False), ("int", False), (None, False), (lambda: None, False)],
+)
+def test_is_instance_with_type_any(type_constructor, value, expected):
+    assert is_instance(value, type_constructor[Any]) is expected
+
+
+@pytest.mark.parametrize(
+    "type_constructor", [Type, pytest.param(type, marks=type_hints_with_generic_collections_support)]
+)
+def test_is_instance_with_type_any_and_custom_metaclass(type_constructor):
+    class Meta(type):
+        pass
+
+    class Value(metaclass=Meta):
+        pass
+
+    assert is_instance(Value, type_constructor[Any])
+    assert not is_instance(Value(), type_constructor[Any])
+
+
 def test_is_instance_with_not_supported_generic_types():
     T = TypeVar("T")
 

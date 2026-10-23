@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-...
+### Fixed
+
+- Accept class objects for fields annotated with `Type[Any]` or `type[Any]`.
 
 ## [1.9.2] - 2025-02-05
 

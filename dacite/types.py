@@ -175,7 +175,10 @@ def is_instance(value: Any, type_: Type) -> bool:
     if is_init_var(type_):
         return is_instance(value, extract_init_var(type_))
     if is_type_generic(type_):
-        return is_subclass(value, extract_generic(type_)[0])
+        expected_type = extract_generic(type_)[0]
+        if expected_type is Any:
+            return isinstance(value, type)
+        return is_subclass(value, expected_type)
     if is_generic_dataclass(type_):
         return isinstance(value, get_origin(type_))  # type: ignore[arg-type]
     return False
