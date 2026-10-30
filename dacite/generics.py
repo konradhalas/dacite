@@ -1,5 +1,6 @@
 # pylint: disable=unsupported-binary-operation
 import sys
+import typing
 from dataclasses import Field, is_dataclass
 from functools import reduce
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, get_type_hints
@@ -46,6 +47,9 @@ def __dereference(type_name: str, data_class: Type) -> Type:
 
 def __concretize(hint: Any, generics: Dict[TypeVar, Type], data_class: Type) -> Any:
     """Recursively replace type vars and forward references by concrete types."""
+
+    if sys.version_info >= (3, 12) and isinstance(hint, typing.TypeAliasType):
+        return __concretize(hint.__value__, generics, data_class)
 
     if isinstance(hint, str):
         return __dereference(hint, data_class)
