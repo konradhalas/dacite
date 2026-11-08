@@ -328,6 +328,12 @@ If a data class field type is a `Optional[T]` you can pass both -
 collections, e.g. when a field has type `List[T]` you can use `List[T]` to 
 transform whole collection or `T` to transform each item. 
 
+When a hook for a whole `Union` returns a value matching one of its members,
+that value is used without applying member hooks or casts again. With
+`strict_unions_match=True`, the returned value must match only one member.
+If the hook's result does not yet match any member, the usual member conversion
+continues.
+
 ### Casting
 
 It's a very common case that you want to create an instance of a field type 

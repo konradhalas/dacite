@@ -117,6 +117,13 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
 
 def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     types = extract_generic(union)
+    if union in config.type_hooks:
+        # A hook for the whole union may already have constructed the final value.
+        matches = {inner_type: data for inner_type in types if is_instance(data, inner_type)}
+        if matches:
+            if config.strict_unions_match and len(matches) > 1:
+                raise StrictUnionMatchError(matches)
+            return data
     if is_optional(union) and len(types) == 2:
         return _build_value(type_=types[0], data=data, config=config)
     union_matches = {}
