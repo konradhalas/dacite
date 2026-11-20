@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-...
+### Added
+
+- Benchmark harness and baseline results (`benchmarks/`)
+- Differential test suite (Hypothesis) comparing the implementation against a frozen copy of 1.9.2 (`tests/differential/`)
+- v2 architecture proposal (`docs/ARCHITECTURE_V2.md`) and draft migration guide (`MIGRATION.md`)
 
 ## [1.9.2] - 2025-02-05
 

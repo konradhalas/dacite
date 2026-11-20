@@ -13,6 +13,7 @@ Measurements per (library, scenario):
 Correctness guard: every result must equal the result of dacite on the same input, otherwise it is flagged
 and its timings are not reported (no benchmarking of something that does the wrong thing).
 """
+
 import argparse
 import gc
 import json

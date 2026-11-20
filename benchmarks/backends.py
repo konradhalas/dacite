@@ -4,6 +4,7 @@
 msgspec.convert and dacite v1 compile lazily on first call; their cold cost is therefore paid inside the first
 `convert` call.
 """
+
 from typing import Any, Callable
 
 from .scenarios import Scenario

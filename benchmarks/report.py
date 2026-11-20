@@ -1,7 +1,8 @@
 """Render benchmark JSON files into Markdown tables.
 
-    python -m benchmarks.report benchmarks/results/baseline.json [more.json ...] > tables.md
+python -m benchmarks.report benchmarks/results/baseline.json [more.json ...] > tables.md
 """
+
 import json
 import sys
 from typing import Any, Dict, List
@@ -39,7 +40,12 @@ def columns(runs):
 
 def table(runs, metric: str, title: str, fmt) -> str:
     cols = columns(runs)
-    lines = [f"#### {title}", "", "| scenario | " + " | ".join(c[0] for c in cols) + " | dacite ÷ best other |", "|---|" + "---:|" * (len(cols) + 1)]
+    lines = [
+        f"#### {title}",
+        "",
+        "| scenario | " + " | ".join(c[0] for c in cols) + " | dacite ÷ best other |",
+        "|---|" + "---:|" * (len(cols) + 1),
+    ]
     for sc in SCENARIOS:
         cells, vals = [], {}
         for title_, run, lib in cols:
@@ -67,6 +73,15 @@ if __name__ == "__main__":
     print()
     print(table(runs, "cold_us", "Cold call: build + first conversion in a fresh interpreter (median of 9)", fmt_us))
     print()
-    print(table(runs, "tm_peak_kb", "tracemalloc peak during one warm conversion (KiB, includes result objects)", lambda v: f"{v:,.1f}"))
+    print(
+        table(
+            runs,
+            "tm_peak_kb",
+            "tracemalloc peak during one warm conversion (KiB, includes result objects)",
+            lambda v: f"{v:,.1f}",
+        )
+    )
     print()
-    print(table(runs, "rss_delta_mb", "Peak RSS growth for one conversion of the 10k list (MiB)", lambda v: f"{v:,.1f}"))
+    print(
+        table(runs, "rss_delta_mb", "Peak RSS growth for one conversion of the 10k list (MiB)", lambda v: f"{v:,.1f}")
+    )

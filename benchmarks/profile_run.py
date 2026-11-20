@@ -5,6 +5,7 @@
 cProfile only sees Python frames and C *functions*; `functools.lru_cache` wrappers are not recorded separately,
 so their lookup cost (hashing args incl. `typed=True`) is attributed to the calling function's own time.
 """
+
 import cProfile
 import pstats
 import sys
@@ -18,9 +19,21 @@ BUCKETS = {
     # (module file suffix, function name) -> bucket ; first match wins
     "type introspection": {
         "types.py": {
-            "is_optional", "is_union", "is_generic", "is_generic_collection", "extract_generic",
-            "extract_origin_collection", "is_subclass", "is_init_var", "extract_init_var", "is_tuple",
-            "is_literal", "is_new_type", "extract_new_type", "is_type_generic", "is_generic_dataclass",
+            "is_optional",
+            "is_union",
+            "is_generic",
+            "is_generic_collection",
+            "extract_generic",
+            "extract_origin_collection",
+            "is_subclass",
+            "is_init_var",
+            "extract_init_var",
+            "is_tuple",
+            "is_literal",
+            "is_new_type",
+            "extract_new_type",
+            "is_type_generic",
+            "is_generic_dataclass",
             "extract_optional",
         },
         "generics.py": {"orig", "get_fields", "get_concrete_type_hints"},
@@ -42,7 +55,12 @@ def bucket(filename: str, func: str) -> str:
     for name, mapping in BUCKETS.items():
         if base in mapping and func in mapping[base]:
             return name
-    if "dataclasses" in filename and "site-packages" not in filename and base == "dataclasses.py" and "dacite" not in filename:
+    if (
+        "dataclasses" in filename
+        and "site-packages" not in filename
+        and base == "dataclasses.py"
+        and "dacite" not in filename
+    ):
         return "object creation (dataclass __init__/setattr)"
     if func in ("__init__", "<string>") or base == "<string>":
         return "object creation (dataclass __init__/setattr)"

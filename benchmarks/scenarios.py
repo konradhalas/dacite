@@ -3,6 +3,7 @@
 Every scenario declares which libraries can take part (`libs`). Libraries that can not express the scenario
 natively (e.g. `type_hooks`, `forward_references`) are simply not listed - they are reported as N/A, not faked.
 """
+
 import random
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -248,7 +249,6 @@ class Warmup:
     r: str
 
 
-
 # --- scenario registry ---------------------------------------------------------------------------------------------
 @dataclass
 class Scenario:
@@ -281,7 +281,9 @@ SCENARIOS: List[Scenario] = [
     Scenario("flat10", "flat", Flat10, lambda: FLAT10_DATA, description="flat dataclass, 10 simple fields"),
     Scenario("nested5", "nested", L1, lambda: NESTED5_DATA, description="5 levels of nested dataclasses"),
     Scenario("big_list_10k", "bulk", Payload, _big, description="list of 10k small dataclasses (5 fields)"),
-    Scenario("opt_literal", "union", OptLiteral, lambda: OPT_LITERAL_DATA, description="Optional/Literal/Union[int,str]"),
+    Scenario(
+        "opt_literal", "union", OptLiteral, lambda: OPT_LITERAL_DATA, description="Optional/Literal/Union[int,str]"
+    ),
     Scenario(
         "union_dataclasses",
         "union",
@@ -290,7 +292,9 @@ SCENARIOS: List[Scenario] = [
         libs=("dacite", "pydantic", "cattrs"),
         description="Union[Dog, Cat] (also in list/dict/Optional)",
     ),
-    Scenario("collections", "collections", Colls, lambda: COLLS_DATA, description="list/dict/tuple/set of dataclasses+ints"),
+    Scenario(
+        "collections", "collections", Colls, lambda: COLLS_DATA, description="list/dict/tuple/set of dataclasses+ints"
+    ),
     Scenario(
         "type_hooks_cast",
         "config",
