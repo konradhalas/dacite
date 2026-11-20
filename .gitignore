@@ -10,3 +10,4 @@ dacite-env*
 
 .benchmarks
 benchmark.json
+graphify-out/
