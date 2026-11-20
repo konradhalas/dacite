@@ -403,3 +403,57 @@ Reading:
   are dominated by the result objects, as expected.
 - **Leak safety:** the plan cache lives in the data class (`__dacite_plans__`), checkers and nodes use no `lru_cache`;
   `tests/test_plan_cache.py` verifies that 50 dynamically created class pairs are garbage collected.
+
+## Phase 2c: generated code (`benchmarks/results/phase2c.json`)
+
+Default configuration: a type is interpreted for 99 conversions and compiled on the 100th (`set_compile_threshold`).
+Warm numbers are therefore compiled; cold numbers are the first call (interpreter), except that a 10k-item list
+compiles its item type after 100 items inside the very first conversion. Same machine, CPython 3.13.2.
+
+| scenario | warm 1.9.2 | warm 2b | **warm 2c** | speedup vs 1.9.2 | cold 1.9.2 → 2c | tracemalloc KiB 1.9.2 → 2c | best other library (warm) |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `flat10` | 11.90 µs | 2.51 µs | **0.65 µs** | 18.2× | 68.79 → 76.21 µs | 1.9 → 0.3 | 0.58 µs (msgspec) |
+| `nested5` | 17.88 µs | 4.56 µs | **1.12 µs** | 15.9× | 108.50 → 131.17 µs | 2.8 → 0.5 | 0.99 µs (msgspec) |
+| `big_list_10k` | 115.03 ms | 23.28 ms | **5.64 ms** | 20.4× | 116.57 → 7.76 ms | 2361 → 1880 | 3.15 ms (msgspec) |
+| `opt_literal` | 24.86 µs | 3.39 µs | **0.83 µs** | 30.1× | 158.63 → 197.04 µs | 2.6 → 0.3 | 0.58 µs (msgspec) |
+| `union_dataclasses` | 121.71 µs | 18.24 µs | **10.91 µs** | 11.2× | 313.38 → 287.08 µs | 5.2 → 2.3 | 5.90 µs (cattrs) |
+| `collections` | 358.44 µs | 66.54 µs | **33.70 µs** | 10.6× | 558.88 → 341.04 µs | 18.5 → 10.6 | 7.99 µs (msgspec) |
+| `type_hooks_cast` | 12.70 µs | 2.55 µs | **1.46 µs** | 8.7× | 111.00 → 138.58 µs | 2.1 → 0.6 | n/a |
+| `forward_refs` | 31.32 µs | 7.06 µs | **1.83 µs** | 17.1× | 196.62 → 182.33 µs | 3.2 → 0.9 | n/a |
+| `flat10_nocheck` | 9.84 µs | 1.92 µs | **0.53 µs** | 18.5× | 74.13 → 78.37 µs | 1.3 → 0.3 | n/a |
+| `nested5_nocheck` | 15.55 µs | 3.83 µs | **1.00 µs** | 15.5× | 139.71 → 130.75 µs | 2.3 → 0.5 | n/a |
+| `big_list_10k_nocheck` | 84.81 ms | 17.95 ms | **3.64 ms** | 23.3× | 83.13 → 5.25 ms | 2360 → 1880 | n/a |
+
+Peak RSS growth for the 10k list: 2.44 MiB (1.9.2) → 2.00 MiB (msgspec 1.8, cattrs 2.3, pydantic 3.5).
+
+Targets from `docs/ARCHITECTURE_V2.md` (≥10× `flat10`, ≥15× 10k list): **met** (18.2× and 20.4×); the "realistic"
+range estimated there (11–13× and 16–21×) was beaten for `flat10`, the 10k list is at the top of it.
+
+### Where it stands against the reference libraries (warm)
+
+| scenario | dacite 2c | cattrs | pydantic | msgspec |
+|---|---:|---:|---:|---:|
+| `flat10` | **0.65 µs** | 0.95 | 0.81 | 0.58 |
+| `nested5` | **1.12 µs** | 1.80 | 1.50 | 0.99 |
+| `big_list_10k` | **5.64 ms** | 7.84 | 5.62 | 3.15 |
+| `opt_literal` | **0.83 µs** | n/a | 0.97 | 0.58 |
+| `union_dataclasses` | 10.91 µs | 5.90 | 6.46 | n/a |
+| `collections` | 33.70 µs | 24.96 | 15.19 | 7.99 |
+
+Pure-Python generated code is ahead of cattrs and pydantic on flat/nested/optional data and within 1.1–1.8× of msgspec
+(a C library that does not call `__init__`). Two shapes are **still behind**: unions of data classes (1.7× slower than
+cattrs: the union loop is interpreted; failed members are skipped by prefilters but still go through `Node.build`) and
+`collections` (1.4–4× slower: sets, fixed tuples and nested collections are not in the fast path yet).
+
+### Costs and decisions measured along the way
+
+- **Compiling a plan costs about 0.22 ms** for `flat10` (80% is `builtins.compile()` of the generated source; it was
+  0.29 ms before slow paths were collapsed into one call each). The interpreter of Phase 2b is already 2.5 µs, so the
+  saving per call is only about 1.9 µs: break-even ≈ 120 calls. The threshold design from `ARCHITECTURE_V2.md` assumed
+  10–25 calls and a threshold of 2; measured numbers changed the default to **100** (documented in §5.3).
+- Positional construction (`Cls(v0, v1, …)` instead of keywords) saves 0.29 µs per 10-field object, reading required
+  keys in one `try` saves another 0.15 µs; together they moved `flat10` from 1.11 µs to 0.65 µs.
+- Skipping a redundant deep type check for list/dict items that were just produced by a nested plan took the 10k list
+  from 9.9 ms to 8.6 ms (before inline lists and positional construction brought it to 5.5 ms).
+- Peak `tracemalloc` for the 10k list is now equal to msgspec's (1.88 MiB): the temporary checks and builders are gone;
+  what remains is the result objects.

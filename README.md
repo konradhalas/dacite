@@ -64,6 +64,9 @@ Dacite supports following features:
 - custom type hooks
 - case conversion
 
+Since 2.0 conversion plans are built once per type and compiled to generated code, which makes `from_dict` roughly
+9-30 times faster than 1.9 (typically 15-20x) (see [Performance tuning](#performance-tuning) and `benchmarks/RESULTS.md`).
+
 ## Motivation
 
 Passing plain dictionaries as a data container between your functions or
@@ -517,6 +520,10 @@ pytest
 `dacite` is a small library, but its use is potentially very extensive. Thus, it is crucial
 to ensure good performance of the library.
 
+The `benchmarks/` directory contains a harness (`python -m benchmarks.run all --label NAME --out FILE.json`) that measures
+warm and cold conversion, peak memory and the same scenarios for msgspec, pydantic v2 and cattrs; results and
+methodology are in `benchmarks/RESULTS.md`.
+
 We achieve that with the help of `pytest-benchmark` library, and a suite of dedicated performance tests
 which can be found in the `tests/performance` directory. The CI process runs these tests automatically,
 but they can also be helpful locally, while developing the library.
@@ -645,6 +652,22 @@ converter.compile()  # optional: builds the plan now and raises e.g. ForwardRefe
 person = converter.convert(data)  # or converter(data)
 people = converter.convert_many(list_of_dicts)
 ```
+
+### Performance tuning
+
+Conversion plans start in an interpreter and are compiled to generated Python code after 100 conversions of a type (the
+compilation costs about 0.2 ms per type and pays off after roughly that many calls). Change this globally with
+`set_compile_threshold`:
+
+```python
+from dacite import set_compile_threshold
+
+set_compile_threshold(0)  # compile every type as soon as it is first used (long running services, benchmarks)
+set_compile_threshold(None)  # never compile, interpret only
+```
+
+`Converter(...).compile()` compiles immediately. Results are identical in all modes. See `benchmarks/RESULTS.md` for
+measurements against dacite 1.9, msgspec, pydantic v2 and cattrs.
 
 ### Config is immutable
 

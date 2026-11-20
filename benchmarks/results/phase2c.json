@@ -1,0 +1,94 @@
+{
+ "label": "dacite-2c",
+ "python": "3.13.2",
+ "machine": "arm64 Darwin",
+ "versions": {
+  "dacite": "1.9.2",
+  "msgspec": "0.22.0",
+  "pydantic": "2.14.4",
+  "cattrs": "26.2.1"
+ },
+ "results": {
+  "dacite|flat10": {
+   "status": "ok",
+   "warm_min_us": 0.6544405456430021,
+   "warm_med_us": 0.665269829497318,
+   "tm_peak_kb": 0.28125,
+   "cold_us": 76.20803080499172
+  },
+  "dacite|nested5": {
+   "status": "ok",
+   "warm_min_us": 1.1246078877052872,
+   "warm_med_us": 1.1564449145002287,
+   "tm_peak_kb": 0.5234375,
+   "cold_us": 131.1670057475567
+  },
+  "dacite|big_list_10k": {
+   "status": "ok",
+   "warm_min_us": 5644.435028764694,
+   "warm_med_us": 5775.207085261012,
+   "tm_peak_kb": 1880.4296875,
+   "cold_us": 7764.209061861038,
+   "rss_before_mb": 26.625,
+   "rss_delta_mb": 2.0
+  },
+  "dacite|opt_literal": {
+   "status": "ok",
+   "warm_min_us": 0.8258057641711627,
+   "warm_med_us": 0.8321661418262162,
+   "tm_peak_kb": 0.3359375,
+   "cold_us": 197.04201258718967
+  },
+  "dacite|union_dataclasses": {
+   "status": "ok",
+   "warm_min_us": 10.909871342190547,
+   "warm_med_us": 11.65360843840703,
+   "tm_peak_kb": 2.296875,
+   "cold_us": 287.0839089155197
+  },
+  "dacite|collections": {
+   "status": "ok",
+   "warm_min_us": 33.69966711395629,
+   "warm_med_us": 34.20275059321384,
+   "tm_peak_kb": 10.5625,
+   "cold_us": 341.0420613363385
+  },
+  "dacite|type_hooks_cast": {
+   "status": "ok",
+   "warm_min_us": 1.4586893539221402,
+   "warm_med_us": 1.4938771996068856,
+   "tm_peak_kb": 0.64453125,
+   "cold_us": 138.58301099389791
+  },
+  "dacite|forward_refs": {
+   "status": "ok",
+   "warm_min_us": 1.8290942894666236,
+   "warm_med_us": 1.8402645910708348,
+   "tm_peak_kb": 0.9375,
+   "cold_us": 182.3339844122529
+  },
+  "dacite|flat10_nocheck": {
+   "status": "ok",
+   "warm_min_us": 0.5320690618327137,
+   "warm_med_us": 0.5390481955014533,
+   "tm_peak_kb": 0.28125,
+   "cold_us": 78.37498560547829
+  },
+  "dacite|nested5_nocheck": {
+   "status": "ok",
+   "warm_min_us": 1.0043190563067603,
+   "warm_med_us": 1.016857122473681,
+   "tm_peak_kb": 0.5234375,
+   "cold_us": 130.7500060647726
+  },
+  "dacite|big_list_10k_nocheck": {
+   "status": "ok",
+   "warm_min_us": 3644.0204553814096,
+   "warm_med_us": 3750.21894631738,
+   "tm_peak_kb": 1880.21875,
+   "cold_us": 5252.250004559755,
+   "rss_before_mb": 26.375,
+   "rss_delta_mb": 1.921875
+  }
+ }
+}

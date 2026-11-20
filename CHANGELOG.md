@@ -13,12 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking:** `Config` is immutable and hashable; `cast` is a tuple, `type_hooks`/`forward_references` are read-only copies
 - **Breaking:** error paths contain list/tuple indices and mapping keys (`orders[3].customer.email`); new `.path` attribute
 - Type annotations are introspected once per `(data class, Config)` into a cached conversion plan (stored in the
-  data class itself, no global strong references): about 4-7x faster warm conversion
+  data class itself, no global strong references), and the plan is compiled to generated Python code after
+  `set_compile_threshold(n)` conversions (default 100): `from_dict` is about 9-30x faster than 1.9.2 (typically
+  15-20x) with the same results and errors, and allocates 70-85% less per call for small types
+- Union members that can not match (missing required key, other `Literal` discriminator) are skipped without being built
 - `Union[None, X]` is converted like `Optional[X]` (1.x result depended on `lru_cache` history)
 
 ### Added
 
 - `Converter(data_class, config)` with `compile()`, `convert()` and `convert_many()`
+- `set_compile_threshold()` / `get_compile_threshold()`
 - Benchmark harness and baseline results (`benchmarks/`)
 - Differential test suite (Hypothesis) comparing the implementation against a frozen copy of 1.9.2 (`tests/differential/`)
 - v2 architecture proposal (`docs/ARCHITECTURE_V2.md`) and draft migration guide (`MIGRATION.md`)
