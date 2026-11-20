@@ -106,8 +106,9 @@ _Python 3.13.2, arm64 Darwin_
 
 cProfile exposes Python frames and C functions only; `functools.lru_cache` hits are not separate entries, so their cost
 (including hashing `typing` objects as keys) shows up inside the *caller's* own time. `py-spy` needs root on macOS (not
-used); `scalene` was tried but its sampler thread swamped the profile (75% attributed to `threading.py`), so cProfile is
-the only profile used. Share = own time, profiler overhead inflates every Python call roughly uniformly.
+used). `scalene` 2.4 was tried twice (`--profile-all`: 75% attributed to its own sampler thread; `--profile-only dacite`:
+100% attributed to the caller line in the script, nothing inside dacite) and is unusable here on 3.13, so it is not used.
+cProfile (deterministic) is cross-checked with `pyinstrument` (sampling, no root, `benchmarks/profile_pyinstrument.py`). Share = own time, profiler overhead inflates every Python call roughly uniformly.
 
 | bucket (own-time share) | flat10 | nested5 | opt_literal | union_dataclasses | collections | big_list_10k |
 |---|---:|---:|---:|---:|---:|---:|
@@ -127,6 +128,23 @@ Extra measurements (same machine):
 | cost of one failed union branch (raise+catch of `WrongTypeError`) | ≈ 6 µs; `Union[Dog, Cat]` item matching 2nd member costs 16.9 µs vs 10.7 µs when 1st matches |
 | exceptions raised for `union_dataclasses` data | 4 per call (≈ 20% of its 122 µs) |
 | `_build_value` calls per flat10 conversion | 11 (1 per field + 1 for the `Optional`/union unwrap) |
+
+### Second opinion: pyinstrument (sampling, inclusive time, same warm calls)
+
+cProfile's own-time view hides cost that lives inside `lru_cache` lookups and callees. Inclusive share of total time:
+
+| function (inclusive) | flat10 | opt_literal | union_dataclasses | big_list_10k |
+|---|---:|---:|---:|---:|
+| `orig()` (called for **every value**, only to ask "is this a dataclass?") | 35% | 12% | 9% | 22% |
+| `is_instance` (result check) | 10% | 33% | 35% | 27% |
+| `typing.__hash__` (hashing `Literal`/`Union` aliases as cache keys) | 5% | 37% | 34% | 8% |
+| `typing.get_origin` | 17% | 4% | 2% | 9% |
+
+New facts versus the cProfile view: (a) `orig()` + `is_dataclass` + `get_origin` per value is 22–35% of flat/bulk
+conversions although the answer is constant per type, (b) on `Literal`/`Union` fields **a third of the time is
+`typing.__hash__`**: `_LiteralGenericAlias.__hash__` rebuilds a tuple of `(value, type)` pairs on every `lru_cache` lookup,
+and dacite does several lookups per value, (c) `is_instance` is the biggest single block on union scenarios (33–35%).
+All three disappear when decisions are taken once, at plan-build time.
 
 ### Findings
 
