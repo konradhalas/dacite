@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (2.0, work in progress)
+
+- **Breaking:** minimum Python is 3.11
+- **Breaking:** `Config` is immutable and hashable; `cast` is a tuple, `type_hooks`/`forward_references` are read-only copies
+- **Breaking:** error paths contain list/tuple indices and mapping keys (`orders[3].customer.email`); new `.path` attribute
+- Type annotations are introspected once per `(data class, Config)` into a cached conversion plan (stored in the
+  data class itself, no global strong references): about 4-7x faster warm conversion
+- `Union[None, X]` is converted like `Optional[X]` (1.x result depended on `lru_cache` history)
+
 ### Added
 
+- `Converter(data_class, config)` with `compile()`, `convert()` and `convert_many()`
 - Benchmark harness and baseline results (`benchmarks/`)
 - Differential test suite (Hypothesis) comparing the implementation against a frozen copy of 1.9.2 (`tests/differential/`)
 - v2 architecture proposal (`docs/ARCHITECTURE_V2.md`) and draft migration guide (`MIGRATION.md`)

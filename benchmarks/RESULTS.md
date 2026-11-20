@@ -363,3 +363,43 @@ top 12 functions by own time:
 | `typing.py:1374(__instancecheck__)` | 50004.0 | 3.2% |
 
 </details>
+
+## Phase 2b: plans + interpreter (no code generation yet)
+
+Same harness, same machine (arm64 macOS, CPython 3.13.2), `benchmarks/results/phase2b.json` vs `baseline.json`.
+Implementation: type annotations are introspected once per `(data class, Config)` into a tree of nodes in which every
+type/config dependent decision is already taken; value checking (`check_types`) is a pre-built checker per field instead
+of `is_instance` re-deriving the type every time. Plans run in a plain Python interpreter; `exec` code generation (Phase 2c)
+is **not** in these numbers.
+
+| scenario | warm 1.9.2 | warm 2b | speedup | cold 1.9.2 | cold 2b | cold ratio | tracemalloc KiB 1.9.2 → 2b |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `flat10` | 11.90 µs | 2.51 µs | 4.7× | 68.79 µs | 81.29 µs | 1.18× | 1.9 → 1.1 |
+| `nested5` | 17.88 µs | 4.56 µs | 3.9× | 108.50 µs | 143.96 µs | 1.33× | 2.8 → 1.7 |
+| `big_list_10k` | 115.03 ms | 23.28 ms | 4.9× | 116.57 ms | 23.38 ms | 0.20× | 2361.1 → 2359.3 |
+| `opt_literal` | 24.86 µs | 3.39 µs | 7.3× | 158.63 µs | 190.17 µs | 1.20× | 2.6 → 1.5 |
+| `union_dataclasses` | 121.71 µs | 18.24 µs | 6.7× | 313.38 µs | 269.25 µs | 0.86× | 5.2 → 4.2 |
+| `collections` | 358.44 µs | 66.54 µs | 5.4× | 558.88 µs | 339.17 µs | 0.61× | 18.5 → 16.6 |
+| `type_hooks_cast` | 12.70 µs | 2.55 µs | 5.0× | 111.00 µs | 126.92 µs | 1.14× | 2.1 → 1.0 |
+| `forward_refs` | 31.32 µs | 7.06 µs | 4.4× | 196.62 µs | 187.42 µs | 0.95× | 3.2 → 2.3 |
+| `flat10_nocheck` | 9.84 µs | 1.92 µs | 5.1× | 74.13 µs | 82.50 µs | 1.11× | 1.3 → 1.1 |
+| `nested5_nocheck` | 15.55 µs | 3.83 µs | 4.1× | 139.71 µs | 135.54 µs | 0.97× | 2.3 → 1.7 |
+| `big_list_10k_nocheck` | 84.81 ms | 17.95 ms | 4.7× | 83.13 ms | 18.50 ms | 0.22× | 2360.1 → 2359.3 |
+
+Peak RSS growth for the 10k list: 2.44 → 2.34 MiB (floor is the result objects, as predicted).
+
+Reading:
+
+- **Warm: 3.9–7.3× faster** without any code generation; the largest gains are where v1 re-derived the most (unions,
+  `Literal`, collections). Already in the range of cattrs-minus-2×; Phase 2c (fused checks + generated code) targets the
+  remaining 4–5×.
+- **Cold: bar partially met.** The gate from `ARCHITECTURE_V2.md` was "cold ≈ v1". Small types are 11–33% slower
+  (+8…+35 µs per type, one-off): the plan builds a node *and* a checker for each distinct type, and nested data classes
+  compile their plans one by one. Bigger types and anything repeated are faster (collections 0.61×, unions 0.86×). The
+  extra cost is repaid after 1–4 calls (warm saving is 5–35 µs per call for these types). Cheap shortcut applied:
+  plain builtin leaf types use shared pre-built nodes/checkers (66 → 58 µs of compile time for `flat10`; type hints
+  alone are 30 µs and are paid by v1 as well).
+- **Memory:** transient per-call allocations drop 30–40% for small types (no `init_values`/config copies); big payloads
+  are dominated by the result objects, as expected.
+- **Leak safety:** the plan cache lives in the data class (`__dacite_plans__`), checkers and nodes use no `lru_cache`;
+  `tests/test_plan_cache.py` verifies that 50 dynamically created class pairs are garbage collected.
