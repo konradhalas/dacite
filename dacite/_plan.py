@@ -307,13 +307,48 @@ class Node:  # pylint: disable=too-few-public-methods
 _PASSTHROUGH = Node(None, False, None, None)
 
 
+_NOT_FOUND = object()
+
+
+def _member_prefilter(node: "Node") -> Optional[Tuple[frozenset, Tuple[Tuple[Any, tuple], ...]]]:
+    """For a union member that is a plain nested data class: what the member needs to *possibly* succeed on an exact
+    `dict`. `(required keys, ((key, allowed literal values), ...))`. A member whose required key is missing, or whose
+    `Literal` discriminator field holds another value (with `check_types`), is certain to be rejected by the
+    interpreter anyway, so skipping it only saves building (and catching the exception of) a doomed attempt."""
+    if node.hook is not None or node.cast is not None or node.optional or not isinstance(node.body, _DataclassBody):
+        return None
+    try:
+        plan = node.body.resolve()
+    except Exception:  # pylint: disable=broad-except  # unresolvable: the member fails inside `build`, as before
+        return None
+    required = frozenset(key for _n, key, _node, _c, _t, init, kind, _d in plan.fields if init and kind == _NO_DEFAULT)
+    literals = []
+    if plan.check_types:
+        for _n, key, field_node, _c, field_type, _i, _k, _d in plan.fields:
+            plain = field_node.hook is None and not field_node.optional and field_node.cast is None
+            if plain and field_node.body is None and ti.is_literal(field_type):
+                literals.append((key, ti.extract_generic(field_type)))
+    return (required, tuple(literals)) if required or literals else None
+
+
 class _UnionBody:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
-    __slots__ = ("union", "types", "nodes", "checkers", "single", "single_index", "strict_match", "check_types")
+    __slots__ = (
+        "union",
+        "types",
+        "nodes",
+        "checkers",
+        "single",
+        "single_index",
+        "strict_match",
+        "check_types",
+        "prefilters",
+    )
 
     def __init__(  # type: ignore[no-untyped-def]
         self, union, types, nodes, checkers, single, single_index, strict_match, check_types
     ):  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self.union = union
+        self.prefilters: Optional[tuple] = None
         self.single_index = single_index
         self.types = types
         self.nodes = nodes
@@ -329,7 +364,23 @@ class _UnionBody:  # pylint: disable=too-few-public-methods,too-many-instance-at
             # `Union[None, X]`, so the outcome depended on which form was seen first in the process.)
             return self.nodes[self.single_index].build(data)
         union_matches: Dict[Any, Any] = {}
-        for inner_type, node, check in zip(self.types, self.nodes, self.checkers):
+        prefilters = self.prefilters
+        if prefilters is None:
+            prefilters = self.prefilters = tuple(_member_prefilter(node) for node in self.nodes)
+        exact = data.__class__ is dict
+        for inner_type, node, check, prefilter in zip(self.types, self.nodes, self.checkers, prefilters):
+            if prefilter is not None and exact:
+                required, literals = prefilter
+                if not required.issubset(data):
+                    continue
+                for key, values in literals:
+                    found = data.get(key, _NOT_FOUND)
+                    if found is not _NOT_FOUND and found not in values:
+                        break
+                else:
+                    literals = None
+                if literals is not None:  # a discriminator holds a value this member can not accept
+                    continue
             try:
                 # noinspection PyBroadException
                 try:
@@ -432,12 +483,15 @@ class _DataclassBody:  # pylint: disable=too-few-public-methods
         self.config = config
         self.plan: Optional["DataclassPlan"] = None
 
+    def resolve(self) -> "DataclassPlan":
+        plan = self.plan
+        if plan is None:
+            plan = self.plan = get_plan(self.data_class, self.config)
+        return plan
+
     def build(self, data: Any) -> Any:
-        if isinstance(data, Mapping):
-            plan = self.plan
-            if plan is None:
-                plan = self.plan = get_plan(self.data_class, self.config)
-            return plan.run(data)
+        if data.__class__ is dict or isinstance(data, Mapping):
+            return (self.plan or self.resolve()).run(data)
         return data
 
 
@@ -445,8 +499,31 @@ class _DataclassBody:  # pylint: disable=too-few-public-methods
 _DEFAULT_VALUE, _DEFAULT_FACTORY, _DEFAULT_NONE, _NO_DEFAULT = range(4)
 
 
-class DataclassPlan:  # pylint: disable=too-few-public-methods
-    __slots__ = ("data_class", "fields", "strict_names", "frozen", "check_types")
+_compile_threshold: Optional[int] = 100  # pylint: disable=invalid-name
+
+
+def set_compile_threshold(threshold: Optional[int]) -> None:
+    """Number of calls after which the plan of a data class is compiled to generated Python code.
+
+    `100` (default): a type is interpreted for its first 99 conversions and compiled on the 100th. Compiling costs
+    about 0.2 ms per type and saves about 2 microseconds per conversion of a small type (the interpreter is already
+    fast), so this is roughly the break-even point: types that are used rarely never pay for it, types that are used a
+    lot do. `0`: compile as soon as the plan is built (e.g. for a long running service). `None`: never compile.
+    Affects plans built afterwards; call `clear_cache()` to apply it to existing ones. `Converter.compile()` always
+    compiles (unless the threshold is `None`)."""
+    global _compile_threshold  # pylint: disable=global-statement
+    _compile_threshold = threshold
+
+
+def get_compile_threshold() -> Optional[int]:
+    return _compile_threshold
+
+
+class DataclassPlan:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
+    """`run(data)` converts one mapping. It starts as the interpreter below, behind a call counter; once the counter
+    reaches the compile threshold `run` is replaced by a function generated from the plan (`dacite._codegen`)."""
+
+    __slots__ = ("data_class", "fields", "strict_names", "frozen", "check_types", "run", "compiled", "calls")
 
     def __init__(  # type: ignore[no-untyped-def]
         self, data_class, fields, strict_names, frozen, check_types
@@ -456,8 +533,43 @@ class DataclassPlan:  # pylint: disable=too-few-public-methods
         self.strict_names = strict_names
         self.frozen = frozen
         self.check_types = check_types
+        self.compiled: Optional[Callable[[Any], Any]] = None
+        self.calls = 0
+        threshold = _compile_threshold
+        if threshold is None:
+            self.run = self.interpret
+        elif threshold <= 0:
+            self.run = self.interpret
+            self.tier_up()
+        else:
+            self.run = self._tiered
 
-    def run(self, data: Any) -> Any:  # pylint: disable=too-many-branches,too-many-locals
+    def _tiered(self, data: Any) -> Any:
+        compiled = self.compiled
+        if compiled is not None:  # a caller kept a reference to this bound method across the switch
+            return compiled(data)
+        self.calls += 1
+        threshold = _compile_threshold
+        if threshold is not None and self.calls >= threshold:
+            self.tier_up()
+            return self.run(data)
+        return self.interpret(data)
+
+    def tier_up(self) -> None:
+        """Compile the plan (idempotent). Falls back to the interpreter if code generation is not possible."""
+        with _LOCK:
+            if self.compiled is None:
+                from dacite import _codegen  # pylint: disable=import-outside-toplevel,cyclic-import
+
+                try:
+                    self.compiled = _codegen.compile_function(self)
+                except Exception:  # pylint: disable=broad-except  # e.g. exec() unavailable: stay interpreted
+                    self.compiled = None
+                    self.run = self.interpret
+                    return
+            self.run = self.compiled
+
+    def interpret(self, data: Any) -> Any:  # pylint: disable=too-many-branches,too-many-locals
         strict_names = self.strict_names
         if strict_names is not None:
             extra_fields = set(data.keys()) - strict_names

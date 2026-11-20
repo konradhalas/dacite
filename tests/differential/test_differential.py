@@ -31,8 +31,20 @@ PROFILE = settings(
 
 ORACLE = oracle.oracle_impl()
 CANDIDATE = oracle.candidate_impl()
+CANDIDATES = [oracle.candidate_impl("interpreter"), oracle.candidate_impl("codegen")]
 # v2 adds indices / mapping keys to field paths (MIGRATION.md B3); everything else is compared strictly.
 NORMALIZE = oracle.strip_indices
+
+
+@pytest.fixture(autouse=True)
+def _restore_compile_threshold():
+    """The candidates set the global compile threshold; do not leak it into other tests."""
+    import dacite
+
+    threshold = dacite.get_compile_threshold()
+    yield
+    dacite.set_compile_threshold(threshold)
+    dacite.clear_cache()
 
 
 @st.composite
@@ -53,7 +65,7 @@ def cases(draw, corrupt: bool):
     return mat, spec, data, params
 
 
-def check(case, candidate=CANDIDATE, normalize=NORMALIZE):
+def check(case, candidates=None, normalize=NORMALIZE):
     mat, spec, data, params = case
     try:
         cls = mat.infos[id(spec)].cls
@@ -62,14 +74,19 @@ def check(case, candidate=CANDIDATE, normalize=NORMALIZE):
             return
         kwargs = config_kwargs(params)
         ORACLE.clear_cache()
-        candidate.clear_cache()
         expected = ORACLE.convert(cls, data, kwargs)
-        actual = candidate.convert(cls, data, kwargs)
-        difference = oracle.diff(expected, actual, normalize)
         event(f"oracle={'ok' if expected.ok else type(expected.exc).__name__}")
-        schema = {name: f.type for name, f in cls.__dataclass_fields__.items()}
-        detail = f"oracle: {expected.exc or expected.value!r}\ncandidate: {actual.exc or actual.value!r}"
-        assert difference is None, f"{difference}\n{detail}\nschema={schema}\ndata={data!r}\nconfig={params}"
+        for candidate in candidates or CANDIDATES:
+            candidate.clear_cache()
+            # twice: the first conversion of a type may be interpreted, the second one runs the compiled plan
+            for _ in range(2):
+                actual = candidate.convert(cls, data, kwargs)
+                difference = oracle.diff(expected, actual, normalize)
+                schema = {name: f.type for name, f in cls.__dataclass_fields__.items()}
+                detail = f"oracle: {expected.exc or expected.value!r}\n{candidate.name}: {actual.exc or actual.value!r}"
+                assert (
+                    difference is None
+                ), f"[{candidate.name}] {difference}\n{detail}\nschema={schema}\ndata={data!r}\nconfig={params}"
     finally:
         mat.__exit__(None, None, None)
 
@@ -143,7 +160,9 @@ REQUIRED_EXCEPTIONS = {
 def test_strategies_reach_every_exception_kind():
     reached = set()
 
-    @settings(max_examples=2500, deadline=None, database=None, suppress_health_check=list(HealthCheck))
+    @settings(
+        max_examples=3000, deadline=None, database=None, derandomize=True, suppress_health_check=list(HealthCheck)
+    )
     @given(cases(corrupt=True))
     def run(case):
         outcome = _oracle_outcome(case)

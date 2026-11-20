@@ -1,6 +1,6 @@
 from typing import Generic, Iterable, List, Optional, Type, TypeVar
 
-from dacite._plan import DataclassPlan, get_plan
+from dacite._plan import DataclassPlan, get_compile_threshold, get_plan
 from dacite.config import DEFAULT_CONFIG, Config
 from dacite.data import Data
 
@@ -32,8 +32,11 @@ class Converter(Generic[T]):
         self._plan: Optional[DataclassPlan] = None
 
     def compile(self) -> "Converter[T]":
-        """Build the plan now. Raises e.g. `ForwardReferenceError` immediately instead of at the first conversion."""
-        self._plan = get_plan(self._data_class, self._config)
+        """Build the plan now and compile it to generated code (unless `set_compile_threshold(None)`). Raises e.g.
+        `ForwardReferenceError` immediately instead of at the first conversion."""
+        plan = self._plan = get_plan(self._data_class, self._config)
+        if get_compile_threshold() is not None:
+            plan.tier_up()
         return self
 
     def convert(self, data: Data) -> T:
@@ -48,5 +51,5 @@ class Converter(Generic[T]):
         plan = self._plan
         if plan is None:
             plan = self.compile()._plan
-        run = plan.run  # type: ignore[union-attr]
+        run = plan.run  # type: ignore[union-attr]  # already the compiled function: `compile()` ran `tier_up()`
         return [run(item) for item in items]

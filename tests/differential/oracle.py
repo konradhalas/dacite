@@ -173,10 +173,18 @@ def oracle_impl() -> Impl:
     return Impl("dacite-1.9.2", dacite_v1.from_dict, dacite_v1.Config, _clear_all_v1_caches)
 
 
-def candidate_impl() -> Impl:
+def candidate_impl(mode: str = "default") -> Impl:
+    """The package under development. `mode`: `interpreter` (never compile), `codegen` (compile immediately) or
+    `default` (library default)."""
     import dacite
 
-    return Impl("dacite", dacite.from_dict, dacite.Config, dacite.clear_cache)
+    threshold = {"interpreter": None, "codegen": 0, "default": 100}[mode]
+
+    def clear() -> None:
+        dacite.set_compile_threshold(threshold)
+        dacite.clear_cache()
+
+    return Impl(f"dacite[{mode}]", dacite.from_dict, dacite.Config, clear)
 
 
 def has_none_first_optional(data_class: Any) -> bool:
