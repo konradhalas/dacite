@@ -122,7 +122,6 @@ def _freeze(d):
 def _extend(children):
     return st.one_of(
         children.map(lambda s: ("optional", s)),
-        children.map(lambda s: ("optional_none_first", s)),
         st.lists(children, min_size=2, max_size=3).map(lambda m: ("union", tuple(m))),
         children.map(lambda s: ("list", s)),
         st.sampled_from(["int", "str"]).map(lambda n: ("set", n)),

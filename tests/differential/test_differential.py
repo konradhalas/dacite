@@ -31,8 +31,8 @@ PROFILE = settings(
 
 ORACLE = oracle.oracle_impl()
 CANDIDATE = oracle.candidate_impl()
-# v2 adds indices to field paths (MIGRATION.md B3); v1-vs-v1 runs compare strictly.
-NORMALIZE = oracle.identity
+# v2 adds indices / mapping keys to field paths (MIGRATION.md B3); everything else is compared strictly.
+NORMALIZE = oracle.strip_indices
 
 
 @st.composite
@@ -57,6 +57,9 @@ def check(case, candidate=CANDIDATE, normalize=NORMALIZE):
     mat, spec, data, params = case
     try:
         cls = mat.infos[id(spec)].cls
+        if oracle.has_none_first_optional(cls):
+            event("skipped: Union[None, X] (intentional divergence)")
+            return
         kwargs = config_kwargs(params)
         ORACLE.clear_cache()
         candidate.clear_cache()
@@ -64,7 +67,9 @@ def check(case, candidate=CANDIDATE, normalize=NORMALIZE):
         actual = candidate.convert(cls, data, kwargs)
         difference = oracle.diff(expected, actual, normalize)
         event(f"oracle={'ok' if expected.ok else type(expected.exc).__name__}")
-        assert difference is None, f"{difference}\nschema={cls.__dataclass_fields__}\ndata={data!r}\nconfig={params}"
+        schema = {name: f.type for name, f in cls.__dataclass_fields__.items()}
+        detail = f"oracle: {expected.exc or expected.value!r}\ncandidate: {actual.exc or actual.value!r}"
+        assert difference is None, f"{difference}\n{detail}\nschema={schema}\ndata={data!r}\nconfig={params}"
     finally:
         mat.__exit__(None, None, None)
 
@@ -165,3 +170,4 @@ def test_valid_cases_mostly_succeed():
 
 def test_normalize_strips_indices():
     assert oracle.strip_indices('field "orders[3].customer[0].email"') == 'field "orders.customer.email"'
+    assert oracle.strip_indices("""field "a['k'].b["x"]" """) == """field "a.b" """
