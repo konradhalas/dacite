@@ -1,27 +1,29 @@
-from dataclasses import InitVar, is_dataclass
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Mapping, Tuple, cast as typing_cast
+from typing import Type, Any, Optional, Union, TypeVar, Mapping, cast as typing_cast
+from typing import get_origin
 
-try:
-    from typing import get_origin  # type: ignore
-except ImportError:
-    from typing_extensions import get_origin  # type: ignore
-
+from dacite import _typeinfo
 from dacite.cache import cache
 
 T = TypeVar("T", bound=Any)
 
 
-@cache
-def extract_origin_collection(collection: Type) -> Type:
-    try:
-        return collection.__extra__
-    except AttributeError:
-        return collection.__origin__
-
-
-@cache
-def is_optional(type_: Type) -> bool:
-    return is_union(type_) and type(None) in extract_generic(type_)
+# Cached public helpers kept for backward compatibility (and used by `is_instance`). The implementations live in
+# `dacite._typeinfo`; plans use the uncached versions so that no class is pinned by these `lru_cache`s.
+extract_origin_collection = cache(_typeinfo.extract_origin_collection)
+is_generic = cache(_typeinfo.is_generic)
+is_union = cache(_typeinfo.is_union)
+extract_generic = cache(_typeinfo.extract_generic)
+is_optional = cache(_typeinfo.is_optional)
+is_generic_collection = cache(_typeinfo.is_generic_collection)
+is_subclass = cache(_typeinfo.is_subclass)
+is_tuple = cache(_typeinfo.is_tuple)
+is_literal = cache(_typeinfo.is_literal)
+is_new_type = cache(_typeinfo.is_new_type)
+extract_new_type = cache(_typeinfo.extract_new_type)
+is_init_var = cache(_typeinfo.is_init_var)
+extract_init_var = cache(_typeinfo.extract_init_var)
+is_type_generic = cache(_typeinfo.is_type_generic)
+is_generic_dataclass = cache(_typeinfo.is_generic_dataclass)
 
 
 @cache
@@ -31,108 +33,6 @@ def extract_optional(optional: Type[Optional[T]]) -> T:
         return typing_cast(T, Union[tuple(other_members)])
     else:
         raise ValueError("can not find not-none value")
-
-
-@cache
-def is_generic(type_: Type) -> bool:
-    return hasattr(type_, "__origin__")
-
-
-@cache
-def is_union(type_: Type) -> bool:
-    if is_generic(type_) and type_.__origin__ == Union:
-        return True
-
-    try:
-        from types import UnionType  # type: ignore
-
-        return isinstance(type_, UnionType)
-    except ImportError:
-        return False
-
-
-@cache
-def is_tuple(type_: Type) -> bool:
-    return is_subclass(type_, tuple)
-
-
-@cache
-def is_literal(type_: Type) -> bool:
-    try:
-        from typing import Literal  # type: ignore
-
-        return is_generic(type_) and type_.__origin__ == Literal
-    except ImportError:
-        return False
-
-
-@cache
-def is_new_type(type_: Type) -> bool:
-    return hasattr(type_, "__supertype__")
-
-
-@cache
-def extract_new_type(type_: Type) -> Type:
-    return type_.__supertype__
-
-
-@cache
-def is_init_var(type_: Type) -> bool:
-    return isinstance(type_, InitVar) or type_ is InitVar
-
-
-@cache
-def extract_init_var(type_: Type) -> Union[Type, Any]:
-    try:
-        return type_.type
-    except AttributeError:
-        return Any
-
-
-@cache
-def is_generic_collection(type_: Type) -> bool:
-    if not is_generic(type_):
-        return False
-    origin = extract_origin_collection(type_)
-    try:
-        return bool(origin and issubclass(origin, Collection))
-    except (TypeError, AttributeError):
-        return False
-
-
-@cache
-def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
-    try:
-        if getattr(type_, "_special", False):
-            return defaults
-        if type_.__args__ == ():
-            return (type_.__args__,)
-        return type_.__args__ or defaults  # type: ignore
-    except AttributeError:
-        return defaults
-
-
-@cache
-def is_subclass(sub_type: Type, base_type: Type) -> bool:
-    if is_generic_collection(sub_type):
-        sub_type = extract_origin_collection(sub_type)
-    try:
-        return issubclass(sub_type, base_type)
-    except TypeError:
-        return False
-
-
-@cache
-def is_type_generic(type_: Type) -> bool:
-    try:
-        return type_.__origin__ in (type, Type)
-    except AttributeError:
-        return False
-
-
-@cache
-def is_generic_dataclass(type_: Type) -> bool:
-    return is_dataclass(get_origin(type_))
 
 
 def is_instance(value: Any, type_: Type) -> bool:

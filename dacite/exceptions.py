@@ -1,4 +1,4 @@
-from typing import Any, Type, Optional, Set, Dict
+from typing import Any, Type, Optional, Set, Dict, Tuple, Union
 from dacite.types import is_union
 
 
@@ -10,16 +10,57 @@ class DaciteError(Exception):
     pass
 
 
+class MapKey:
+    """Path segment addressing a value of a mapping by its key, rendered as `["key"]`."""
+
+    __slots__ = ("key",)
+
+    def __init__(self, key: Any) -> None:
+        self.key = key
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, MapKey) and self.key == other.key
+
+    def __hash__(self) -> int:
+        return hash(("MapKey", self.key))
+
+    def __repr__(self) -> str:
+        return f"MapKey({self.key!r})"
+
+
+PathSegment = Union[str, int, MapKey]
+
+
+def _format_path(path: Tuple[PathSegment, ...]) -> str:
+    result = ""
+    for segment in path:
+        if isinstance(segment, str):
+            result = f"{result}.{segment}" if result else segment
+        elif isinstance(segment, MapKey):
+            result += f"[{segment.key!r}]"
+        else:
+            result += f"[{segment}]"
+    return result
+
+
 class DaciteFieldError(DaciteError):
+    """Error bound to a place in the input. `path` holds the segments (field names, list/tuple indices, `MapKey`s),
+    `field_path` is the same path as a string, e.g. `orders[3].customer.email`."""
+
     def __init__(self, field_path: Optional[str] = None):
         super().__init__()
-        self.field_path = field_path
+        self.path: Tuple[PathSegment, ...] = (field_path,) if field_path else ()
 
-    def update_path(self, parent_field_path: str) -> None:
-        if self.field_path:
-            self.field_path = f"{parent_field_path}.{self.field_path}"
-        else:
-            self.field_path = parent_field_path
+    @property
+    def field_path(self) -> Optional[str]:
+        return _format_path(self.path) if self.path else None
+
+    @field_path.setter
+    def field_path(self, value: Optional[str]) -> None:
+        self.path = (value,) if value else ()
+
+    def update_path(self, parent_field_path: PathSegment) -> None:
+        self.path = (parent_field_path,) + self.path
 
 
 class WrongTypeError(DaciteFieldError):

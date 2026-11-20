@@ -3,7 +3,7 @@ from typing import Optional, Union, List, NewType
 
 import pytest
 
-from dacite import from_dict, MissingValueError, WrongTypeError
+from dacite import Config, from_dict, MissingValueError, WrongTypeError
 
 
 def test_from_dict_with_missing_optional_value():
@@ -177,3 +177,22 @@ def test_from_dict_with_optional_new_type():
     result = from_dict(X, {"s": MyStr("test")})
 
     assert result == X(s=MyStr("test"))
+
+
+def test_from_dict_with_none_first_optional_applies_type_hooks_and_converts():
+    # `Union[None, X]` is the same type as `Optional[X]`: it must be converted the same way, whichever form was
+    # seen first (dacite 1.x depended on lru_cache history here; see MIGRATION.md).
+    @dataclass
+    class Inner:
+        i: int
+
+    @dataclass
+    class X:
+        a: Union[None, Inner]
+        b: Optional[Inner]
+        c: Union[None, int]
+
+    result = from_dict(X, {"a": {"i": 1}, "b": {"i": 2}, "c": 3}, Config(type_hooks={int: lambda value: value + 1}))
+
+    assert result == X(a=Inner(i=2), b=Inner(i=3), c=4)
+    assert from_dict(X, {"a": None, "b": None, "c": None}) == X(a=None, b=None, c=None)

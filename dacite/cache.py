@@ -22,4 +22,7 @@ def get_cache_size() -> Optional[int]:
 
 
 def clear_cache() -> None:
+    from dacite._plan import clear_plans  # pylint: disable=import-outside-toplevel,cyclic-import
+
     cache.cache_clear()
+    clear_plans()

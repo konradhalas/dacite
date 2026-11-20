@@ -1,8 +1,4 @@
-try:
-    from typing import Protocol, Any  # type: ignore
-except ImportError:
-    from typing_extensions import Protocol, Any  # type: ignore
-
+from typing import Any, Protocol
 
 # fmt: off
 class Data(Protocol):
