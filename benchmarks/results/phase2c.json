@@ -1,5 +1,5 @@
 {
- "label": "dacite-2c",
+ "label": "dacite-final",
  "python": "3.13.2",
  "machine": "arm64 Darwin",
  "versions": {
@@ -11,84 +11,84 @@
  "results": {
   "dacite|flat10": {
    "status": "ok",
-   "warm_min_us": 0.6544405456430021,
-   "warm_med_us": 0.665269829497318,
+   "warm_min_us": 0.6551611453500623,
+   "warm_med_us": 0.6639713108355236,
    "tm_peak_kb": 0.28125,
-   "cold_us": 76.20803080499172
+   "cold_us": 80.08407894521952
   },
   "dacite|nested5": {
    "status": "ok",
-   "warm_min_us": 1.1246078877052872,
-   "warm_med_us": 1.1564449145002287,
+   "warm_min_us": 1.1300357680837083,
+   "warm_med_us": 1.1498308835372961,
    "tm_peak_kb": 0.5234375,
-   "cold_us": 131.1670057475567
+   "cold_us": 131.4160181209445
   },
   "dacite|big_list_10k": {
    "status": "ok",
-   "warm_min_us": 5644.435028764694,
-   "warm_med_us": 5775.207085261012,
+   "warm_min_us": 5814.355941090201,
+   "warm_med_us": 6032.444057720048,
    "tm_peak_kb": 1880.4296875,
-   "cold_us": 7764.209061861038,
-   "rss_before_mb": 26.625,
-   "rss_delta_mb": 2.0
+   "cold_us": 7654.334069229662,
+   "rss_before_mb": 26.5,
+   "rss_delta_mb": 1.984375
   },
   "dacite|opt_literal": {
    "status": "ok",
-   "warm_min_us": 0.8258057641711627,
-   "warm_med_us": 0.8321661418262162,
+   "warm_min_us": 0.8163744182538744,
+   "warm_med_us": 0.8354825030651643,
    "tm_peak_kb": 0.3359375,
-   "cold_us": 197.04201258718967
+   "cold_us": 192.66700837761164
   },
   "dacite|union_dataclasses": {
    "status": "ok",
-   "warm_min_us": 10.909871342190547,
-   "warm_med_us": 11.65360843840703,
-   "tm_peak_kb": 2.296875,
-   "cold_us": 287.0839089155197
+   "warm_min_us": 5.747510784370674,
+   "warm_med_us": 5.89361762704185,
+   "tm_peak_kb": 1.59375,
+   "cold_us": 282.33404736965895
   },
   "dacite|collections": {
    "status": "ok",
-   "warm_min_us": 33.69966711395629,
-   "warm_med_us": 34.20275059321384,
-   "tm_peak_kb": 10.5625,
-   "cold_us": 341.0420613363385
+   "warm_min_us": 15.589930666003022,
+   "warm_med_us": 15.787903179543422,
+   "tm_peak_kb": 8.5703125,
+   "cold_us": 334.33292992413044
   },
   "dacite|type_hooks_cast": {
    "status": "ok",
-   "warm_min_us": 1.4586893539221402,
-   "warm_med_us": 1.4938771996068856,
+   "warm_min_us": 1.453453900747614,
+   "warm_med_us": 1.464727221600587,
    "tm_peak_kb": 0.64453125,
-   "cold_us": 138.58301099389791
+   "cold_us": 125.58302842080593
   },
   "dacite|forward_refs": {
    "status": "ok",
-   "warm_min_us": 1.8290942894666236,
-   "warm_med_us": 1.8402645910708348,
+   "warm_min_us": 1.8726470949651524,
+   "warm_med_us": 1.9074843348637762,
    "tm_peak_kb": 0.9375,
-   "cold_us": 182.3339844122529
+   "cold_us": 195.54095342755318
   },
   "dacite|flat10_nocheck": {
    "status": "ok",
-   "warm_min_us": 0.5320690618327137,
-   "warm_med_us": 0.5390481955014533,
+   "warm_min_us": 0.5394920459032588,
+   "warm_med_us": 0.5430249884270194,
    "tm_peak_kb": 0.28125,
-   "cold_us": 78.37498560547829
+   "cold_us": 86.79099846631289
   },
   "dacite|nested5_nocheck": {
    "status": "ok",
-   "warm_min_us": 1.0043190563067603,
-   "warm_med_us": 1.016857122473681,
+   "warm_min_us": 0.9935626648735945,
+   "warm_med_us": 1.0175311781705758,
    "tm_peak_kb": 0.5234375,
-   "cold_us": 130.7500060647726
+   "cold_us": 145.41600830852985
   },
   "dacite|big_list_10k_nocheck": {
    "status": "ok",
-   "warm_min_us": 3644.0204553814096,
-   "warm_med_us": 3750.21894631738,
+   "warm_min_us": 3617.5995375271195,
+   "warm_med_us": 3764.9290170520544,
    "tm_peak_kb": 1880.21875,
-   "cold_us": 5252.250004559755,
-   "rss_before_mb": 26.375,
-   "rss_delta_mb": 1.921875
+   "cold_us": 5352.832959033549,
+   "rss_before_mb": 26.703125,
+   "rss_delta_mb": 1.984375
   }
  }
 }

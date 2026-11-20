@@ -308,6 +308,7 @@ _PASSTHROUGH = Node(None, False, None, None)
 
 
 _NOT_FOUND = object()
+NO_MATCH = object()
 
 
 def _member_prefilter(node: "Node") -> Optional[Tuple[frozenset, Tuple[Tuple[Any, tuple], ...]]]:
@@ -342,6 +343,7 @@ class _UnionBody:  # pylint: disable=too-few-public-methods,too-many-instance-at
         "strict_match",
         "check_types",
         "prefilters",
+        "dc_members",
     )
 
     def __init__(  # type: ignore[no-untyped-def]
@@ -349,6 +351,7 @@ class _UnionBody:  # pylint: disable=too-few-public-methods,too-many-instance-at
     ):  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self.union = union
         self.prefilters: Optional[tuple] = None
+        self.dc_members: Any = None  # None: not prepared yet, False: not applicable, else tuple of (prefilter, body)
         self.single_index = single_index
         self.types = types
         self.nodes = nodes
@@ -357,17 +360,72 @@ class _UnionBody:  # pylint: disable=too-few-public-methods,too-many-instance-at
         self.strict_match = strict_match
         self.check_types = check_types
 
-    def build(self, data: Any) -> Any:
+    def _prepare(self) -> None:
+        self.prefilters = tuple(_member_prefilter(node) for node in self.nodes)
+        members: Any = []
+        if not self.strict_match and not self.single:
+            for node, member_type, prefilter in zip(self.nodes, self.types, self.prefilters):
+                plain = node.hook is None and node.cast is None and not node.optional
+                if plain and isinstance(node.body, _DataclassBody):
+                    members.append((prefilter, node.body))
+                elif member_type is not type(None):  # a `None` member never matches data that is not `None`
+                    members = False
+                    break
+            if members is not False and not members:
+                members = False
+        else:
+            members = False
+        self.dc_members = members
+
+    def uses_data_classes_only(self) -> bool:
+        """True when every member is a plain data class (or `None`) and the union is not in strict mode: then the
+        first member that converts is the result and no type check is needed (see `match`)."""
+        if self.dc_members is None:
+            self._prepare()
+        return self.dc_members is not False
+
+    def match(self, data: Any) -> Any:
+        """First data class member that accepts the exact `dict` `data`, or `NO_MATCH`. Members that certainly fail
+        are skipped (see `_member_prefilter`); a failing member is simply not a match, whatever it raises."""
+        if self.dc_members is None:
+            self._prepare()
+        for prefilter, body in self.dc_members:
+            if prefilter is not None:
+                required, literals = prefilter
+                if not required.issubset(data):
+                    continue
+                for key, values in literals:
+                    found = data.get(key, _NOT_FOUND)
+                    if found is not _NOT_FOUND and found not in values:
+                        break
+                else:
+                    literals = None
+                if literals is not None:
+                    continue
+            try:
+                return (body.plan or body.resolve()).run(data)
+            except Exception:  # pylint: disable=broad-except
+                continue
+        return NO_MATCH
+
+    def build(self, data: Any) -> Any:  # pylint: disable=too-many-locals
         if self.single:
             # `Optional[X]` / `Union[None, X]`: convert as X. (dacite 1.x took `types[0]`, which for `Union[None, X]` is
             # NoneType, i.e. no conversion - but its lru_cache shared the entry between the equal `Optional[X]` and
             # `Union[None, X]`, so the outcome depended on which form was seen first in the process.)
             return self.nodes[self.single_index].build(data)
         union_matches: Dict[Any, Any] = {}
-        prefilters = self.prefilters
-        if prefilters is None:
-            prefilters = self.prefilters = tuple(_member_prefilter(node) for node in self.nodes)
+        if self.dc_members is None:
+            self._prepare()
         exact = data.__class__ is dict
+        if exact and self.dc_members is not False:
+            matched = self.match(data)
+            if matched is not NO_MATCH:
+                return matched
+            if not self.check_types:
+                return data
+            raise UnionMatchError(field_type=self.union, value=data)
+        prefilters: Tuple[Any, ...] = self.prefilters  # type: ignore[assignment]  # set by `_prepare`
         for inner_type, node, check, prefilter in zip(self.types, self.nodes, self.checkers, prefilters):
             if prefilter is not None and exact:
                 required, literals = prefilter

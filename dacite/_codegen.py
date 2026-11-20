@@ -18,6 +18,7 @@ from dacite._plan import (
     _NO_DEFAULT,
     _CollectionBody,
     _DataclassBody,
+    NO_MATCH,
     _UnionBody,
     DataclassPlan,
     Node,
@@ -56,15 +57,33 @@ def _is_primitive(type_: Any) -> bool:
 
 
 def _leaf(node: Node, type_: Any) -> Optional[Tuple[Any, ...]]:
-    """Classify an element/value node of a collection: ("any",), ("prim", cls) or ("dc", body, node)."""
+    """Classify an element/value node of a collection:
+    ("any",), ("prim", cls), ("dc", plain data class body, node, optional) or ("udc", union of data classes, node,
+    optional)."""
     if _passthrough(node):
         if type_ is Any:
             return ("any",)
         if _is_primitive(type_):
             return ("prim", type_)
         return None
-    if node.hook is None and node.cast is None and not node.optional and isinstance(node.body, _DataclassBody):
-        return ("dc", node.body, node)
+    if node.hook is not None or node.cast is not None:
+        return None
+    body = node.body
+    if not node.optional and isinstance(body, _DataclassBody):
+        return ("dc", body, node, False)
+    if isinstance(body, _UnionBody):
+        if node.optional and body.single:  # Optional[DataClass]
+            inner = body.nodes[body.single_index]
+            if (
+                inner.hook is None
+                and inner.cast is None
+                and not inner.optional
+                and isinstance(inner.body, _DataclassBody)
+            ):
+                return ("dc", inner.body, node, True)
+            return None
+        if not body.single and body.uses_data_classes_only():
+            return ("udc", body, node, node.optional)
     return None
 
 
@@ -93,38 +112,178 @@ def _general(node: Node, checker: Callable[[Any], bool], ftype: Any, name: str, 
     return run
 
 
+# --- "pure" converters: collections of primitives, checked and copied without side effects ---------------------------
+# A pure converter returns the converted value, or raises `_Bail` as soon as anything is not exactly what it expects
+# (other container class, wrong length, a value of an unexpected class). The caller then hands the *original* value
+# to the interpreter, which produces the result or the exact error. Pure converters call no hooks, `__init__` or user
+# code, so bailing out halfway cannot duplicate side effects.
+class _Bail(Exception):
+    pass
+
+
+def _pure_primitive(prim: type) -> Callable[[Any], Any]:
+    fast, accepted = _PRIMITIVES[prim]
+
+    def one(value: Any) -> Any:
+        if value.__class__ in fast or isinstance(value, accepted):
+            return value
+        raise _Bail
+
+    return one
+
+
+def _pure_item(node: Node, type_: Any) -> Optional[Tuple[str, Any]]:
+    if _passthrough(node):
+        if type_ is Any:
+            return ("any", None)
+        if _is_primitive(type_):
+            return ("prim", type_)
+        return None
+    if ti.is_generic_collection(type_):
+        converter = _pure_container(node, type_)
+        if converter is not None:
+            return ("fn", converter)
+    return None
+
+
+def _pure_container(  # pylint: disable=too-many-return-statements,too-many-branches
+    node: Node, type_: Any
+) -> Optional[Callable[[Any], Any]]:
+    body = node.body
+    if not isinstance(body, _CollectionBody) or node.hook is not None or node.cast is not None or node.optional:
+        return None
+    origin = ti.extract_origin_collection(type_)
+    generics = ti.extract_generic(type_)
+    if origin in (list, set, frozenset) and len(generics) == 1 and body.item_node is not None:
+        if not body.is_collection or body.is_mapping or body.is_tuple:
+            return None
+        item = _pure_item(body.item_node, generics[0])
+        return None if item is None else _pure_sequence(origin, item)
+    if origin is tuple and body.is_tuple:
+        if body.variadic and len(generics) == 2 and body.tuple_nodes[0] is not None:
+            item = _pure_item(body.tuple_nodes[0], generics[0])  # type: ignore[arg-type]
+            return None if item is None else _pure_sequence(tuple, item)
+        if not body.variadic and generics and generics != ((),) and len(body.tuple_nodes) == len(generics):
+            items = [_pure_item(n, g) for n, g in zip(body.tuple_nodes, generics) if n is not None]
+            if len(items) == len(generics) and all(item is not None for item in items):
+                return _pure_fixed_tuple(items)  # type: ignore[arg-type]
+        return None
+    if origin is dict and body.is_mapping and len(generics) == 2 and body.value_node is not None:
+        key_type, value_type = generics
+        if key_type is not Any and not _is_primitive(key_type):
+            return None
+        item = _pure_item(body.value_node, value_type)
+        return None if item is None else _pure_dict(key_type if _is_primitive(key_type) else None, item)
+    return None
+
+
+def _pure_sequence(container: type, item: Tuple[str, Any]) -> Callable[[Any], Any]:
+    kind, detail = item
+    if kind == "fn":
+
+        def nested(value: Any) -> Any:
+            if value.__class__ is not container:
+                raise _Bail
+            elements: Any = value  # (mypy narrows `value` to `object` after the `__class__` test)
+            return container([detail(element) for element in elements])
+
+        return nested
+    fast: Optional[frozenset] = None
+    accepted: Tuple[type, ...] = ()
+    if kind == "prim":
+        fast, accepted = _PRIMITIVES[detail]
+
+    def flat(value: Any) -> Any:
+        if value.__class__ is not container:
+            raise _Bail
+        out = container(value)
+        if fast is not None and not set(map(type, out)) <= fast and not all(isinstance(e, accepted) for e in out):
+            raise _Bail
+        return out
+
+    return flat
+
+
+def _pure_fixed_tuple(items: List[Tuple[str, Any]]) -> Callable[[Any], Any]:
+    converters: List[Optional[Callable[[Any], Any]]] = []
+    for kind, detail in items:
+        converters.append(None if kind == "any" else _pure_primitive(detail) if kind == "prim" else detail)
+    length = len(converters)
+
+    def fixed(value: Any) -> Any:
+        if value.__class__ is not tuple or len(value) != length:
+            raise _Bail
+        return tuple(  # pylint: disable=consider-using-generator
+            [e if c is None else c(e) for c, e in zip(converters, value)]
+        )  # pylint: disable=consider-using-generator
+
+    return fixed
+
+
+def _pure_dict(key_prim: Optional[type], item: Tuple[str, Any]) -> Callable[[Any], Any]:
+    kind, detail = item
+
+    def mapping(value: Any) -> Any:
+        if value.__class__ is not dict:
+            raise _Bail
+        if key_prim is not None and not _check_classes(value.keys(), key_prim):
+            raise _Bail
+        if kind == "fn":
+            return {k: detail(v) for k, v in value.items()}
+        out = dict(value)
+        if kind == "prim" and not _check_classes(out.values(), detail):
+            raise _Bail
+        return out
+
+    return mapping
+
+
+def _pure_function(converter: Callable[[Any], Any], general: Callable[[Any], Any]) -> Callable[[Any], Any]:
+    def convert(value: Any) -> Any:
+        try:
+            return converter(value)
+        except _Bail:
+            return general(value)
+
+    return convert
+
+
 def _collection_function(  # pylint: disable=too-many-return-statements,too-many-locals,too-many-arguments,too-many-positional-arguments
     node: Node, checker: Callable[[Any], bool], type_: Any, ftype: Any, name: str, check_types: bool
 ) -> Optional[Callable[[Any], Any]]:
-    """Function converting + checking a whole `List[T]`, `Tuple[T, ...]` or `Dict[K, T]` field for exact container
-    input; any other input goes through the general (interpreter) path."""
+    """Function converting + checking a whole collection field for exact container input; any other input goes
+    through the general (interpreter) path."""
     body = node.body
     if not isinstance(body, _CollectionBody) or node.hook is not None or node.cast is not None or node.optional:
         return None
     origin = ti.extract_origin_collection(type_)
     generics = ti.extract_generic(type_)
     general = _general(node, checker, ftype, name, check_types)
+    pure = _pure_container(node, type_)
     if origin is dict and body.is_mapping and len(generics) == 2 and body.value_node is not None:
         key_type, value_type = generics
         leaf = _leaf(body.value_node, value_type)
-        if leaf is None or not (key_type is Any or _is_primitive(key_type)):
-            return None
-        return _dict_function(leaf, key_type, body.value_node, checker, ftype, name, check_types, general)
+        if leaf is not None and leaf[0] in ("dc", "udc") and (key_type is Any or _is_primitive(key_type)):
+            return _dict_function(leaf, key_type, body.value_node, checker, ftype, name, check_types, general)
+        return _pure_function(pure, general) if pure is not None else None
+    item_node: Optional[Node]
     if origin is list and body.is_collection and not body.is_mapping and not body.is_tuple and len(generics) == 1:
         item_node, item_type, container = body.item_node, generics[0], list
     elif origin is tuple and body.is_tuple and body.variadic and len(generics) == 2:
         item_node, item_type, container = body.tuple_nodes[0], generics[0], tuple  # type: ignore[assignment]
     else:
-        return None
-    if item_node is None:
-        return None
-    leaf = _leaf(item_node, item_type)
-    if leaf is None:
-        return None
-    return _sequence_function(container, leaf, item_node, checker, ftype, name, check_types, general)
+        return _pure_function(pure, general) if pure is not None else None
+    leaf = _leaf(item_node, item_type) if item_node is not None else None
+    if leaf is not None and leaf[0] in ("dc", "udc"):
+        return _sequence_function(container, leaf, item_node, checker, ftype, name, check_types, general)  # type: ignore[arg-type]
+    if pure is not None:
+        return _pure_function(pure, general)
+    if leaf is not None and item_node is not None:  # list/tuple of primitives or Any (pure converter not applicable)
+        return _sequence_function(container, leaf, item_node, checker, ftype, name, check_types, general)
+    return None
 
 
-def _sequence_function(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _sequence_function(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     container: type, leaf: Tuple[Any, ...], item_node: Node, checker, ftype, name, check_types, general
 ):  # type: ignore[no-untyped-def]
     kind = leaf[0]
@@ -142,7 +301,7 @@ def _sequence_function(  # pylint: disable=too-many-arguments,too-many-positiona
 
         return convert
 
-    body = leaf[1]
+    body, optional, is_dc = leaf[1], leaf[3], kind == "dc"
 
     def convert_items(value: Any) -> Any:
         if value.__class__ is not container:
@@ -155,12 +314,23 @@ def _sequence_function(  # pylint: disable=too-many-arguments,too-many-positiona
         try:
             for item in elements:
                 if item.__class__ is dict:
-                    if run is None:
-                        run = (body.plan or body.resolve()).run
-                    out.append(run(item))
-                else:
-                    produced = False
-                    out.append(item_node.build(item))
+                    if is_dc:
+                        if run is None:
+                            run = (body.plan or body.resolve()).run
+                        out.append(run(item))
+                        index += 1
+                        continue
+                    matched = body.match(item)
+                    if matched is not NO_MATCH:
+                        out.append(matched)
+                        index += 1
+                        continue
+                elif item is None and optional:
+                    out.append(None)
+                    index += 1
+                    continue
+                produced = False
+                out.append(item_node.build(item))
                 index += 1
         except DaciteFieldError as error:
             error.update_path(index)
@@ -177,25 +347,8 @@ def _sequence_function(  # pylint: disable=too-many-arguments,too-many-positiona
 def _dict_function(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     leaf: Tuple[Any, ...], key_type: Any, value_node: Node, checker, ftype, name, check_types, general
 ):  # type: ignore[no-untyped-def]
-    kind = leaf[0]
     key_prim = key_type if _is_primitive(key_type) else None
-    if kind in ("any", "prim"):
-        value_prim = leaf[1] if kind == "prim" else None
-
-        def convert(value: Any) -> Any:
-            if value.__class__ is not dict:
-                return general(value)
-            out = dict(value)
-            if check_types and (
-                (key_prim is not None and not _check_classes(out.keys(), key_prim))
-                or (value_prim is not None and not _check_classes(out.values(), value_prim))
-            ):
-                raise WrongTypeError(field_path=name, field_type=ftype, value=out)
-            return out
-
-        return convert
-
-    body = leaf[1]
+    body, optional, is_dc = leaf[1], leaf[3], leaf[0] == "dc"
 
     def convert_values(value: Any) -> Any:
         if value.__class__ is not dict:
@@ -207,12 +360,20 @@ def _dict_function(  # pylint: disable=too-many-arguments,too-many-positional-ar
         try:
             for current, item in value.items():
                 if item.__class__ is dict:
-                    if run is None:
-                        run = (body.plan or body.resolve()).run
-                    out[current] = run(item)
-                else:
-                    produced = False
-                    out[current] = value_node.build(item)
+                    if is_dc:
+                        if run is None:
+                            run = (body.plan or body.resolve()).run
+                        out[current] = run(item)
+                        continue
+                    matched = body.match(item)
+                    if matched is not NO_MATCH:
+                        out[current] = matched
+                        continue
+                elif item is None and optional:
+                    out[current] = None
+                    continue
+                produced = False
+                out[current] = value_node.build(item)
         except DaciteFieldError as error:
             error.update_path(MapKey(current))
             error.update_path(name)
@@ -224,6 +385,20 @@ def _dict_function(  # pylint: disable=too-many-arguments,too-many-positional-ar
         return out
 
     return convert_values
+
+
+def _union_function(body: _UnionBody, general: Callable[[Any], Any]) -> Callable[[Any], Any]:
+    """Field function for a union of data classes: the first member that converts an exact `dict` wins (and is an
+    instance by construction); anything else, including "no member matched", is decided by the interpreter."""
+
+    def convert(value: Any) -> Any:
+        if value.__class__ is dict:
+            matched = body.match(value)
+            if matched is not NO_MATCH:
+                return matched
+        return general(value)
+
+    return convert
 
 
 class _Source:  # pylint: disable=too-few-public-methods
@@ -294,7 +469,7 @@ def _field_lines(  # pylint: disable=too-many-arguments,too-many-positional-argu
         ):
             return None
         leaf = _leaf(body.item_node, generics[0])
-        if leaf is None or leaf[0] == "dc":
+        if leaf is None or leaf[0] in ("dc", "udc"):
             return None
         lines = [f"if {variable}.__class__ is list:", f"    {variable} = list({variable})"]
         if check_types and leaf[0] == "prim":
@@ -348,6 +523,19 @@ def _field_lines(  # pylint: disable=too-many-arguments,too-many-positional-argu
             if function is not None:
                 return [f"{variable} = {src.bind(function, 'f')}({variable})"]
         return None
+
+    # Union[DataClassA, DataClassB, ...] (optionally with None): the first member that converts the dict wins
+    union = node.body
+    if (
+        node.hook is None
+        and node.cast is None
+        and isinstance(union, _UnionBody)
+        and not union.single
+        and union.uses_data_classes_only()
+    ):
+        function = _union_function(union, _general(node, checker, ftype, name, check_types))
+        call = f"{variable} = {src.bind(function, 'f')}({variable})"
+        return [f"if {variable} is not None:", f"    {call}"] if node.optional else [call]
 
     # Optional[X] / Union[None, X]: None is always accepted; X is converted like a field of type X
     if node.hook is None and node.cast is None and node.optional:

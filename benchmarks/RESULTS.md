@@ -404,46 +404,49 @@ Reading:
 - **Leak safety:** the plan cache lives in the data class (`__dacite_plans__`), checkers and nodes use no `lru_cache`;
   `tests/test_plan_cache.py` verifies that 50 dynamically created class pairs are garbage collected.
 
-## Phase 2c: generated code (`benchmarks/results/phase2c.json`)
+## Phase 2c + A: generated code with fast paths for collections and unions (`benchmarks/results/phase2c.json`)
 
 Default configuration: a type is interpreted for 99 conversions and compiled on the 100th (`set_compile_threshold`).
-Warm numbers are therefore compiled; cold numbers are the first call (interpreter), except that a 10k-item list
-compiles its item type after 100 items inside the very first conversion. Same machine, CPython 3.13.2.
+Warm numbers are therefore compiled; cold numbers are the first call (interpreter), except that a 10k-item list compiles
+its item type after 100 items inside the very first conversion. Same machine, CPython 3.13.2, final state of the branch
+(the first 2c measurement of this phase, before the collection/union work, is shown for comparison).
 
-| scenario | warm 1.9.2 | warm 2b | **warm 2c** | speedup vs 1.9.2 | cold 1.9.2 → 2c | tracemalloc KiB 1.9.2 → 2c | best other library (warm) |
-|---|---:|---:|---:|---:|---:|---:|---|
-| `flat10` | 11.90 µs | 2.51 µs | **0.65 µs** | 18.2× | 68.79 → 76.21 µs | 1.9 → 0.3 | 0.58 µs (msgspec) |
-| `nested5` | 17.88 µs | 4.56 µs | **1.12 µs** | 15.9× | 108.50 → 131.17 µs | 2.8 → 0.5 | 0.99 µs (msgspec) |
-| `big_list_10k` | 115.03 ms | 23.28 ms | **5.64 ms** | 20.4× | 116.57 → 7.76 ms | 2361 → 1880 | 3.15 ms (msgspec) |
-| `opt_literal` | 24.86 µs | 3.39 µs | **0.83 µs** | 30.1× | 158.63 → 197.04 µs | 2.6 → 0.3 | 0.58 µs (msgspec) |
-| `union_dataclasses` | 121.71 µs | 18.24 µs | **10.91 µs** | 11.2× | 313.38 → 287.08 µs | 5.2 → 2.3 | 5.90 µs (cattrs) |
-| `collections` | 358.44 µs | 66.54 µs | **33.70 µs** | 10.6× | 558.88 → 341.04 µs | 18.5 → 10.6 | 7.99 µs (msgspec) |
-| `type_hooks_cast` | 12.70 µs | 2.55 µs | **1.46 µs** | 8.7× | 111.00 → 138.58 µs | 2.1 → 0.6 | n/a |
-| `forward_refs` | 31.32 µs | 7.06 µs | **1.83 µs** | 17.1× | 196.62 → 182.33 µs | 3.2 → 0.9 | n/a |
-| `flat10_nocheck` | 9.84 µs | 1.92 µs | **0.53 µs** | 18.5× | 74.13 → 78.37 µs | 1.3 → 0.3 | n/a |
-| `nested5_nocheck` | 15.55 µs | 3.83 µs | **1.00 µs** | 15.5× | 139.71 → 130.75 µs | 2.3 → 0.5 | n/a |
-| `big_list_10k_nocheck` | 84.81 ms | 17.95 ms | **3.64 ms** | 23.3× | 83.13 → 5.25 ms | 2360 → 1880 | n/a |
+| scenario | warm 1.9.2 | warm 2c (first cut) | **warm final** | speedup vs 1.9.2 | cold 1.9.2 → final | tracemalloc KiB 1.9.2 → final | cattrs | pydantic | msgspec |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `flat10` | 11.90 µs | 0.65 µs | **0.66 µs** | 18.2× | 68.79 → 80.08 µs | 1.9 → 0.3 | 0.95 µs | 0.81 µs | 0.58 µs |
+| `nested5` | 17.88 µs | 1.12 µs | **1.13 µs** | 15.8× | 108.50 → 131.42 µs | 2.8 → 0.5 | 1.80 µs | 1.50 µs | 0.99 µs |
+| `big_list_10k` | 115.03 ms | 5.64 ms | **5.81 ms** | 19.8× | 116.57 → 7.65 ms | 2361 → 1880 | 7.84 ms | 5.62 ms | 3.15 ms |
+| `opt_literal` | 24.86 µs | 0.83 µs | **0.82 µs** | 30.4× | 158.63 → 192.67 µs | 2.6 → 0.3 | n/a | 0.97 µs | 0.58 µs |
+| `union_dataclasses` | 121.71 µs | 10.91 µs | **5.75 µs** | 21.2× | 313.38 → 282.33 µs | 5.2 → 1.6 | 5.90 µs | 6.46 µs | n/a |
+| `collections` | 358.44 µs | 33.70 µs | **15.59 µs** | 23.0× | 558.88 → 334.33 µs | 18.5 → 8.6 | 24.96 µs | 15.19 µs | 7.99 µs |
+| `type_hooks_cast` | 12.70 µs | 1.46 µs | **1.45 µs** | 8.7× | 111.00 → 125.58 µs | 2.1 → 0.6 | n/a | n/a | n/a |
+| `forward_refs` | 31.32 µs | 1.83 µs | **1.87 µs** | 16.7× | 196.62 → 195.54 µs | 3.2 → 0.9 | n/a | n/a | n/a |
+| `flat10_nocheck` | 9.84 µs | 0.53 µs | **0.54 µs** | 18.2× | 74.13 → 86.79 µs | 1.3 → 0.3 | n/a | n/a | n/a |
+| `nested5_nocheck` | 15.55 µs | 1.00 µs | **0.99 µs** | 15.7× | 139.71 → 145.42 µs | 2.3 → 0.5 | n/a | n/a | n/a |
+| `big_list_10k_nocheck` | 84.81 ms | 3.64 ms | **3.62 ms** | 23.4× | 83.13 → 5.35 ms | 2360 → 1880 | n/a | n/a | n/a |
 
-Peak RSS growth for the 10k list: 2.44 MiB (1.9.2) → 2.00 MiB (msgspec 1.8, cattrs 2.3, pydantic 3.5).
+Peak RSS growth for the 10k list: 2.44 MiB (1.9.2) → 1.98 MiB (msgspec 1.8, cattrs 2.3, pydantic 3.5).
 
-Targets from `docs/ARCHITECTURE_V2.md` (≥10× `flat10`, ≥15× 10k list): **met** (18.2× and 20.4×); the "realistic"
-range estimated there (11–13× and 16–21×) was beaten for `flat10`, the 10k list is at the top of it.
+### Against the targets and the reference libraries
 
-### Where it stands against the reference libraries (warm)
+- Targets from `docs/ARCHITECTURE_V2.md` (≥10× `flat10`, ≥15× 10k list): **met** (18.2× and 19.8×). The "realistic" range
+  estimated in Phase 1 (11–13× and 16–21×) was beaten for `flat10` and reached for the list.
+- Pure-Python generated code is **ahead of cattrs** on every comparable scenario (0.66 vs 0.95 µs, 1.13 vs 1.80 µs,
+  5.8 vs 7.8 ms, 5.75 vs 5.90 µs, 15.6 vs 25.0 µs), **ahead of or level with pydantic-core** (Rust) on flat, nested,
+  optional and union data (0.66 vs 0.81, 1.13 vs 1.50, 0.82 vs 0.97, 5.75 vs 6.46; list of 10k: 5.81 vs 5.62 ms, level;
+  `collections`: 15.6 vs 15.2 µs, level), and **within 1.1–2×** of msgspec, a C library that does not call `__init__`
+  (`collections` 15.6 vs 8.0 µs is the widest gap).
+- The remaining cold-start cost (first conversion of a small type is 12–20% slower than 1.9.2, 10–20 µs one-off) comes
+  from building the plan. `type_hooks_cast` (8.7×) is limited by the user's hook calls.
 
-| scenario | dacite 2c | cattrs | pydantic | msgspec |
-|---|---:|---:|---:|---:|
-| `flat10` | **0.65 µs** | 0.95 | 0.81 | 0.58 |
-| `nested5` | **1.12 µs** | 1.80 | 1.50 | 0.99 |
-| `big_list_10k` | **5.64 ms** | 7.84 | 5.62 | 3.15 |
-| `opt_literal` | **0.83 µs** | n/a | 0.97 | 0.58 |
-| `union_dataclasses` | 10.91 µs | 5.90 | 6.46 | n/a |
-| `collections` | 33.70 µs | 24.96 | 15.19 | 7.99 |
+### What the "A" step added (before → after on the same machine)
 
-Pure-Python generated code is ahead of cattrs and pydantic on flat/nested/optional data and within 1.1–1.8× of msgspec
-(a C library that does not call `__init__`). Two shapes are **still behind**: unions of data classes (1.7× slower than
-cattrs: the union loop is interpreted; failed members are skipped by prefilters but still go through `Node.build`) and
-`collections` (1.4–4× slower: sets, fixed tuples and nested collections are not in the fast path yet).
+- `collections` 33.7 → 15.6 µs: `List[List[int]]` went from 17.8 to ~3 µs by converting nested containers of
+  primitives with "pure" converters (no user code, so bailing out to the interpreter halfway cannot repeat side effects),
+  plus fast paths for `Set`/`FrozenSet`, fixed `Tuple[A, B, C]` and `Dict[str, List[...]]`.
+- `union_dataclasses` 10.9 → 5.75 µs: a union of data classes picks the first member that converts an exact `dict`
+  directly (skipping members that cannot match by prefilter) instead of going through a node-per-member loop and a
+  type check; unions also work as elements of lists/dicts and with `None`.
 
 ### Costs and decisions measured along the way
 
@@ -455,5 +458,5 @@ cattrs: the union loop is interpreted; failed members are skipped by prefilters 
   keys in one `try` saves another 0.15 µs; together they moved `flat10` from 1.11 µs to 0.65 µs.
 - Skipping a redundant deep type check for list/dict items that were just produced by a nested plan took the 10k list
   from 9.9 ms to 8.6 ms (before inline lists and positional construction brought it to 5.5 ms).
-- Peak `tracemalloc` for the 10k list is now equal to msgspec's (1.88 MiB): the temporary checks and builders are gone;
-  what remains is the result objects.
+- Peak `tracemalloc` for the 10k list equals msgspec's (1.88 MiB): the temporary checks and builders are gone; what
+  remains is the result objects. Small types allocate 70–85% less per call (1.9 → 0.3 KiB for `flat10`).
