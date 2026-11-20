@@ -1,7 +1,7 @@
 from typing import Type, Any, Optional, Union, TypeVar, Mapping, cast as typing_cast
 from typing import get_origin
 
-from dacite import _typeinfo
+import dacite._typeinfo as _typeinfo  # pylint: disable=consider-using-from-import
 from dacite.cache import cache
 
 T = TypeVar("T", bound=Any)

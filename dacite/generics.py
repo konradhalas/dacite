@@ -3,11 +3,10 @@ import sys
 from types import UnionType
 from dataclasses import Field, is_dataclass
 from functools import reduce
-from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, get_type_hints
+from typing import Any, Dict, Generic, List, Literal, Tuple, Type, TypeVar, get_args, get_origin, get_type_hints
 
 from dacite.exceptions import DaciteError
 
-from typing import Literal, get_args, get_origin
 
 from .dataclasses import get_fields as dataclasses_get_fields
 

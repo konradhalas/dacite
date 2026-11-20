@@ -19,7 +19,7 @@ from dataclasses import _FIELD, _FIELD_INITVAR, _FIELDS, MISSING, Field, is_data
 from itertools import zip_longest
 from typing import Any, Callable, Dict, List, Optional, Tuple, get_origin
 
-from dacite import _typeinfo as ti
+import dacite._typeinfo as ti
 from dacite.cache import get_cache_size
 from dacite.config import Config
 from dacite.exceptions import (
