@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-...
+## [1.9.3] - UNRELEASED
+
+### Fixed
+
+- Fix converting a list of values to a tuple with mixed member types (#227)
+- Support PEP 604 unions (`X | Y`) in generic data classes (#282)
+- Fix the order of `Union` members being lost: `Union[int, float]` and `Union[float, int]` share a cache entry, so
+  `type_hooks` and `cast` could be tried in the wrong order (#300)
+- Fix `cast` and `type_hooks` being skipped for `Union[None, X]` (a two-member `Optional` with `None` first) (#311)
+- Fix `strict=True` rejecting every key when `convert_key` is set (#295)
+- Fix `from_dict` overwriting the value of an `init=False` field with its default after `__post_init__` set it (#301)
 
 ## [1.9.2] - 2025-02-05
 

@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="dacite",
-    version="1.9.2",
+    version="1.9.3",
     description="Simple creation of data classes from dictionaries.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
