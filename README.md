@@ -106,6 +106,7 @@ of `dacite.Config` class
 Configuration is a (data) class with following fields:
 
 - `type_hooks`
+- `subclass_type_hooks`
 - `cast`
 - `forward_references`
 - `check_types`
@@ -327,6 +328,43 @@ If a data class field type is a `Optional[T]` you can pass both -
 `Optional[T]` or just `T` - as a key in `type_hooks`. The same with generic 
 collections, e.g. when a field has type `List[T]` you can use `List[T]` to 
 transform whole collection or `T` to transform each item. 
+
+### Type hooks for subclasses
+
+`Config.subclass_type_hooks` registers a conversion for a base class and
+its subclasses. These hooks receive **the target type and the value**, so
+one hook can, for example, construct different enums from member names:
+
+```python
+from enum import Enum
+
+class Color(Enum):
+    RED = "red"
+
+class Size(Enum):
+    SMALL = "s"
+
+@dataclass
+class Product:
+    color: Color
+    size: Size
+
+config = Config(subclass_type_hooks={Enum: lambda target, value: target[value]})
+assert from_dict(Product, {"color": "RED", "size": "SMALL"}, config) == Product(Color.RED, Size.SMALL)
+```
+
+Existing one-argument `type_hooks` remain exact-type registrations and take
+precedence. Within `subclass_type_hooks`, an exact annotation wins, followed
+by the first registered class in the target's Python method resolution
+order. If no class in that order matches, virtual abstract base classes
+are considered in registration order, as with `cast`.
+
+Only one hook runs for each value. Normal recursive construction, casting,
+and type checking follow it. For a parameterized collection, the hook gets
+the original annotation (such as `List[int]`); matching uses its origin
+class. Hooks are also used inside collections and unions, whose existing
+matching and error-handling rules still apply. The separate option makes
+subclass conversion explicit without changing existing hook signatures.
 
 ### Casting
 
