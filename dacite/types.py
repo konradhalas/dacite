@@ -100,8 +100,9 @@ def is_generic_collection(type_: Type) -> bool:
         return False
 
 
-@cache
 def extract_generic(type_: Type, defaults: Tuple = ()) -> tuple:
+    # Not cached: `Union[int, float]` and `Union[float, int]` are equal and share a hash, so `lru_cache` would
+    # return the `__args__` of whichever one was seen first and ignore the order of the members.
     try:
         if getattr(type_, "_special", False):
             return defaults
