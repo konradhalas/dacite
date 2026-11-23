@@ -3,7 +3,7 @@ from typing import Optional, List, Union, Dict
 
 import pytest
 
-from dacite import from_dict, UnionMatchError
+from dacite import from_dict, Config, UnionMatchError
 
 
 def test_from_dict_with_union_of_builtin_types():
@@ -14,6 +14,29 @@ def test_from_dict_with_union_of_builtin_types():
     result = from_dict(X, {"i": "s"})
 
     assert result == X(i="s")
+
+
+@pytest.mark.parametrize("config", [Config(cast=[int]), Config(type_hooks={int: int})])
+def test_from_dict_with_none_first_optional_conversion(config):
+    @dataclass
+    class X:
+        i: Union[None, int]
+
+    assert from_dict(X, {"i": "2"}, config) == X(i=2)
+    assert from_dict(X, {"i": None}, config) == X(i=None)
+    assert from_dict(X, {}, config) == X(i=None)
+
+
+def test_from_dict_with_none_first_optional_data_class():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        x: Union[None, X]
+
+    assert from_dict(Y, {"x": {"i": 2}}) == Y(x=X(i=2))
 
 
 def test_from_dict_with_union_of_data_classes():
@@ -183,3 +206,23 @@ def test_from_dict_with_union_of_mixed_types_and_dict_of_data_classes_as_a_resul
     result = from_dict(Y, {"d": {"x": {"i": 42}, "z": {"i": 37}}})
 
     assert result == Y(d={"x": X(i=42), "z": X(i=37)})
+
+
+def test_from_dict_union_type_hooks_respect_member_order():
+    # `Union[int, float]` and `Union[float, int]` are equal and share a hash, so a cache keyed by the type
+    # used to return the members of whichever union was seen first.
+    @dataclass
+    class IntFirst:
+        value: Union[int, float]
+
+    @dataclass
+    class FloatFirst:
+        value: Union[float, int]
+
+    config = Config(type_hooks={int: int, float: float})
+
+    result_float = from_dict(FloatFirst, {"value": 3}, config=config)
+    result_int = from_dict(IntFirst, {"value": 3}, config=config)
+
+    assert isinstance(result_float.value, float)
+    assert isinstance(result_int.value, int)

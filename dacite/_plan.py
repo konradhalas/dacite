@@ -687,7 +687,10 @@ def compile_plan(data_class: Any, config: Config) -> DataclassPlan:  # pylint: d
     specs = []
     for field in fields:
         field_type = hints[field.name]
-        if field.default != MISSING:
+        if not field.init and (field.default is not MISSING or field.default_factory is not MISSING):  # type: ignore
+            # `__init__` (and `__post_init__`) already set this value; do not overwrite it (1.9.3 fix)
+            default_kind, default = _NO_DEFAULT, None
+        elif field.default != MISSING:
             default_kind, default = _DEFAULT_VALUE, field.default
         elif field.default_factory != MISSING:  # type: ignore
             default_kind, default = _DEFAULT_FACTORY, field.default_factory  # type: ignore
