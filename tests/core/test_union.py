@@ -16,6 +16,29 @@ def test_from_dict_with_union_of_builtin_types():
     assert result == X(i="s")
 
 
+@pytest.mark.parametrize("config", [Config(cast=[int]), Config(type_hooks={int: int})])
+def test_from_dict_with_none_first_optional_conversion(config):
+    @dataclass
+    class X:
+        i: Union[None, int]
+
+    assert from_dict(X, {"i": "2"}, config) == X(i=2)
+    assert from_dict(X, {"i": None}, config) == X(i=None)
+    assert from_dict(X, {}, config) == X(i=None)
+
+
+def test_from_dict_with_none_first_optional_data_class():
+    @dataclass
+    class X:
+        i: int
+
+    @dataclass
+    class Y:
+        x: Union[None, X]
+
+    assert from_dict(Y, {"x": {"i": 2}}) == Y(x=X(i=2))
+
+
 def test_from_dict_with_union_of_data_classes():
     @dataclass
     class X:

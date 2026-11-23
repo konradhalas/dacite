@@ -26,6 +26,7 @@ from dacite.types import (
     is_union,
     extract_generic,
     is_optional,
+    extract_optional,
     extract_origin_collection,
     is_init_var,
     extract_init_var,
@@ -118,7 +119,7 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
 def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     types = extract_generic(union)
     if is_optional(union) and len(types) == 2:
-        return _build_value(type_=types[0], data=data, config=config)
+        return _build_value(type_=extract_optional(union), data=data, config=config)
     union_matches = {}
     for inner_type in types:
         try:
