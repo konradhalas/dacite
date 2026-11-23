@@ -70,6 +70,19 @@ class ForwardReferenceError(DaciteError):
         return f"can not resolve forward reference: {self.message}"
 
 
+class UnionSelectionError(DaciteFieldError):
+    def __init__(self, field_type: Type, selected_type: Any, field_path: Optional[str] = None) -> None:
+        super().__init__(field_path=field_path)
+        self.field_type = field_type
+        self.selected_type = selected_type
+
+    def __str__(self) -> str:
+        return (
+            f'explicit selector for field "{self.field_path}" returned "{_name(self.selected_type)}"; '
+            f"expected a member of a union annotation: {_name(self.field_type)}"
+        )
+
+
 class UnexpectedDataError(DaciteError):
     def __init__(self, keys: Set[str]) -> None:
         super().__init__()

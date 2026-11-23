@@ -111,6 +111,7 @@ Configuration is a (data) class with following fields:
 - `check_types`
 - `strict`
 - `strict_unions_match`
+- `explicit_unions`
 - `convert_key`
 
 The examples below show all features of `from_dict` function and usage
@@ -300,6 +301,46 @@ result = from_dict(data_class=C, data=data)
 
 assert result == C(z=A(x=X(a='foo'), y=[1,2,3]))
 ```
+
+### Explicit union selection
+
+When a union's discriminator is in the containing object, use
+`Config.explicit_unions` to choose a member from that object's input data:
+
+```python
+@dataclass
+class Cat:
+    name: str
+
+@dataclass
+class Dog:
+    name: str
+
+@dataclass
+class Person:
+    pet_type: str
+    pet: Union[Cat, Dog]
+
+config = Config(explicit_unions={
+    "pet": lambda data: {"cat": Cat, "dog": Dog}[data["pet_type"]],
+})
+person = from_dict(Person, {"pet_type": "dog", "pet": {"name": "Rex"}}, config)
+assert person.pet == Dog(name="Rex")
+```
+
+Selectors are keyed by dataclass field name, before `convert_key`, and receive
+the original input for the current dataclass, including sibling fields. The
+same configuration applies recursively, so a selector for `pet` also applies
+to nested dataclasses with that field name. Missing fields use their normal
+defaults without calling a selector.
+
+A selector must return an exact member of the resolved union, such as `Dog`,
+`List[Dog]`, or `type(None)` for an optional value. Otherwise
+`UnionSelectionError` reports the field, annotation and selected type. Only
+the selected member is built, using the normal hooks, casts and checks.
+Errors from the selector or selected member propagate without trying other
+members. Explicit selection resolves ambiguity even with
+`strict_unions_match=True`; fields without a selector keep ordinary matching.
 
 ### Type hooks
 

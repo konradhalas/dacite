@@ -1,6 +1,6 @@
 from dataclasses import is_dataclass
 from itertools import zip_longest
-from typing import TypeVar, Type, Optional, Mapping, Any, Collection, MutableMapping
+from typing import TypeVar, Type, Optional, Mapping, Any, Collection, MutableMapping, Callable
 
 from dacite.cache import cache
 from dacite.config import Config
@@ -19,6 +19,7 @@ from dacite.exceptions import (
     DaciteFieldError,
     UnexpectedDataError,
     StrictUnionMatchError,
+    UnionSelectionError,
 )
 from dacite.types import (
     is_instance,
@@ -66,7 +67,10 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
 
         if key in data:
             try:
-                value = _build_value(type_=field_type, data=data[key], config=config)
+                selected_type = None
+                if field.name in config.explicit_unions:
+                    selected_type = _select_union_member(field_type, data, config.explicit_unions[field.name])
+                value = _build_value(type_=field_type, data=data[key], config=config, selected_type=selected_type)
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
@@ -92,15 +96,23 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     return instance
 
 
-def _build_value(type_: Type, data: Any, config: Config) -> Any:
+def _select_union_member(field_type: Type, data: Data, selector: Callable[[Data], Type]) -> Type:
+    union = extract_init_var(field_type) if is_init_var(field_type) else field_type
+    selected_type = selector(data)
+    if not is_union(union) or selected_type not in extract_generic(union):
+        raise UnionSelectionError(field_type=union, selected_type=selected_type)
+    return selected_type
+
+
+def _build_value(type_: Type, data: Any, config: Config, selected_type: Optional[Type] = None) -> Any:
     if is_init_var(type_):
         type_ = extract_init_var(type_)
     if type_ in config.type_hooks:
         data = config.type_hooks[type_](data)
-    if is_optional(type_) and data is None:
+    if is_optional(type_) and data is None and selected_type is None:
         return data
     if is_union(type_):
-        data = _build_value_for_union(union=type_, data=data, config=config)
+        data = _build_value_for_union(union=type_, data=data, config=config, selected_type=selected_type)
     elif is_generic_collection(type_):
         data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif cache(is_dataclass)(orig(type_)) and isinstance(data, Mapping):
@@ -115,7 +127,12 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
     return data
 
 
-def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
+def _build_value_for_union(union: Type, data: Any, config: Config, selected_type: Optional[Type] = None) -> Any:
+    if selected_type is not None:
+        value = _build_value(type_=selected_type, data=data, config=config)
+        if config.check_types and not is_instance(value, selected_type):
+            raise WrongTypeError(field_type=selected_type, value=value)
+        return value
     types = extract_generic(union)
     if is_optional(union) and len(types) == 2:
         return _build_value(type_=types[0], data=data, config=config)
