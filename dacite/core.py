@@ -74,7 +74,8 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             if config.check_types and not is_instance(value, field_type):
                 raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
         else:
-            if not field.init and (field.default is not MISSING or field.default_factory is not MISSING):  # type: ignore
+            has_default = field.default is not MISSING or field.default_factory is not MISSING  # type: ignore
+            if not field.init and has_default:
                 # the dataclass `__init__` (and `__post_init__`) already set this value; do not overwrite it
                 continue
             try:
