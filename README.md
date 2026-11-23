@@ -145,6 +145,41 @@ result = from_dict(data_class=B, data=data)
 assert result == B(a=A(x='test', y=1))
 ```
 
+### Typed dictionaries
+
+Fields annotated with `typing.TypedDict` (or its `typing_extensions`
+backport) are built recursively and remain ordinary dictionaries:
+
+```python
+from typing import TypedDict
+
+class Address(TypedDict):
+    street: str
+    number: int
+
+@dataclass
+class Person:
+    address: Address
+
+person = from_dict(Person, {"address": {"street": "Main", "number": "7"}},
+                   config=Config(cast=[int]))
+assert person.address == {"street": "Main", "number": 7}
+```
+
+Required keys, `total=False`, inherited keys and `Required`/`NotRequired`
+qualifiers are respected. An optional key is omitted when absent; an
+`Optional[T]` value still requires its key unless the key is non-required.
+Dataclasses and collections nested inside a typed dictionary are converted
+using the same type hooks, casts, key conversion and forward references as
+other fields. Parameterized generic typed dictionaries are supported where
+the Python version supports declaring them.
+
+Extra keys are preserved by default; `strict=True` rejects them.
+`check_types=False` disables value type checks but still requires mandatory
+keys. A fresh dictionary is returned without changing the input. On older
+Python versions whose stdlib TypedDict does not expose required-key metadata,
+use the `typing_extensions` backport for mixed-totality inheritance.
+
 ### Optional fields
 
 Whenever your data class has a `Optional` field and you will not provide
