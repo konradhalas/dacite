@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `set_compile_threshold(n)` conversions (default 100): `from_dict` is about 9-30x faster than 1.9.2 (typically
   15-20x) with the same results and errors, and allocates 70-85% less per call for small types
 - Union members that can not match (missing required key, other `Literal` discriminator) are skipped without being built
+- `strict=True` compares keys with the converted field names when `convert_key` is set, and a missing `init=False` field
+  with a default is no longer overwritten after `__post_init__` (both are 1.9.3 fixes)
 - `Union[None, X]` is converted like `Optional[X]` (1.x result depended on `lru_cache` history)
 
 ### Added

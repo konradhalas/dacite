@@ -66,6 +66,10 @@ Note: an error about the *type of a simple element* detected by the final type c
   working after `Union[None, X]` had been used). There is no single "1.x behavior" to preserve; 2.0 is deterministic and
   correct. This deviates from decision D4 and is easy to revert in `_union_body` (`single_index`). Schemas with such a
   union are skipped in the differential test and covered by a unit test.
+- **`strict` with `convert_key`:** data keys are compared with the *converted* field names (the 1.9.3 fix; 1.9.2
+  rejected every key). The combination is not covered by the differential test and has unit tests instead.
+- **`init=False` fields with a default:** when the key is missing, the field is left to `__init__`/`__post_init__`
+  (the 1.9.3 fix); 1.9.2 overwrote the value set in `__post_init__` with the default.
 - **A generic data class (`Box[int]`) with an `init=False` field:** 1.x raised `AttributeError`
   (`__dataclass_params__` is not forwarded through a generic alias); 2.0 works.
 - **Field defaults and `convert_key`** are evaluated once when the plan is built (not on every `from_dict`): the
@@ -91,9 +95,8 @@ Note: an error about the *type of a simple element* detected by the final type c
 
 Kept bug-for-bug in 2.0 (decision D4: maximum compatibility with 1.x): the `field.default != MISSING` comparison (Q2),
 a `defaultdict` as input for a `Dict` field (Q3), a `str` given for a collection field yields `str(generator)` (a value
-with a memory address, rejected by the type check), `strict` compares data keys with field names *before*
-`convert_key`, for tuples `zip_longest` pads with `None`, and there is no `Collection` check for tuples. Q1
-(`Union[None, X]`) is fixed, see above.
+with a memory address, rejected by the type check), for tuples `zip_longest` pads with `None`, and there is no
+`Collection` check for tuples. Q1 (`Union[None, X]`) is fixed, see above.
 
 ## Differences found by the differential tests
 
