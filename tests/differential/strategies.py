@@ -472,7 +472,19 @@ def _with(parent, key, value):
 
 
 # --- Config ----------------------------------------------------------------------------------------------------------
+def _without_strict_for_converted_keys(params):
+    # 1.9.2 rejects every key with `strict=True` + `convert_key`; 2.0 follows the 1.9.3 fix (MIGRATION.md), so the
+    # combination is not comparable against the frozen oracle and is covered by a unit test instead.
+    if params["key_style"] != "identity":
+        return {**params, "strict": False}
+    return params
+
+
 def config_params():
+    return _config_params().map(_without_strict_for_converted_keys)
+
+
+def _config_params():
     return st.fixed_dictionaries(
         {
             "check_types": st.sampled_from([True, True, True, False]),

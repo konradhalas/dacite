@@ -710,7 +710,7 @@ def compile_plan(data_class: Any, config: Config) -> DataclassPlan:  # pylint: d
     return DataclassPlan(
         data_class,
         tuple(specs),
-        frozenset(f.name for f in fields) if config.strict else None,
+        frozenset(spec[1] for spec in specs) if config.strict else None,  # converted keys, as in 1.9.3
         ti.orig(data_class).__dataclass_params__.frozen,
         config.check_types,
     )
