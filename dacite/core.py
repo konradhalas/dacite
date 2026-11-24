@@ -1,4 +1,4 @@
-from dataclasses import is_dataclass
+from dataclasses import is_dataclass, MISSING
 from itertools import zip_longest
 from typing import TypeVar, Type, Optional, Mapping, Any, Collection, MutableMapping
 
@@ -26,6 +26,7 @@ from dacite.types import (
     is_union,
     extract_generic,
     is_optional,
+    extract_optional,
     extract_origin_collection,
     is_init_var,
     extract_init_var,
@@ -56,7 +57,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
     data_class_fields = cache(get_fields)(data_class)
 
     if config.strict:
-        extra_fields = set(data.keys()) - {f.name for f in data_class_fields}
+        extra_fields = set(data.keys()) - {config.convert_key(f.name) for f in data_class_fields}
         if extra_fields:
             raise UnexpectedDataError(keys=extra_fields)
 
@@ -73,6 +74,10 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             if config.check_types and not is_instance(value, field_type):
                 raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
         else:
+            has_default = field.default is not MISSING or field.default_factory is not MISSING  # type: ignore
+            if not field.init and has_default:
+                # the dataclass `__init__` (and `__post_init__`) already set this value; do not overwrite it
+                continue
             try:
                 value = get_default_value_for_field(field, field_type)
             except DefaultValueNotFoundError:
@@ -118,7 +123,7 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
 def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     types = extract_generic(union)
     if is_optional(union) and len(types) == 2:
-        return _build_value(type_=types[0], data=data, config=config)
+        return _build_value(type_=extract_optional(union), data=data, config=config)
     union_matches = {}
     for inner_type in types:
         try:
