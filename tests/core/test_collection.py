@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
+from enum import Enum
 from typing import List, Set, Union, Dict, Collection, Tuple, Sequence
 
 import pytest
@@ -309,3 +310,17 @@ def test_from_dict_with_sequence_and_empty_tuple():
     result = from_dict(X, {"s": ()})
 
     assert result == X(s=())
+
+
+def test_from_dict_casting_dict_keys_to_enum():
+    class Bar(Enum):
+        BAR_1 = 1
+        BAR_2 = 2
+
+    @dataclass
+    class X:
+        d: Dict[Bar, str]
+
+    result = from_dict(X, {"d": {1: "1", 2: "2"}}, Config(cast=[Enum]))
+
+    assert result == X(d={Bar.BAR_1: "1", Bar.BAR_2: "2"})
