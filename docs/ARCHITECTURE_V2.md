@@ -371,7 +371,7 @@ Details and migration: `MIGRATION.md`.
 | plan cache in the class, immutable `Config`, `Converter` | done | tests: threads, leaks, limit, errors are not cached |
 | error paths with indices (D1) | done | list/tuple indices and mapping keys; the error of a simple element type still points at the field (`field_type`/`value` compatibility) |
 | differential tests 1.x vs 2.0, both backends | done | `tests/differential/`, `tests/conftest.py` |
-| Python ≥ 3.11, free-threaded | done | tests: 3.11-3.15, 3.14t (full suite), 3.13t (without Hypothesis) |
+| Python ≥ 3.11, free-threaded | done | tests: 3.11-3.15 and 3.14t (full suite); 3.13t is not in CI (its dev dependencies have no wheels and cannot be built from source: PyO3 needs 3.14+ for free-threaded) |
 | native core (Rust/PyO3) | **not built (decision D2: gate 8.1)** | pure Python is ahead of cattrs on every comparable scenario and level with pydantic-core on most; the native gain is limited by the `__init__` floor; cost: about 49 wheels. To be reassessed if a scenario appears where the 1.1-2× gap to msgspec matters |
 | `py3-none-any` wheel + sdist, CI | done | a `package` job in `code_check.yaml` (3 operating systems); **nothing is released automatically**, the version is `2.0.0.dev0` |
 | `DACITE_PURE_PYTHON`, `dacite.backend()` | not built | without a native core there is nothing to switch |

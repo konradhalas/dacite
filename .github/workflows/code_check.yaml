@@ -17,10 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ '3.11', '3.12', '3.13', '3.14', '3.15', '3.14t' ]
-        include:
-          # Hypothesis can not be installed on 3.13t (a native dependency does not support it): no differential tests
-          - python-version: '3.13t'
-            pytest-args: '--ignore=tests/differential'
 
     name: Python ${{ matrix.python-version }}
     steps:
@@ -33,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev]"
       - name: Testing Check
-        run: pytest --cov=dacite ${{ matrix.pytest-args }}
+        run: pytest --cov=dacite
       - name: Formatting Check
         run: black --check .
       - name: Typing Check
