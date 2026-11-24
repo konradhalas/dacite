@@ -1,0 +1,215 @@
+{
+ "label": "dacite-1.9.2",
+ "python": "3.13.2",
+ "machine": "arm64 Darwin",
+ "versions": {
+  "dacite": "1.9.2",
+  "msgspec": "0.22.0",
+  "pydantic": "2.14.4",
+  "cattrs": "26.2.1"
+ },
+ "results": {
+  "dacite|flat10": {
+   "status": "ok",
+   "warm_min_us": 11.89818767236198,
+   "warm_med_us": 12.002932145613244,
+   "tm_peak_kb": 1.8671875,
+   "cold_us": 68.79190914332867
+  },
+  "msgspec|flat10": {
+   "status": "ok",
+   "warm_min_us": 0.5834632515434963,
+   "warm_med_us": 0.5859177435413033,
+   "tm_peak_kb": 0.2265625,
+   "cold_us": 30.583003535866737
+  },
+  "pydantic|flat10": {
+   "status": "ok",
+   "warm_min_us": 0.8077469960904511,
+   "warm_med_us": 0.8272576224490308,
+   "tm_peak_kb": 0.59375,
+   "cold_us": 387.70888932049274
+  },
+  "cattrs|flat10": {
+   "status": "ok",
+   "warm_min_us": 0.9483250411277163,
+   "warm_med_us": 0.9573341359543956,
+   "tm_peak_kb": 1.171875,
+   "cold_us": 766.5000157430768
+  },
+  "dacite|nested5": {
+   "status": "ok",
+   "warm_min_us": 17.880301949006355,
+   "warm_med_us": 18.216244287863855,
+   "tm_peak_kb": 2.765625,
+   "cold_us": 108.50001126527786
+  },
+  "msgspec|nested5": {
+   "status": "ok",
+   "warm_min_us": 0.9874354859420961,
+   "warm_med_us": 0.9907512783560029,
+   "tm_peak_kb": 0.5390625,
+   "cold_us": 48.87511022388935
+  },
+  "pydantic|nested5": {
+   "status": "ok",
+   "warm_min_us": 1.4973948855661492,
+   "warm_med_us": 1.5181959389124167,
+   "tm_peak_kb": 1.421875,
+   "cold_us": 610.4590138420463
+  },
+  "cattrs|nested5": {
+   "status": "ok",
+   "warm_min_us": 1.8011405044823254,
+   "warm_med_us": 1.8136640274147406,
+   "tm_peak_kb": 2.0234375,
+   "cold_us": 1259.62495803833
+  },
+  "dacite|big_list_10k": {
+   "status": "ok",
+   "warm_min_us": 115030.52100306377,
+   "warm_med_us": 117714.72898544744,
+   "tm_peak_kb": 2361.0859375,
+   "cold_us": 116566.9170441106,
+   "rss_before_mb": 26.46875,
+   "rss_delta_mb": 2.4375
+  },
+  "msgspec|big_list_10k": {
+   "status": "ok",
+   "warm_min_us": 3145.143692680181,
+   "warm_med_us": 3240.6981798629154,
+   "tm_peak_kb": 1875.232421875,
+   "cold_us": 3496.5419908985496,
+   "rss_before_mb": 27.4375,
+   "rss_delta_mb": 1.828125
+  },
+  "pydantic|big_list_10k": {
+   "status": "ok",
+   "warm_min_us": 5619.080420475193,
+   "warm_med_us": 5766.968023530099,
+   "tm_peak_kb": 3672.287109375,
+   "cold_us": 6473.707966506481,
+   "rss_before_mb": 37.671875,
+   "rss_delta_mb": 3.46875
+  },
+  "cattrs|big_list_10k": {
+   "status": "ok",
+   "warm_min_us": 7840.281621360316,
+   "warm_med_us": 7958.741380897319,
+   "tm_peak_kb": 2046.515625,
+   "cold_us": 8591.999998316169,
+   "rss_before_mb": 28.265625,
+   "rss_delta_mb": 2.265625
+  },
+  "dacite|opt_literal": {
+   "status": "ok",
+   "warm_min_us": 24.855762153511744,
+   "warm_med_us": 25.078430869598147,
+   "tm_peak_kb": 2.5703125,
+   "cold_us": 158.625072799623
+  },
+  "msgspec|opt_literal": {
+   "status": "ok",
+   "warm_min_us": 0.578315696792083,
+   "warm_med_us": 0.5842734038622379,
+   "tm_peak_kb": 0.28125,
+   "cold_us": 64.0420475974679
+  },
+  "pydantic|opt_literal": {
+   "status": "ok",
+   "warm_min_us": 0.9661261389771916,
+   "warm_med_us": 0.9701676208510243,
+   "tm_peak_kb": 0.828125,
+   "cold_us": 493.8750062137842
+  },
+  "cattrs|opt_literal": {
+   "status": "N/A (StructureHandlerNotFoundError: Unsupported type: typing.Union[int, str]. Register a structure hook for it.)"
+  },
+  "dacite|union_dataclasses": {
+   "status": "ok",
+   "warm_min_us": 121.70777455214578,
+   "warm_med_us": 122.62218621168229,
+   "tm_peak_kb": 5.203125,
+   "cold_us": 313.37502878159285
+  },
+  "pydantic|union_dataclasses": {
+   "status": "ok",
+   "warm_min_us": 6.456783364896276,
+   "warm_med_us": 6.536305053425057,
+   "tm_peak_kb": 2.96875,
+   "cold_us": 616.0830380395055
+  },
+  "cattrs|union_dataclasses": {
+   "status": "ok",
+   "warm_min_us": 5.900623639381622,
+   "warm_med_us": 6.012815241392496,
+   "tm_peak_kb": 2.8046875,
+   "cold_us": 1850.042026489973
+  },
+  "dacite|collections": {
+   "status": "ok",
+   "warm_min_us": 358.4426258214944,
+   "warm_med_us": 364.9296763306149,
+   "tm_peak_kb": 18.546875,
+   "cold_us": 558.875035494566
+  },
+  "msgspec|collections": {
+   "status": "ok",
+   "warm_min_us": 7.994760163363091,
+   "warm_med_us": 8.141560334701902,
+   "tm_peak_kb": 9.3125,
+   "cold_us": 57.6250022277236
+  },
+  "pydantic|collections": {
+   "status": "ok",
+   "warm_min_us": 15.186263766448583,
+   "warm_med_us": 15.555139688445177,
+   "tm_peak_kb": 18.3515625,
+   "cold_us": 549.4579672813416
+  },
+  "cattrs|collections": {
+   "status": "ok",
+   "warm_min_us": 24.960970143622138,
+   "warm_med_us": 25.322361455194468,
+   "tm_peak_kb": 16.515625,
+   "cold_us": 1608.0409986898303
+  },
+  "dacite|type_hooks_cast": {
+   "status": "ok",
+   "warm_min_us": 12.70313169565987,
+   "warm_med_us": 12.90301095178327,
+   "tm_peak_kb": 2.05859375,
+   "cold_us": 111.00003030151129
+  },
+  "dacite|forward_refs": {
+   "status": "ok",
+   "warm_min_us": 31.31905472125535,
+   "warm_med_us": 31.397505079189372,
+   "tm_peak_kb": 3.203125,
+   "cold_us": 196.62489648908377
+  },
+  "dacite|flat10_nocheck": {
+   "status": "ok",
+   "warm_min_us": 9.841386468913072,
+   "warm_med_us": 10.006774692082864,
+   "tm_peak_kb": 1.3359375,
+   "cold_us": 74.12501145154238
+  },
+  "dacite|nested5_nocheck": {
+   "status": "ok",
+   "warm_min_us": 15.550780518872335,
+   "warm_med_us": 15.655026243867193,
+   "tm_peak_kb": 2.2890625,
+   "cold_us": 139.70897998660803
+  },
+  "dacite|big_list_10k_nocheck": {
+   "status": "ok",
+   "warm_min_us": 84812.7084900625,
+   "warm_med_us": 89989.33300608769,
+   "tm_peak_kb": 2360.140625,
+   "cold_us": 83126.33400782943,
+   "rss_before_mb": 26.171875,
+   "rss_delta_mb": 2.3125
+  }
+ }
+}

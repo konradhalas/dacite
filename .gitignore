@@ -10,3 +10,5 @@ dacite-env*
 
 .benchmarks
 benchmark.json
+graphify-out/
+.hypothesis/

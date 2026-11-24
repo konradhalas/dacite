@@ -22,7 +22,8 @@ $ pip install dacite
 
 ## Requirements
 
-Minimum Python version supported by `dacite` is 3.7.
+Minimum Python version supported by `dacite` is 3.11 (including the free-threaded builds). Use `dacite<2` on older
+versions.
 
 ## Quick start
 
@@ -62,6 +63,9 @@ Dacite supports following features:
 - collections
 - custom type hooks
 - case conversion
+
+Since 2.0 conversion plans are built once per type and compiled to generated code, which makes `from_dict` roughly
+9-30 times faster than 1.9 (typically 15-20x) (see [Performance tuning](#performance-tuning) and `benchmarks/RESULTS.md`).
 
 ## Motivation
 
@@ -451,6 +455,17 @@ data has not matching keys
 - `StrictUnionMatchError` - raised when `strict_unions_match` mode is enabled 
 and the input data has ambiguous `Union` match
 
+Errors bound to a place in the input (`WrongTypeError`, `MissingValueError`, `UnionMatchError`, ...) carry the full
+path to it: items of lists and tuples are addressed by index and values of mappings by key.
+
+```python
+try:
+    from_dict(Root, data)
+except DaciteFieldError as error:
+    error.field_path  # "orders[3].customer.email"
+    error.path  # ("orders", 3, "customer", "email")
+```
+
 ## Development
 
 First of all - if you want to submit your pull request, thank you very much! 
@@ -504,6 +519,10 @@ pytest
 
 `dacite` is a small library, but its use is potentially very extensive. Thus, it is crucial
 to ensure good performance of the library.
+
+The `benchmarks/` directory contains a harness (`python -m benchmarks.run all --label NAME --out FILE.json`) that measures
+warm and cold conversion, peak memory and the same scenarios for msgspec, pydantic v2 and cattrs; results and
+methodology are in `benchmarks/RESULTS.md`.
 
 We achieve that with the help of `pytest-benchmark` library, and a suite of dedicated performance tests
 which can be found in the `tests/performance` directory. The CI process runs these tests automatically,
@@ -620,16 +639,55 @@ def products():
 
 Still `dacite` helps us to create data class from "raw" dict with validated data.
 
+### Converter
+
+`from_dict` looks up a pre-built conversion plan for `(data class, Config)` on every call. When you convert many
+objects of the same type you can hold the plan yourself:
+
+```python
+from dacite import Converter, Config
+
+converter = Converter(Person, Config(strict=True))
+converter.compile()  # optional: builds the plan now and raises e.g. ForwardReferenceError immediately
+person = converter.convert(data)  # or converter(data)
+people = converter.convert_many(list_of_dicts)
+```
+
+### Performance tuning
+
+Conversion plans start in an interpreter and are compiled to generated Python code after 100 conversions of a type (the
+compilation costs about 0.2 ms per type and pays off after roughly that many calls). Change this globally with
+`set_compile_threshold`:
+
+```python
+from dacite import set_compile_threshold
+
+set_compile_threshold(0)  # compile every type as soon as it is first used (long running services, benchmarks)
+set_compile_threshold(None)  # never compile, interpret only
+```
+
+`Converter(...).compile()` compiles immediately. Results are identical in all modes. See `benchmarks/RESULTS.md` for
+measurements against dacite 1.9, msgspec, pydantic v2 and cattrs.
+
+### Config is immutable
+
+`Config` is immutable and hashable. Mutable arguments (`type_hooks`, `cast`, `forward_references`) are copied when the
+`Config` is created, so changing the original dict/list afterwards has no effect. Use `dataclasses.replace(config,
+check_types=False)` to derive a modified copy. Create a `Config` once and reuse it: a `Config` built anew with a new
+`lambda` hook on every call is a new cache key every time.
+
 ### Cache
 
-`dacite` uses some LRU caching to improve its performance where possible. To use the caching utility:
+The first `from_dict` call for a data class and `Config` introspects the type annotations once and builds a conversion
+plan; the plan is stored in the data class itself, so it is released together with the class (nothing global keeps
+dynamically created classes alive) and is safe to use from many threads. To control the cache:
 
 ```python
 from dacite import set_cache_size, get_cache_size, clear_cache
 
-get_cache_size()  # outputs the current LRU max_size, default is 2048
-set_cache_size(4096)  # set LRU max_size to 4096
-set_cache_size(None)  # set LRU max_size to None
+get_cache_size()  # outputs the current max size, default is 2048 (plans per class, and entries of the helper caches)
+set_cache_size(4096)  # set the max size to 4096
+set_cache_size(None)  # set the max size to None (unbounded)
 clear_cache()  # Clear the cache
 ```
 

@@ -1,0 +1,94 @@
+{
+ "label": "dacite-2b",
+ "python": "3.13.2",
+ "machine": "arm64 Darwin",
+ "versions": {
+  "dacite": "1.9.2",
+  "msgspec": "0.22.0",
+  "pydantic": "2.14.4",
+  "cattrs": "26.2.1"
+ },
+ "results": {
+  "dacite|flat10": {
+   "status": "ok",
+   "warm_min_us": 2.5075939514822476,
+   "warm_med_us": 2.5243740760903934,
+   "tm_peak_kb": 1.1328125,
+   "cold_us": 81.29200432449579
+  },
+  "dacite|nested5": {
+   "status": "ok",
+   "warm_min_us": 4.562405573508729,
+   "warm_med_us": 4.672114584928388,
+   "tm_peak_kb": 1.703125,
+   "cold_us": 143.95802281796932
+  },
+  "dacite|big_list_10k": {
+   "status": "ok",
+   "warm_min_us": 23284.68330670148,
+   "warm_med_us": 23956.229200121015,
+   "tm_peak_kb": 2359.33203125,
+   "cold_us": 23376.667057164013,
+   "rss_before_mb": 26.578125,
+   "rss_delta_mb": 2.34375
+  },
+  "dacite|opt_literal": {
+   "status": "ok",
+   "warm_min_us": 3.3920430205820895,
+   "warm_med_us": 3.4172955045357516,
+   "tm_peak_kb": 1.546875,
+   "cold_us": 190.1669893413782
+  },
+  "dacite|union_dataclasses": {
+   "status": "ok",
+   "warm_min_us": 18.241394556572185,
+   "warm_med_us": 18.501336047615112,
+   "tm_peak_kb": 4.2265625,
+   "cold_us": 269.2500129342079
+  },
+  "dacite|collections": {
+   "status": "ok",
+   "warm_min_us": 66.5410265908385,
+   "warm_med_us": 67.22131568031182,
+   "tm_peak_kb": 16.6015625,
+   "cold_us": 339.1669597476721
+  },
+  "dacite|type_hooks_cast": {
+   "status": "ok",
+   "warm_min_us": 2.5531063674977372,
+   "warm_med_us": 2.586984368639636,
+   "tm_peak_kb": 0.96484375,
+   "cold_us": 126.91691517829895
+  },
+  "dacite|forward_refs": {
+   "status": "ok",
+   "warm_min_us": 7.058773387913737,
+   "warm_med_us": 7.158694934426041,
+   "tm_peak_kb": 2.265625,
+   "cold_us": 187.41691019386053
+  },
+  "dacite|flat10_nocheck": {
+   "status": "ok",
+   "warm_min_us": 1.916300142429672,
+   "warm_med_us": 1.942826735405771,
+   "tm_peak_kb": 1.0703125,
+   "cold_us": 82.49992970377207
+  },
+  "dacite|nested5_nocheck": {
+   "status": "ok",
+   "warm_min_us": 3.832661767799631,
+   "warm_med_us": 3.9008835496398517,
+   "tm_peak_kb": 1.703125,
+   "cold_us": 135.54200995713472
+  },
+  "dacite|big_list_10k_nocheck": {
+   "status": "ok",
+   "warm_min_us": 17953.198689680834,
+   "warm_med_us": 18222.073693043338,
+   "tm_peak_kb": 2359.26953125,
+   "cold_us": 18495.416967198253,
+   "rss_before_mb": 26.71875,
+   "rss_delta_mb": 2.328125
+  }
+ }
+}
