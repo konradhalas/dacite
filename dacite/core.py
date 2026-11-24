@@ -102,6 +102,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         type_ = extract_init_var(type_)
     if type_ in config.type_hooks:
         data = config.type_hooks[type_](data)
+    elif config.subclass_type_hooks:
+        data = _apply_subclass_type_hook(type_, data, config)
     if is_optional(type_) and data is None:
         return data
     if is_union(type_):
@@ -117,6 +119,23 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
             else:
                 data = type_(data)
             break
+    return data
+
+
+def _apply_subclass_type_hook(type_: Type, data: Any, config: Config) -> Any:
+    # Prefer the exact annotation, then normal Python MRO. The hook receives
+    # the original annotation, including any generic arguments.
+    hooks = config.subclass_type_hooks
+    if type_ in hooks:
+        return hooks[type_](type_, data)
+    origin = extract_origin_collection(type_) if is_generic_collection(type_) else type_
+    for base in getattr(origin, "__mro__", ()):
+        if base in hooks:
+            return hooks[base](type_, data)
+    # Virtual ABCs are absent from __mro__; use registration order, like cast.
+    for base, hook in hooks.items():
+        if is_subclass(type_, base):
+            return hook(type_, data)
     return data
 
 
