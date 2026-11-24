@@ -29,6 +29,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Differential test suite (Hypothesis) comparing the implementation against a frozen copy of 1.9.2 (`tests/differential/`)
 - v2 architecture proposal (`docs/ARCHITECTURE_V2.md`) and draft migration guide (`MIGRATION.md`)
 
+## [1.9.3] - 2026-11-24
+
+### Fixed
+
+- Fix converting a list of values to a tuple with mixed member types (#227)
+- Support PEP 604 unions (`X | Y`) in generic data classes (#282)
+- Fix the order of `Union` members being lost: `Union[int, float]` and `Union[float, int]` share a cache entry, so
+  `type_hooks` and `cast` could be tried in the wrong order (#300)
+- Fix `cast` and `type_hooks` being skipped for `Union[None, X]` (a two-member `Optional` with `None` first) (#311)
+- Fix `strict=True` rejecting every key when `convert_key` is set (#295)
+- Fix `from_dict` overwriting the value of an `init=False` field with its default after `__post_init__` set it (#301)
+
 ## [1.9.2] - 2025-02-05
 
 - Clean up the fix for readonly attribute `__args__` (introduced in v1.9.1)
@@ -164,7 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Validate type for generic collection fields
 
-[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.9.2...HEAD
+[Unreleased]: https://github.com/konradhalas/dacite/compare/v1.9.3...HEAD
+[1.9.3]: https://github.com/konradhalas/dacite/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/konradhalas/dacite/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/konradhalas/dacite/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/konradhalas/dacite/compare/v1.8.1...v1.9.0
