@@ -29,7 +29,7 @@ def test_from_dict_with_literal_and_wrong_value():
     class X:
         l: Literal["A", "B"]
 
-    with pytest.raises(WrongTypeError) as exception_info:
+    with pytest.raises(WrongTypeError):
         from_dict(X, {"l": "C"})
 
 
