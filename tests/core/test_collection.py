@@ -163,8 +163,8 @@ def test_from_dict_with_wrong_type_of_collection_item():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {"l": ["1"]})
 
-    assert exception_info.value.field_path == "l"
-    assert exception_info.value.field_type == List[int]
+    assert exception_info.value.field_path == "l[0]"
+    assert exception_info.value.field_type == int
 
 
 def test_from_dict_with_wrong_type_of_dict_value():
@@ -175,8 +175,24 @@ def test_from_dict_with_wrong_type_of_dict_value():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(X, {"d": {"a": "test"}})
 
-    assert exception_info.value.field_path == "d"
-    assert exception_info.value.field_type == Dict[str, int]
+    assert exception_info.value.field_path == "d[a]"
+    assert exception_info.value.field_type == int
+
+
+def test_from_dict_with_dict_of_wrong_type_of_collection_items():
+    @dataclass
+    class X:
+        l: List[int]
+
+    @dataclass
+    class Y:
+        d: Dict[str, X]
+
+    with pytest.raises(WrongTypeError) as exception_info:
+        from_dict(Y, {"d": {"a": {"l": ["1"]}}})
+
+    assert exception_info.value.field_path == "d[a].l[0]"
+    assert exception_info.value.field_type == int
 
 
 def test_from_dict_with_dict_and_implicit_any_types():
@@ -231,7 +247,7 @@ def test_from_dict_with_tuple_of_undefined_length():
     assert result == Y(t=(X(a=1), X(a=2)))
 
 
-def test_from_dict_with_tuple_and_wrong_length():
+def test_from_dict_with_tuple_and_extra_element():
     @dataclass
     class X:
         a: int
@@ -247,8 +263,28 @@ def test_from_dict_with_tuple_and_wrong_length():
     with pytest.raises(WrongTypeError) as exception_info:
         from_dict(Z, {"t": ({"a": 1}, {"b": 2}, {"c": 3})})
 
-    assert exception_info.value.field_path == "t"
-    assert exception_info.value.field_type == Tuple[X, Y]
+    assert exception_info.value.field_path == "t[2]"
+    assert exception_info.value.field_type == None
+
+
+def test_from_dict_with_tuple_and_missing_element():
+    @dataclass
+    class X:
+        a: int
+
+    @dataclass
+    class Y:
+        b: int
+
+    @dataclass
+    class Z:
+        t: Tuple[X, Y]
+
+    with pytest.raises(WrongTypeError) as exception_info:
+        from_dict(Z, {"t": ({"a": 1},)})
+
+    assert exception_info.value.field_path == "t[1]"
+    assert exception_info.value.field_type == Y
 
 
 def test_from_dict_with_tuple_and_implicit_any_types():
