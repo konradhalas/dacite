@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 
 import pytest
 
@@ -119,6 +119,16 @@ def test_from_dict_with_type_hook_exception():
 
     with pytest.raises(KeyError):
         from_dict(X, {"i": 1}, config=Config(type_hooks={int: raise_error}))
+
+
+def test_from_dict_with_type_hooks_and_generic_mapping():
+    @dataclass
+    class X:
+        d: Dict[str, str]
+
+    result = from_dict(X, {"d": {"B": "TEST"}}, config=Config(type_hooks={str: str.lower}))
+
+    assert result == X(d={"b": "test"})
 
 
 def test_from_dict_with_forward_reference():
