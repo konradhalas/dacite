@@ -34,6 +34,7 @@ from dacite.types import (
 )
 
 from dacite.generics import get_concrete_type_hints, get_fields, orig
+from dacite.typed_dict import get_typed_dict_spec, is_typed_dict
 
 T = TypeVar("T")
 
@@ -71,7 +72,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
-            if config.check_types and not is_instance(value, field_type):
+            if config.check_types and not is_instance(value, field_type, config.hashable_forward_references):
                 raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
         else:
             has_default = field.default is not MISSING or field.default_factory is not MISSING  # type: ignore
@@ -106,6 +107,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
         return data
     if is_union(type_):
         data = _build_value_for_union(union=type_, data=data, config=config)
+    elif is_typed_dict(type_) and isinstance(data, Mapping):
+        data = _build_value_for_typed_dict(type_, data, config)
     elif is_generic_collection(type_):
         data = _build_value_for_collection(collection=type_, data=data, config=config)
     elif cache(is_dataclass)(orig(type_)) and isinstance(data, Mapping):
@@ -120,6 +123,34 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
     return data
 
 
+def _build_value_for_typed_dict(type_: Type, data: Mapping, config: Config) -> dict:
+    try:
+        hints, required = cache(get_typed_dict_spec)(type_, localns=config.hashable_forward_references)
+    except NameError as error:
+        raise ForwardReferenceError(str(error)) from None
+    source_keys = {name: config.convert_key(name) for name in hints}
+    extra_keys = data.keys() - set(source_keys.values())
+    if config.strict and extra_keys:
+        raise UnexpectedDataError(keys=extra_keys)
+    # TypedDicts are structurally typed: retain additional keys unless strict.
+    result = {key: value for key, value in data.items() if key in extra_keys}
+    for name, hint in hints.items():
+        key = source_keys[name]
+        if key not in data:
+            if name in required:
+                raise MissingValueError(name)
+            continue
+        try:
+            value = _build_value(hint, data[key], config)
+        except DaciteFieldError as error:
+            error.update_path(name)
+            raise
+        if config.check_types and not is_instance(value, hint, config.hashable_forward_references):
+            raise WrongTypeError(field_path=name, field_type=hint, value=value)
+        result[name] = value
+    return result
+
+
 def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
     types = extract_generic(union)
     if is_optional(union) and len(types) == 2:
@@ -132,7 +163,7 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
                 value = _build_value(type_=inner_type, data=data, config=config)
             except Exception:  # pylint: disable=broad-except
                 continue
-            if is_instance(value, inner_type):
+            if is_instance(value, inner_type, config.hashable_forward_references):
                 if config.strict_unions_match:
                     union_matches[inner_type] = value
                 else:
